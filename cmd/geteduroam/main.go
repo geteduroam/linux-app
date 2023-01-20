@@ -1,10 +1,9 @@
 package main
 
 import (
+	"os"
 	//"github.com/geteduroam/linux/internal/discovery"
 	"github.com/geteduroam/linux/internal/ui"
-
-    "os"
 )
 
 func main() {

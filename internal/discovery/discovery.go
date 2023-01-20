@@ -4,46 +4,45 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"time"
-
 	"net/http"
+	"time"
 )
 
 type Profile struct {
 	AuthorizationEndpoint string `json:"authorization_endpoint"`
-	Default bool `json:"default"`
-	EapConfigEndpoint string `json:"eapconfig_endpoint"`
-	ID string `json:"id"`
-	Name string `json:"name"`
-	OAuth bool `json:"oauth"`
-	TokenEndpoint string `json:"string"`
-	Redirect string `json:"redirect"` 
+	Default               bool   `json:"default"`
+	EapConfigEndpoint     string `json:"eapconfig_endpoint"`
+	ID                    string `json:"id"`
+	Name                  string `json:"name"`
+	OAuth                 bool   `json:"oauth"`
+	TokenEndpoint         string `json:"string"`
+	Redirect              string `json:"redirect"`
 }
 
 type Instances struct {
-	CatIDP int `json:"cat_idp"`
+	CatIDP  int    `json:"cat_idp"`
 	Country string `json:"country"`
-	Geo []struct {
-		lat float32
+	Geo     []struct {
+		lat  float32
 		long float32
 	} `json:"geo"`
-	ID string `json:"id"`
-	Name string `json:"name"`
+	ID       string    `json:"id"`
+	Name     string    `json:"name"`
 	Profiles []Profile `json:"profiles"`
 }
 
 type Discovery struct {
 	Instances []Instances `json:"instances"`
 	// See: https://github.com/geteduroam/windows-app/blob/22cd90f36031907c7174fbdc678edafaa627ce49/CHANGELOG.md#changed
-	Seq       int     `json:"seq"`
-	Version   int       `json:"version"`
+	Seq     int `json:"seq"`
+	Version int `json:"version"`
 }
 
 type Cache struct {
 	// Cached is the cached list of discovery
 	Cached Discovery `json:"previous"`
 	// Seq is the parsed sequence number
-	Seq Seq `json:"seq"` 
+	Seq Seq `json:"seq"`
 	// LastUpdate is the last time we updated the cache
 	LastUpdate time.Time `json:"updated"`
 }
@@ -89,7 +88,6 @@ func (c *Cache) Instances() (*[]Instances, error) {
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		return &c.Cached.Instances, fmt.Errorf("status code is not 2xx for discovery. Status code: %v, body: %v", res.StatusCode, string(body))
 	}
-
 
 	var d *Discovery
 	err = json.Unmarshal(body, &d)

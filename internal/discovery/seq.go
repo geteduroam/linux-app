@@ -1,15 +1,15 @@
 package discovery
 
 import (
-	"time"
 	"strconv"
+	"time"
 )
 
 // A version string from discovery
 // See https://github.com/geteduroam/cattenbak/blob/481e243f22b40e1d8d48ecac2b85705b8cb48494/cattenbak.py#L116
 type Seq struct {
-	Timestamp time.Time 
-	Offset int
+	Timestamp time.Time
+	Offset    int
 }
 
 func NewSeq(seq int) (*Seq, error) {

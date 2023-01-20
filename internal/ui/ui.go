@@ -1,16 +1,16 @@
 package ui
 
 import (
-	"github.com/gotk3/gotk3/gtk"
-	"github.com/gotk3/gotk3/glib"
 	"log"
 	"os"
+
+	"github.com/gotk3/gotk3/glib"
+	"github.com/gotk3/gotk3/gtk"
 )
 
-type ui struct {}
+type ui struct{}
 
-func New() *ui {return &ui{}}
-
+func New() *ui { return &ui{} }
 
 func (ui *ui) Run(args []string) int {
 	gtk.Init(&args)

@@ -15,8 +15,7 @@ type VendorSpecificExtension struct {
 }
 
 // TypeSpecificExtension ...
-type TypeSpecificExtension struct {
-}
+type TypeSpecificExtension struct{}
 
 // EAPMethod ...
 type EAPMethod struct {
@@ -29,12 +28,13 @@ type EAPMethod struct {
 type NonEAPAuthNumbers int
 
 // IEEE80211RSNProtocols is CTR with CBC-MAC Protocol (if used, only crypto setting
-//                         "WPA2/AES" and possible future protos are acceptable).
+//
+//	"WPA2/AES" and possible future protos are acceptable).
 type IEEE80211RSNProtocols string
 
 // NonEAPAuthMethod ...
 type NonEAPAuthMethod struct {
-	Type           NonEAPAuthNumbers                        `xml:"Type"`
+	Type           NonEAPAuthNumbers          `xml:"Type"`
 	TypeSpecific   *TypeSpecificExtension     `xml:"TypeSpecific"`
 	VendorSpecific []*VendorSpecificExtension `xml:"VendorSpecific"`
 }
@@ -54,16 +54,17 @@ type LogoData struct {
 }
 
 // ClientCredentialVariants is Not all EAP types and non-EAP authentication methods need or
-//                 support all types of credentials in the list below. While the
-//                 Schema allows to put all kinds of credential information inside
-//                 every AuthenticationMethod, even where the information is not
-//                 applicable, tags which are not applicable for an authentication
-//                 EAP or non-EAP type
-//                    SHOULD NOT be included in the corresponding instance of
-//                      AuthenticationMethod or InnerAuthenticationMethod when
-//                      producing the XML file, and
-//                    MUST be ignored by the entity consuming the XML file if
-//                      present in the XML file.
+//
+//	support all types of credentials in the list below. While the
+//	Schema allows to put all kinds of credential information inside
+//	every AuthenticationMethod, even where the information is not
+//	applicable, tags which are not applicable for an authentication
+//	EAP or non-EAP type
+//	   SHOULD NOT be included in the corresponding instance of
+//	     AuthenticationMethod or InnerAuthenticationMethod when
+//	     producing the XML file, and
+//	   MUST be ignored by the entity consuming the XML file if
+//	     present in the XML file.
 type ClientCredentialVariants struct {
 	AllowsaveAttr             bool        `xml:"allow_save,attr,omitempty"`
 	OuterIdentity             string      `xml:"OuterIdentity"`
@@ -80,16 +81,17 @@ type ClientCredentialVariants struct {
 }
 
 // ServerCredentialVariants is Not all EAP types and non-EAP authentication methods need or
-//                 support all types of credentials in the list below. While the
-//                 Schema allows to put all kinds of credential information inside
-//                 every AuthenticationMethod, even where the information is not
-//                 applicable, tags which are not applicable for an authentication
-//                 EAP or non-EAP type
-//                    SHOULD NOT be included in the corresponding instance of
-//                      AuthenticationMethod or InnerAuthenticationMethod when
-//                      producing the XML file, and
-//                    MUST be ignored by the entity consuming the XML file if
-//                      present in the XML file.
+//
+//	support all types of credentials in the list below. While the
+//	Schema allows to put all kinds of credential information inside
+//	every AuthenticationMethod, even where the information is not
+//	applicable, tags which are not applicable for an authentication
+//	EAP or non-EAP type
+//	   SHOULD NOT be included in the corresponding instance of
+//	     AuthenticationMethod or InnerAuthenticationMethod when
+//	     producing the XML file, and
+//	   MUST be ignored by the entity consuming the XML file if
+//	     present in the XML file.
 type ServerCredentialVariants struct {
 	CA       []*CertData `xml:"CA"`
 	ServerID []string    `xml:"ServerID"`
@@ -119,10 +121,11 @@ type ProviderInfoElements struct {
 }
 
 // IEEE80211 is The conditions inside this element are considered AND conditions.
-//                 It does e.g. not make sense to have multiple SSIDs in one
-//                 IEEE80211 field because the condition would never
-//                 match. To specify multiple ORed network properties, use multiple
-//                 IEEE80211 instances.
+//
+//	It does e.g. not make sense to have multiple SSIDs in one
+//	IEEE80211 field because the condition would never
+//	match. To specify multiple ORed network properties, use multiple
+//	IEEE80211 instances.
 type IEEE80211 struct {
 	XMLName       xml.Name `xml:"IEEE80211"`
 	SSID          string   `xml:"SSID"`
