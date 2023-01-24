@@ -1,4 +1,6 @@
-# Geteduroam Linux client
+# geteduroam Linux client
+
+This repository contains the source code for the geteduroam Linux client. Currently WIP.
 
 # Dependencies
 - Go >= 1.18
