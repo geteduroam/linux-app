@@ -1,10 +1,11 @@
 # Geteduroam Linux client
 
 # Dependencies
+- Go >= 1.18
 - Gtk3
  - Gobject-introspection
  - Glib
-- Go >= 1.18
+- Make
 
 # Building
 make
