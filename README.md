@@ -8,10 +8,14 @@
 - Make
 
 # Building
+```bash
 make
+```
 
 # Running
+```bash
 make run
+```
 
 # License
 BSD 3
