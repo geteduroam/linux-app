@@ -7,6 +7,7 @@ package eap
 
 import (
 	"encoding/xml"
+	"errors"
 )
 
 // VendorSpecificExtension ...
@@ -25,7 +26,7 @@ type EAPMethod struct {
 }
 
 // NonEAPAuthNumbers is MSCHAPv2
-type NonEAPAuthNumbers int
+type NonEAPAuthNumbers = int
 
 // IEEE80211RSNProtocols is CTR with CBC-MAC Protocol (if used, only crypto setting
 //
@@ -204,4 +205,32 @@ func Parse(data []byte) (*EAPIdentityProviderList, error) {
 		return nil, err
 	}
 	return &eap, nil
+}
+
+func (eap *EAPIdentityProviderList) authenticationMethod() (*AuthenticationMethod, error) {
+	p := eap.EAPIdentityProvider
+	if p == nil {
+		return nil, errors.New("identity provider section couldn't be found")
+	}
+	m := p.AuthenticationMethods
+	if m == nil {
+		return nil, errors.New("authentication methods section couldn't be found")
+	}
+	am := m.AuthenticationMethod
+	if am == nil {
+		return nil, errors.New("authentication method couldn't be found")
+	}
+	return am, nil
+}
+
+// AuthenticationType gets the type of authentication
+func (eap *EAPIdentityProviderList) AuthenticationType() (int, error) {
+	am, err := eap.authenticationMethod()
+	if err != nil {
+		return 0, err
+	}
+	if am.EAPMethod == nil {
+		return 0, errors.New("EAP method couldn't be found")
+	}
+	return am.EAPMethod.Type, nil
 }
