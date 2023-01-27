@@ -6,33 +6,12 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/geteduroam/linux/internal/instance"
 )
 
-type Profile struct {
-	AuthorizationEndpoint string `json:"authorization_endpoint"`
-	Default               bool   `json:"default"`
-	EapConfigEndpoint     string `json:"eapconfig_endpoint"`
-	ID                    string `json:"id"`
-	Name                  string `json:"name"`
-	OAuth                 bool   `json:"oauth"`
-	TokenEndpoint         string `json:"string"`
-	Redirect              string `json:"redirect"`
-}
-
-type Instances struct {
-	CatIDP  int    `json:"cat_idp"`
-	Country string `json:"country"`
-	Geo     []struct {
-		lat  float32
-		long float32
-	} `json:"geo"`
-	ID       string    `json:"id"`
-	Name     string    `json:"name"`
-	Profiles []Profile `json:"profiles"`
-}
-
 type Discovery struct {
-	Instances []Instances `json:"instances"`
+	Instances []instance.Instance `json:"instances"`
 	// See: https://github.com/geteduroam/windows-app/blob/22cd90f36031907c7174fbdc678edafaa627ce49/CHANGELOG.md#changed
 	Seq     int `json:"seq"`
 	Version int `json:"version"`
@@ -63,7 +42,7 @@ func (c *Cache) ToUpdate() bool {
 }
 
 // Instances gets the instances either from the cache or from scratch
-func (c *Cache) Instances() (*[]Instances, error) {
+func (c *Cache) Instances() (*[]instance.Instance, error) {
 	if !c.ToUpdate() {
 		return &c.Cached.Instances, nil
 	}
