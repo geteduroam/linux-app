@@ -18,7 +18,6 @@ type Profile struct {
 	Redirect              string `json:"redirect"`
 }
 
-
 func (p *Profile) EAP() ([]byte, error) {
 	if p.OAuth {
 		panic("no oauth support just yet")

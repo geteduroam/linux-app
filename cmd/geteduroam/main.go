@@ -1,14 +1,15 @@
 package main
 
 import (
-	"log"
 	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/geteduroam/linux/internal/discovery"
 	"github.com/geteduroam/linux/internal/eap"
 	"github.com/geteduroam/linux/internal/instance"
-	"os"
-	"strings"
-	"strconv"
 )
 
 func FilterByName(search string, instances *[]instance.Instance) *[]instance.Instance {
