@@ -11,7 +11,7 @@ import (
 )
 
 type Discovery struct {
-	Instances []instance.Instance `json:"instances"`
+	Instances instance.Instances `json:"instances"`
 	// See: https://github.com/geteduroam/windows-app/blob/22cd90f36031907c7174fbdc678edafaa627ce49/CHANGELOG.md#changed
 	Seq     int `json:"seq"`
 	Version int `json:"version"`
@@ -42,7 +42,7 @@ func (c *Cache) ToUpdate() bool {
 }
 
 // Instances gets the instances either from the cache or from scratch
-func (c *Cache) Instances() (*[]instance.Instance, error) {
+func (c *Cache) Instances() (*instance.Instances, error) {
 	if !c.ToUpdate() {
 		return &c.Cached.Instances, nil
 	}

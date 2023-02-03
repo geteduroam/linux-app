@@ -5,24 +5,11 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/jwijenbergh/geteduroam-linux/internal/discovery"
 	"github.com/jwijenbergh/geteduroam-linux/internal/eap"
 	"github.com/jwijenbergh/geteduroam-linux/internal/instance"
 )
-
-func FilterByName(search string, instances *[]instance.Instance) *[]instance.Instance {
-	x := []instance.Instance{}
-	for _, i := range *instances {
-		l1 := strings.ToLower(i.Name)
-		l2 := strings.ToLower(search)
-		if strings.Contains(l1, l2) {
-			x = append(x, i)
-		}
-	}
-	return &x
-}
 
 func ask(prompt string, validator func(input string) bool) string {
 	for {
@@ -36,7 +23,7 @@ func ask(prompt string, validator func(input string) bool) string {
 	}
 }
 
-func filteredOrganizations(orgs *[]instance.Instance) (f *[]instance.Instance) {
+func filteredOrganizations(orgs *instance.Instances) (f *instance.Instances) {
 	for {
 		x := ask("Please enter your organization (e.g. SURF): ", func(x string) bool {
 			if len(x) == 0 {
@@ -45,7 +32,7 @@ func filteredOrganizations(orgs *[]instance.Instance) (f *[]instance.Instance) {
 			}
 			return true
 		})
-		f = FilterByName(x, orgs)
+		f = orgs.Filter(x)
 		if f != nil && len(*f) > 0 {
 			break
 		}
@@ -67,7 +54,7 @@ func validateOrg(input string, n int) bool {
 	return true
 }
 
-func getOrganization(orgs *[]instance.Instance) *instance.Instance {
+func organization(orgs *instance.Instances) *instance.Instance {
 	f := *filteredOrganizations(orgs)
 	fmt.Println("Found the following matches: ")
 	for n, c := range f {
@@ -91,7 +78,7 @@ func main() {
 		log.Fatalf("failed to get instances from discovery: %v", err)
 	}
 
-	chosen := getOrganization(i)
+	chosen := organization(i)
 	config, err := chosen.Profiles[0].EAP()
 	if err != nil {
 		log.Fatalf("Could not obtain eap config: %v", err)
