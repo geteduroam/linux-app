@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/geteduroam/linux/internal/discovery"
-	"github.com/geteduroam/linux/internal/eap"
-	"github.com/geteduroam/linux/internal/instance"
+	"github.com/jwijenbergh/geteduroam-linux/internal/discovery"
+	"github.com/jwijenbergh/geteduroam-linux/internal/eap"
+	"github.com/jwijenbergh/geteduroam-linux/internal/instance"
 )
 
 func FilterByName(search string, instances *[]instance.Instance) *[]instance.Instance {
