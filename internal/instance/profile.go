@@ -1,8 +1,10 @@
 package instance
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"net/http"
 	"time"
 )
@@ -18,11 +20,49 @@ type Profile struct {
 	Redirect              string `json:"redirect"`
 }
 
-func (p *Profile) EAP() ([]byte, error) {
-	if p.OAuth {
-		panic("no oauth support just yet")
-	}
+type FlowCode int8
 
+const (
+	// DirectFlow tells us that we can get the EAP config directly without OAuth
+	DirectFlow FlowCode = iota
+	// RedirectFlow tells us we need to follow the redirect
+	RedirectFlow
+	// OAuthFlow tells us we can get the EAP config through OAuth
+	OAuthFlow
+)
+
+// Flow gets the flow we need to go through to get the EAP config
+// See: https://github.com/geteduroam/cattenbak/blob/481e243f22b40e1d8d48ecac2b85705b8cb48494/cattenbak.py#L68
+func (p *Profile) Flow() FlowCode {
+	// A Redirect entry is present
+	// This means that we need to follow the URI in the redirect flow
+	if p.Redirect != "" {
+		return RedirectFlow
+	}
+	// OAuth is present, we need to get the EAP through some OAuth flow
+	if p.OAuth {
+		return OAuthFlow
+	}
+	// Get the config directly
+	return DirectFlow
+}
+
+func (p *Profile) RedirectURI() (string, error) {
+	if p.Redirect == "" {
+		return "", errors.New("No redirect found")
+	}
+	u, err := url.Parse(p.Redirect)
+	if err != nil {
+		return "", err
+	}
+	// We enforce HTTPS
+	if u.Scheme != "https" {
+		u.Scheme = "https"
+	}
+	return u.String(), nil
+}
+
+func (p *Profile) EAPDirect() ([]byte, error) {
 	// Do request
 	req, err := http.NewRequest("GET", p.EapConfigEndpoint, nil)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"strconv"
 
 	"github.com/jwijenbergh/geteduroam-linux/internal/discovery"
@@ -41,7 +42,7 @@ func filteredOrganizations(orgs *instance.Instances) (f *instance.Instances) {
 	return f
 }
 
-func validateOrg(input string, n int) bool {
+func validateRange(input string, n int) bool {
 	r, err := strconv.ParseInt(input, 10, 32)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Invalid choice. Please enter a number")
@@ -60,8 +61,8 @@ func organization(orgs *instance.Instances) *instance.Instance {
 	for n, c := range f {
 		fmt.Printf("[%d] %s\n", n+1, c.Name)
 	}
-	input := ask("Please enter a choice: ", func(input string) bool {
-		return validateOrg(input, len(f))
+	input := ask("Please enter a choice for the organisation: ", func(input string) bool {
+		return validateRange(input, len(f))
 	})
 	r, err := strconv.ParseInt(input, 10, 32)
 	// This can't happen because we already validated that this can be parsed
@@ -69,6 +70,57 @@ func organization(orgs *instance.Instances) *instance.Instance {
 		panic(err)
 	}
 	return &f[r-1]
+}
+
+func profile(profiles []instance.Profile) *instance.Profile {
+	// Only one profile, return it immediately
+	if len(profiles) == 1 {
+		return &profiles[0]
+	}
+	// Multiple profiles found, we need to get the right one
+	fmt.Println("Found the following profiles: ")
+	for n, c := range profiles {
+		fmt.Printf("[%d] %s\n", n+1, c.Name)
+	}
+	input := ask("Please enter a choice for the profile: ", func(input string) bool {
+		return validateRange(input, len(profiles))
+	})
+	r, err := strconv.ParseInt(input, 10, 32)
+	// This can't happen because we already validated that this can be parsed
+	if err != nil {
+		panic(err)
+	}
+	return &profiles[r-1]
+}
+
+func direct(p *instance.Profile) {
+	config, err := p.EAPDirect()
+	if err != nil {
+		log.Fatalf("Could not obtain eap config: %v", err)
+	}
+	cp, err := eap.Parse(config)
+	if err != nil {
+		log.Fatalf("Error with EAP: %v", err)
+	}
+	m, err := cp.AuthenticationType()
+	if err != nil {
+		log.Fatalf("error getting authentication: %v", err)
+	}
+	fmt.Println("Got authentication:", m)
+}
+
+func redirect(p *instance.Profile) {
+	r, err := p.RedirectURI()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Failed to complete the flow, no redirect URI is available")
+		return
+	}
+	err = exec.Command("xdg-open", r).Start()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to complete the flow, cannot open browser with error: %v\n", err)
+		return
+	}
+	fmt.Println("Opened your browser, please continue the process there")
 }
 
 func main() {
@@ -79,17 +131,14 @@ func main() {
 	}
 
 	chosen := organization(i)
-	config, err := chosen.Profiles[0].EAP()
-	if err != nil {
-		log.Fatalf("Could not obtain eap config: %v", err)
+	p := profile(chosen.Profiles)
+
+	switch p.Flow() {
+	case instance.DirectFlow:
+		direct(p)
+	case instance.RedirectFlow:
+		redirect(p)
+	default:
+		fmt.Println("we do not support this flow just yet")
 	}
-	p, err := eap.Parse(config)
-	if err != nil {
-		log.Fatalf("Error with EAP: %v", err)
-	}
-	m, err := p.AuthenticationType()
-	if err != nil {
-		log.Fatalf("error getting authentication: %v", err)
-	}
-	fmt.Println("Got authentication:", m)
 }
