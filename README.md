@@ -4,9 +4,6 @@ This repository contains the source code for the geteduroam Linux client. Curren
 
 # Dependencies
 - Go >= 1.18
-- Gtk3, with:
-   - Gobject-introspection
-   - Glib
 - Make
 
 # Building
