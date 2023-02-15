@@ -3,19 +3,21 @@ Welcome to the Geteduroam technical documentation. This documentation is intende
 
 This document is based on how existing clients work, including some assumptions on how they should work. Due to this, some documentation can be incorrect or incomplete. This documentation therefore still needs collaborative work, pull requests are always welcome. We want to make this document a standard to be used by Geteduroam apps, which needs agreeing on the aspects that we mention here.
 
+Note that this documentation only describes the protocol to get the EAP metadata. Anything to do with mobile is not yet documented.
+
 ## Overview
 Configuring an eduroam connection needs to happen by parsing the Extensible Authentication Protocol (EAP) metadata and then importing the metadata using the correct user provided information into the OS specific network manager.
 
 As an overview on how a Geteduroam does this is the following:
 
-- The app starts up
-- A file is obtained that lists each instance and their way to get the EAP metadata. This file is gotten from a discovery server, it is possible that clients implement caching using a local copy
-- This discovery file is parsed to list all the instances in it. This discovery file is parsed using JSON
-- The user selects an instance either by clicking on one or filtering on it using a search box
-- The selected instance is used to obtain the EAP metadata, either through OAuth or directly getting the configuration. It is possible that instead of getting the EAP metadata, the user is redirected to a webpage that handles the further setup
-- The EAP metadata is parsed, using XML. Validating that the EAP metadata is correct can be done through XML schemas
-- The app determines whether or not user provided credentials or secrets still need to be provided
-- When the user has entered these credentials, the eduroam profile can be configured in the OS network manager
+  * The app starts up
+  * A file is obtained that lists each instance and their way to get the EAP metadata. This file is gotten from a discovery server, it is possible that clients implement caching using a local copy
+  * This discovery file is parsed to list all the instances in it. This discovery file is parsed using JSON
+  * The user selects an instance either by clicking on one or filtering on it using a search box
+  * The selected instance is used to obtain the EAP metadata, either through OAuth or directly getting the configuration. It is possible that instead of getting the EAP metadata, the user is redirected to a webpage that handles the further setup
+  * The EAP metadata is parsed, using XML. Validating that the EAP metadata is correct can be done through XML schemas
+  * The app determines whether or not user provided credentials or secrets still need to be provided
+  * When the user has entered these credentials, the eduroam profile can be configured in the OS network manager
 
 ## Discovery format
 Geteduroam uses [https://discovery.eduroam.app/v1/discovery.json](https://discovery.eduroam.app/v1/discovery.json), a JSON file, to list all the institutes generated from [CAT](https://cat.eduroam.org/). This list is shown in a Geteduroam client so that the user can choose its own institution to connect to.
@@ -61,14 +63,14 @@ This instances list should be parsed by the client. The name of the instance is 
 ### Variants/flows
 As can be deduced from the instance format, there are various flows possible to configure the eduroam network with a certain profile:
 
-- Directly get the EAP config from the `eapconfig_endpoint`: `eapconfig_endpoint`, `name`, `id` and `oauth` (oauth set to False) MUST be present
-- Get the EAP config using tokens obtained through `authorization_endpoint` and `token_endpoint` using OAuth: `eapconfig_endpoint`, `authorization_endpoint`, `token_endpoint`, `name`, `id` and `oauth` (oauth set to True) MUST be present
-- Forward the user to a "redirect" page: `id`, `name` and `redirect` must be present
+  * Directly get the EAP config from the `eapconfig_endpoint`: `eapconfig_endpoint`, `name`, `id` and `oauth` (oauth set to False) MUST be present
+  * Get the EAP config using tokens obtained through `authorization_endpoint` and `token_endpoint` using OAuth: `eapconfig_endpoint`, `authorization_endpoint`, `token_endpoint`, `name`, `id` and `oauth` (oauth set to True) MUST be present
+  * Forward the user to a "redirect" page: `id`, `name` and `redirect` must be present
 
 Based on the various presence and values of these attributes you can determine the flow as follows:
-- If `redirect` is present, then the redirect flow MUST be used
-- Else, check whether `oauth` is set to True then OAuth flow, else direct flow
-  - For a more complete check, instead of only checking if `oauth` is True a client can also check for the presence of `authorization_endpoint` and `token_endpoint`
+  * If `redirect` is present, then the redirect flow MUST be used
+  * Else, check whether `oauth` is set to True then OAuth flow, else direct flow
+    - For a more complete check, instead of only checking if `oauth` is True a client can also check for the presence of `authorization_endpoint` and `token_endpoint`
 
 The implementation of each flow will be given later. Before we can do that, however, we first explain how a profile should be selected
 
@@ -85,10 +87,10 @@ This section describes the different way that the app should continue when the p
 ### Redirect
 After parsing the discovery entry and determining that the flow is Redirect, the redirect should be verified whether or not the following holds:
 
-- The value is a URL
-- The scheme of the URL is HTTPS or HTTP
+  * The value is a URL
+  * The scheme of the URL is HTTPS or HTTP
 
-If the value is not a URL, or the scheme is not HTTP/HTTPS, the app SHOULD NOT open the url in the browser but should show a friendly error in the UI that the profile is not available.
+If the value is not a URL, or the scheme is not HTTP/HTTPS, the app MUST NOT open the url in the browser but should show a friendly error in the UI that the profile is not available.
 
 If the scheme of the URL is HTTP it MUST be rewritten to HTTPS.
 
@@ -99,6 +101,87 @@ When the app has determined that the profile does not support redirect and oauth
 
 Note that like the URL in redirect, the app MUST parse the `eapconfig_endpont` to check whether or not it is a valid URL, the scheme is HTTP or HTTPS and MUST rewrite HTTP to the HTTPS scheme.
 
-
 ### OAuth
+The extra fields that are available in the OAuth flow are the `authorization_endpoint` and the `token_endpoint`. We go over them one by one what should be done.
 
+NOTE: The authorization endpoint and token endpoint docs is taken from https://www.geteduroam.app/developer/api/ and slightly modified
+
+#### Authorization endpoint
+
+Build a URL for the authorization endpoint; take the `authorization_endpoint` string from the discovery,
+and add the following GET parameters (MUST be implemented according to RFC6749 section 4.1.1 for most of these):
+
+  * `response_type` (MUST be set to `code`)
+  * `code_challenge_method` (MUST be set to `S256`)
+  * `scope` (MUST be set to `eap-metadata`)
+  * `code_challenge` (a code challenge)
+  * `redirect_uri` (where the user should be redirected after accepting or rejecting your application, GET parameters will added to this URL by the server. MUST be local, e.g. http://127.0.0.1/callback)
+  * `client_id` (MUST be your client ID as known by the server)
+  * `state` (a random string that will be set in a GET parameter to the redirect_uri, for you to verify it’s the same flow))
+
+You have created a URL, for example:
+
+	https://demo.eduroam.no/authorize.php?response_type=code&code_challenge_method=S256&scope=eap-metadata&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&redirect_uri=http%3A%2F%2Flocalhost%3A1080%2Fcallback&client_id=00000000-0000-0000-0000-000000000000&state=0
+
+You open a local webbrowser to this URL on the users' device and listen on the `redirect_uri` for a request to return.
+Upon receiving a request, the client SHOULD reclaim focus to the application window and MUST handle the request.
+You may receive these GET parameters:
+
+  * `code` (the authorization code that you can use on the token endpoint)
+  * `error` (an error message that you can present to the user)
+  * `state` (the same value as your earlier `state` GET parameter which MUST be checked)
+
+As a reply to this request, you SHOULD simply return a message to the user stating that he should return to the application.
+Depending on the platform, you SHOULD also return code to trigger a return to the application.
+
+#### Token endpoint
+
+The token endpoint requires a `code`, which you obtain via the Authorization endpoint.
+Use the `token_endpoint` string from the discovery.
+
+You need the following POST parameters:
+
+  * `grant_type` (MUST be set to `authorization_code`)
+  * `code` (MUST the code received from the authorization endpoint)
+  * `redirect_uri` (MUST repeat the value used in the previous request, as mandated by RFC7636)
+  * `client_id` (MUST repeat the value used in the previous request, as mandated by RFC7636)
+  * `code_verifier` (MUST be a code verifier, as documented in RFC7636 section 4. This is the preimage of the code challenge to prove that you are the original sender of the authorization endpoint request )
+
+You get back a JSON dictionary, containing the following keys:
+
+  * `access_token`
+  * `token_type` (set to `Bearer`)
+  * `expires_in` (validity of the `access_token` in seconds)
+
+Example HTTP conversation
+
+	POST /token.php HTTP/1.1
+	Accept: application/json
+	Content-Type: application/x-www-form-urlencoded
+	Content-Length: 209
+
+	grant_type=authorization_code&code=v2.local.AAAAAA&redirect_uri=http%3A%2F%2Flocalhost%3A1080%2Fcallback&client_id=00000000-0000-0000-0000-000000000000&code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk
+
+	HTTP/1.1 200 OK
+	Cache-Control: no-store
+	Content-Type: application/json;charset=UTF-8
+	Pragma: no-cache
+
+	{
+		"access_token": "v2.local.AAAAA…==",
+		"token_type": "Bearer",
+		"expires_in": 3600
+	}
+
+Saving this access token SHOULD be done securely, e.g. in a keyring. This way the client can re-use this access token across restarts.
+
+#### Doing the authorized request
+Now that the client has retrieved the access token, it needs to get the EAP metadata using it. To do this, the client MUST send the access token in the authorization header when making a request to `eapconfig_endpoint`:
+
+	curl \
+		-H "Authorization: Bearer SETTHETOKENHERE" \
+		https://example.org/api/eap-config
+
+Note that error handling on the HTTP code should done to accordance with RFC6749. In short, when the client gets a HTTP 401 here then that possibly means that the access token is expired or invalid/blacklisted. Therefore the client MUST check before it sends the request if the access token is still valid.
+
+If the 401 is returned, or the client did not even have the access token in the first place the whole OAuth procedure MUST be redone.
