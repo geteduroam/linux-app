@@ -70,14 +70,35 @@ Based on the various presence and values of these attributes you can determine t
 - Else, check whether `oauth` is set to True then OAuth flow, else direct flow
   - For a more complete check, instead of only checking if `oauth` is True a client can also check for the presence of `authorization_endpoint` and `token_endpoint`
 
-The implementation of each flow will be given in the next section
+The implementation of each flow will be given later. Before we can do that, however, we first explain how a profile should be selected
+
+## Profile selection
+As can be deduced from the JSON format, there are multiple profiles available per instance. If an instance only has one profile then the profile MUST be automatically chosen without any user interaction. 
+
+If there are multiple profiles then multiple profiles MUST be shown in the UI, asking for a selection to the user. The profile indicated with the `default` attribute set to true SHOULD be in bold, or in case the UI does not support bold text, it SHOULD have a */(default) pre/postfix.
+
+When the profile has been selected, we can use the correct flow to get the EAP metadata. In the next section, we will go over implementing the various flows.
 
 ## Flow implementations
+This section describes the different way that the app should continue when the profile has been selected.
 
 ### Redirect
 After parsing the discovery entry and determining that the flow is Redirect, the redirect should be verified whether or not the following holds:
 
-- The value is an URL
-- The scheme of the URL is HTTPS
+- The value is a URL
+- The scheme of the URL is HTTPS or HTTP
 
-If the value is not an URL, or the scheme is HTTP (an insecure URL), the app SHOULD NOT open the url in the browser but should show a friendly error in the UI that the profile is not available.
+If the value is not a URL, or the scheme is not HTTP/HTTPS, the app SHOULD NOT open the url in the browser but should show a friendly error in the UI that the profile is not available.
+
+If the scheme of the URL is HTTP it MUST be rewritten to HTTPS.
+
+Note that the redirect flow is one of the last steps that the app needs to do as the redirect does not give back an EAP metadata file. This redirect is only used to give the user information on how to proceed with configuring the network himself.
+
+### Direct
+When the app has determined that the profile does not support redirect and oauth is disabled, the app should get the eap config via the `eapconfig_endpoint`. The EAP metadata file is returned in the HTTP response body. 
+
+Note that like the URL in redirect, the app MUST parse the `eapconfig_endpont` to check whether or not it is a valid URL, the scheme is HTTP or HTTPS and MUST rewrite HTTP to the HTTPS scheme.
+
+
+### OAuth
+
