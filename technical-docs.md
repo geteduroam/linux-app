@@ -8,7 +8,7 @@ Note that this documentation only describes the protocol to get the EAP metadata
 ## Overview
 Configuring an eduroam connection needs to happen by parsing the Extensible Authentication Protocol (EAP) metadata and then importing the metadata using the correct user provided information into the OS specific network manager.
 
-As an overview on how a Geteduroam does this is the following:
+As an overview on how a Geteduroam app/client does this is the following:
 
   * The app starts up
   * A file is obtained that lists each instance and their way to get the EAP metadata. This file is gotten from a discovery server, it is possible that clients implement caching using a local copy
@@ -142,7 +142,7 @@ Use the `token_endpoint` string from the discovery.
 You need the following POST parameters:
 
   * `grant_type` (MUST be set to `authorization_code`)
-  * `code` (MUST the code received from the authorization endpoint)
+  * `code` (MUST be the code received from the authorization endpoint)
   * `redirect_uri` (MUST repeat the value used in the previous request, as mandated by RFC7636)
   * `client_id` (MUST repeat the value used in the previous request, as mandated by RFC7636)
   * `code_verifier` (MUST be a code verifier, as documented in RFC7636 section 4. This is the preimage of the code challenge to prove that you are the original sender of the authorization endpoint request )
