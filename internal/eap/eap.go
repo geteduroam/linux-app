@@ -8,6 +8,28 @@ package eap
 import (
 	"encoding/xml"
 	"errors"
+	"fmt"
+)
+
+// EAPMethodType defines the EAP methods that are returned by the EAP xml
+type EAPMethodType int8
+
+const (
+	TLS  EAPMethodType = 13
+	TTLS               = 21
+	PEAP               = 25
+)
+
+// InnerAuthType defines the inner authentication methods that are returned by the EAP xml
+type InnerAuthType int8
+
+const (
+	NONE              InnerAuthType = 0
+	PAP                             = 1
+	MSCHAP                          = 2
+	MSCHAPV2                        = 3
+	EAP_PEAP_MSCHAPV2               = 25
+	EAP_MSCHAPV2                    = 26
 )
 
 // VendorSpecificExtension ...
