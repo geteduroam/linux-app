@@ -102,7 +102,7 @@ func direct(p *instance.Profile) {
 	if err != nil {
 		log.Fatalf("Error with EAP: %v", err)
 	}
-	m, err := cp.AuthenticationType()
+	m, err := cp.MethodType()
 	if err != nil {
 		log.Fatalf("error getting authentication: %v", err)
 	}

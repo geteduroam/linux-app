@@ -11,27 +11,6 @@ import (
 	"fmt"
 )
 
-// EAPMethodType defines the EAP methods that are returned by the EAP xml
-type EAPMethodType int8
-
-const (
-	TLS  EAPMethodType = 13
-	TTLS               = 21
-	PEAP               = 25
-)
-
-// InnerAuthType defines the inner authentication methods that are returned by the EAP xml
-type InnerAuthType int8
-
-const (
-	NONE              InnerAuthType = 0
-	PAP                             = 1
-	MSCHAP                          = 2
-	MSCHAPV2                        = 3
-	EAP_PEAP_MSCHAPV2               = 25
-	EAP_MSCHAPV2                    = 26
-)
-
 // VendorSpecificExtension ...
 type VendorSpecificExtension struct {
 	VendorAttr int `xml:"vendor,attr"`
@@ -253,8 +232,8 @@ func (eap *EAPIdentityProviderList) authenticationMethod() (*AuthenticationMetho
 	return am, nil
 }
 
-// AuthenticationType gets the type of authentication
-func (eap *EAPIdentityProviderList) AuthenticationType() (int, error) {
+// MethodType gets the type of authentication
+func (eap *EAPIdentityProviderList) MethodType() (MethodType, error) {
 	am, err := eap.authenticationMethod()
 	if err != nil {
 		return 0, err
@@ -262,11 +241,15 @@ func (eap *EAPIdentityProviderList) AuthenticationType() (int, error) {
 	if am.EAPMethod == nil {
 		return 0, errors.New("EAP method couldn't be found")
 	}
-	return am.EAPMethod.Type, nil
+	t := am.EAPMethod.Type
+	if !ValidMethod(t) {
+		return 0, fmt.Errorf("EAP method is not valid: %v", t)
+	}
+	return MethodType(t), nil
 }
 
 // InnerAuthenticationType gets the type of inner authentication
-func (eap *EAPIdentityProviderList) InnerAuthenticationType() (int, error) {
+func (eap *EAPIdentityProviderList) InnerAuthenticationType() (InnerAuthType, error) {
 	am, err := eap.authenticationMethod()
 	if err != nil {
 		return 0, err
@@ -278,5 +261,9 @@ func (eap *EAPIdentityProviderList) InnerAuthenticationType() (int, error) {
 	if inner.EAPMethod == nil {
 		return 0, errors.New("EAP method for inner authentication couldn't be found")
 	}
-	return inner.EAPMethod.Type, nil
+	t := inner.EAPMethod.Type
+	if !ValidInnerAuth(t) {
+		return 0, fmt.Errorf("Inner authentication is not valid: %v", t)
+	}
+	return InnerAuthType(t), nil
 }
