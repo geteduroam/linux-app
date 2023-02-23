@@ -1,6 +1,9 @@
 package instance
 
-import "strings"
+import (
+	"github.com/jwijenbergh/geteduroam-linux/internal/utils"
+	"strings"
+)
 
 type Instance struct {
 	CatIDP  int    `json:"cat_idp"`
@@ -20,8 +23,11 @@ type Instances []Instance
 func (i *Instances) Filter(search string) *Instances {
 	x := Instances{}
 	for _, i := range *i {
-		l1 := strings.ToLower(i.Name)
-		l2 := strings.ToLower(search)
+		l1, err1 := utils.RemoveDiacritics(strings.ToLower(i.Name))
+		l2, err2 := utils.RemoveDiacritics(strings.ToLower(search))
+		if err1 != nil || err2 != nil {
+			continue
+		}
 		if strings.Contains(l1, l2) {
 			x = append(x, i)
 		}
