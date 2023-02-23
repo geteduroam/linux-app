@@ -229,6 +229,7 @@ func (eap *EAPIdentityProviderList) authenticationMethod() (*AuthenticationMetho
 	if am == nil || len(am) < 1 {
 		return nil, errors.New("authentication method couldn't be found")
 	}
+	// TODO: Use the first supported instead
 	return am[0], nil
 }
 
@@ -257,6 +258,7 @@ func (eap *EAPIdentityProviderList) InnerAuthenticationType() (InnerAuthType, er
 	if am.InnerAuthenticationMethod == nil || len(am.InnerAuthenticationMethod) < 1 {
 		return 0, errors.New("inner authentication method couldn't be found")
 	}
+	// TODO: Use the first supported instead
 	inner := am.InnerAuthenticationMethod[0]
 	if inner.EAPMethod == nil {
 		return 0, errors.New("EAP method for inner authentication couldn't be found")
