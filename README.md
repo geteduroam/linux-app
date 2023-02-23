@@ -16,5 +16,10 @@ make
 make run
 ```
 
+# Testing
+```bash
+make test
+```
+
 # License
 BSD 3
