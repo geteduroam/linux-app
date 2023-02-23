@@ -19,6 +19,8 @@ func ValidInnerAuth(input int) bool {
 		return true
 	case PAP:
 		return true
+	case MSCHAP:
+		return true
 	case MSCHAPV2:
 		return true
 	case EAP_PEAP_MSCHAPV2:
