@@ -177,7 +177,7 @@ type AuthenticationMethod struct {
 
 // AuthenticationMethods ...
 type AuthenticationMethods struct {
-	AuthenticationMethod *AuthenticationMethod `xml:"AuthenticationMethod"`
+	AuthenticationMethod []*AuthenticationMethod `xml:"AuthenticationMethod"`
 }
 
 // EAPIdentityProvider ...
@@ -226,10 +226,10 @@ func (eap *EAPIdentityProviderList) authenticationMethod() (*AuthenticationMetho
 		return nil, fmt.Errorf("failed to get authentication method due to no methods available: %v", err)
 	}
 	am := ams.AuthenticationMethod
-	if am == nil {
+	if am == nil || len(am) < 1 {
 		return nil, errors.New("authentication method couldn't be found")
 	}
-	return am, nil
+	return am[0], nil
 }
 
 // MethodType gets the type of authentication
