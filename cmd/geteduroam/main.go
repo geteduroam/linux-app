@@ -107,6 +107,11 @@ func direct(p *instance.Profile) {
 		log.Fatalf("error getting authentication: %v", err)
 	}
 	fmt.Println("Got authentication:", m)
+	in, err := cp.InnerAuthenticationType()
+	if err != nil {
+		log.Fatalf("error getting inner authentication: %v", err)
+	}
+	fmt.Println("Got inner authentication:", in)
 }
 
 func redirect(p *instance.Profile) {

@@ -207,7 +207,7 @@ func Parse(data []byte) (*EAPIdentityProviderList, error) {
 	return &eap, nil
 }
 
-func (eap *EAPIdentityProviderList) authenticationMethod() (*AuthenticationMethod, error) {
+func (eap *EAPIdentityProviderList) authenticationMethods() (*AuthenticationMethods, error) {
 	p := eap.EAPIdentityProvider
 	if p == nil {
 		return nil, errors.New("identity provider section couldn't be found")
@@ -216,7 +216,15 @@ func (eap *EAPIdentityProviderList) authenticationMethod() (*AuthenticationMetho
 	if m == nil {
 		return nil, errors.New("authentication methods section couldn't be found")
 	}
-	am := m.AuthenticationMethod
+	return m, nil
+}
+
+func (eap *EAPIdentityProviderList) authenticationMethod() (*AuthenticationMethod, error) {
+	ams, err := eap.authenticationMethods()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get authentication method due to no methods available: %v", err)
+	}
+	am := ams.AuthenticationMethod
 	if am == nil {
 		return nil, errors.New("authentication method couldn't be found")
 	}
@@ -233,4 +241,20 @@ func (eap *EAPIdentityProviderList) AuthenticationType() (int, error) {
 		return 0, errors.New("EAP method couldn't be found")
 	}
 	return am.EAPMethod.Type, nil
+}
+
+// InnerAuthenticationType gets the type of inner authentication
+func (eap *EAPIdentityProviderList) InnerAuthenticationType() (int, error) {
+	am, err := eap.authenticationMethod()
+	if err != nil {
+		return 0, err
+	}
+	if am.InnerAuthenticationMethod == nil || len(am.InnerAuthenticationMethod) < 1 {
+		return 0, errors.New("inner authentication method couldn't be found")
+	}
+	inner := am.InnerAuthenticationMethod[0]
+	if inner.EAPMethod == nil {
+		return 0, errors.New("EAP method for inner authentication couldn't be found")
+	}
+	return inner.EAPMethod.Type, nil
 }
