@@ -1,26 +1,30 @@
-package eap
+package inner
 
 import "testing"
 
-func Test_ValidMethod(t *testing.T) {
+func Test_Valid(t *testing.T) {
 	cases := []struct {
 		input int
 		want  bool
 	}{
 		{
 			input: 0,
-			want:  false,
+			want:  true,
 		},
 		{
 			input: 67,
 			want:  false,
 		},
 		{
-			input: 13,
+			input: 1,
 			want:  true,
 		},
 		{
-			input: 21,
+			input: 2,
+			want:  true,
+		},
+		{
+			input: 3,
 			want:  true,
 		},
 		{
@@ -28,13 +32,13 @@ func Test_ValidMethod(t *testing.T) {
 			want:  true,
 		},
 		{
-			input: -13,
-			want:  false,
+			input: 26,
+			want:  true,
 		},
 	}
 
 	for _, c := range cases {
-		got := ValidMethod(c.input)
+		got := Valid(c.input)
 		if got != c.want {
 			t.Fatalf("Got: %v, Want: %v", got, c.want)
 		}
