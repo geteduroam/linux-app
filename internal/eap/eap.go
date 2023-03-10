@@ -9,6 +9,10 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+
+	"github.com/jwijenbergh/geteduroam-linux/internal/network"
+	"github.com/jwijenbergh/geteduroam-linux/internal/network/inner"
+	"github.com/jwijenbergh/geteduroam-linux/internal/network/method"
 )
 
 // VendorSpecificExtension ...
@@ -68,11 +72,15 @@ type LogoData struct {
 //	   MUST be ignored by the entity consuming the XML file if
 //	     present in the XML file.
 type ClientCredentialVariants struct {
-	AllowsaveAttr             bool        `xml:"allow_save,attr,omitempty"`
-	OuterIdentity             string      `xml:"OuterIdentity"`
-	InnerIdentityPrefix       string      `xml:"InnerIdentityPrefix"`
-	InnerIdentitySuffix       string      `xml:"InnerIdentitySuffix"`
-	InnerIdentityHint         bool        `xml:"InnerIdentityHint"`
+	AllowsaveAttr       bool   `xml:"allow_save,attr,omitempty"`
+	OuterIdentity       string `xml:"OuterIdentity"`
+	InnerIdentityPrefix string `xml:"InnerIdentityPrefix"`
+	InnerIdentitySuffix string `xml:"InnerIdentitySuffix"`
+	InnerIdentityHint   bool   `xml:"InnerIdentityHint"`
+	// TODO: support `Username` (notice the n lowercase)?
+	// See: https://github.com/geteduroam/windows-app/pull/39
+	// Probably not needed as that pr states it is still not used
+	// But maybe good to define here so we can check what is all in the xml?
 	UserName                  string      `xml:"UserName"`
 	Password                  string      `xml:"Password"`
 	ClientCertificate         *CertData   `xml:"ClientCertificate"`
@@ -208,11 +216,7 @@ func Parse(data []byte) (*EAPIdentityProviderList, error) {
 	return &eap, nil
 }
 
-func (eap *EAPIdentityProviderList) authenticationMethods() (*AuthenticationMethods, error) {
-	p := eap.EAPIdentityProvider
-	if p == nil {
-		return nil, errors.New("identity provider section couldn't be found")
-	}
+func (p *EAPIdentityProvider) authenticationMethods() (*AuthenticationMethods, error) {
 	m := p.AuthenticationMethods
 	if m == nil {
 		return nil, errors.New("authentication methods section couldn't be found")
@@ -220,52 +224,219 @@ func (eap *EAPIdentityProviderList) authenticationMethods() (*AuthenticationMeth
 	return m, nil
 }
 
-func (eap *EAPIdentityProviderList) authenticationMethod() (*AuthenticationMethod, error) {
-	ams, err := eap.authenticationMethods()
+func (p *EAPIdentityProvider) AuthMethods() ([]*AuthenticationMethod, error) {
+	ams, err := p.authenticationMethods()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get authentication method due to no methods available: %v", err)
 	}
 	am := ams.AuthenticationMethod
-	if am == nil || len(am) < 1 {
+	if len(am) < 1 {
 		return nil, errors.New("authentication method couldn't be found")
 	}
-	// TODO: Use the first supported instead
-	return am[0], nil
+	return am, nil
 }
 
-// MethodType gets the type of authentication
-func (eap *EAPIdentityProviderList) MethodType() (MethodType, error) {
-	am, err := eap.authenticationMethod()
-	if err != nil {
-		return 0, err
+// preferredInnerAuthType gets the first valid inner authentication type
+func (am *AuthenticationMethod) preferredInnerAuthType(mt method.Type) (inner.Type, error) {
+	if len(am.InnerAuthenticationMethod) < 1 {
+		return inner.NONE, errors.New("inner authentication method couldn't be found")
 	}
-	if am.EAPMethod == nil {
-		return 0, errors.New("EAP method couldn't be found")
+
+	// loop through all methods and return the first valid one
+	for _, i := range am.InnerAuthenticationMethod {
+		if i.EAPMethod != nil {
+			if inner.Valid(mt, i.EAPMethod.Type, true) {
+				return inner.Type(i.EAPMethod.Type), nil
+			}
+		}
+
+		// Otherwise try to get Non eap
+		if i.NonEAPAuthMethod != nil {
+			if inner.Valid(mt, i.NonEAPAuthMethod.Type, false) {
+				return inner.Type(i.NonEAPAuthMethod.Type), nil
+			}
+		}
 	}
-	t := am.EAPMethod.Type
-	if !ValidMethod(t) {
-		return 0, fmt.Errorf("EAP method is not valid: %v", t)
-	}
-	return MethodType(t), nil
+	return inner.NONE, errors.New("no viable inner authentication method found")
 }
 
-// InnerAuthenticationType gets the type of inner authentication
-func (eap *EAPIdentityProviderList) InnerAuthenticationType() (InnerAuthType, error) {
-	am, err := eap.authenticationMethod()
+// SSID gets the SSID from the eap identity provider
+// SSIDSettings returns the SSID and MinRSNProto associated with it
+// It loops trough the credential applicability list and gets the first candidate
+// The candidate filtering was based on https://github.com/geteduroam/windows-app/blob/f11f00dee3eb71abd38537e18881463f83b180d3/EduroamConfigure/EapConfig.cs#L84
+func (p *EAPIdentityProvider) SSIDSettings() (string, string, error) {
+	if p.CredentialApplicability == nil {
+		return "", "", errors.New("no Credential Applicability found")
+	}
+	if len(p.CredentialApplicability.IEEE80211) < 1 {
+		return "", "", errors.New("no IEE80211 section found")
+	}
+	for _, i := range p.CredentialApplicability.IEEE80211 {
+		if i == nil {
+			continue
+		}
+
+		// no min rsn proto
+		if i.MinRSNProto == "" {
+			continue
+		}
+
+		// no ssid present
+		if i.SSID == "" {
+			continue
+		}
+
+		// tkip is too insecure
+		if i.MinRSNProto == "TKIP" {
+			continue
+		}
+
+		return i.SSID, i.MinRSNProto, nil
+	}
+	return "", "", errors.New("no viable SSID entry found")
+}
+
+func (ca *CertData) Valid() bool {
+	if ca.EncodingAttr != "base64" {
+		return false
+	}
+
+	if ca.FormatAttr != "X.509" {
+		return false
+	}
+
+	return true
+}
+
+func (ss *ServerCredentialVariants) CAList() ([]string, error) {
+	var ca []string
+	for _, c := range ss.CA {
+		if c != nil && c.Valid() {
+			ca = append(ca, c.Value)
+		}
+	}
+	if len(ca) == 0 {
+		return nil, errors.New("no viable server side CA entry found")
+	}
+	return ca, nil
+}
+
+// TLSNetwork creates a TLS network using the authentication method
+func (m *AuthenticationMethod) TLSNetwork(base network.Base) network.Network {
+	// TODO: client certificate should be required right?
+	var ccert string
+	var passphrase string
+	if cc := m.ClientSideCredential; cc != nil {
+		if cc.ClientCertificate != nil && cc.ClientCertificate.Valid() {
+			ccert = cc.ClientCertificate.Value
+		}
+		passphrase = cc.Passphrase
+	}
+
+	return &network.TLS{
+		Base:              base,
+		ClientCertificate: ccert,
+		Password:          passphrase,
+	}
+}
+
+// NonTLSNetwork creates a network that is Non-TLS using the authentication method
+func (m *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Network, error) {
+	// Define defaults
+	var username, password, identity, prefix, suffix string
+	if cc := m.ClientSideCredential; cc != nil {
+		username = cc.UserName
+		password = cc.Password
+		identity = cc.OuterIdentity
+		// TODO: Can this be false but still hints here?
+		if cc.InnerIdentityHint {
+			prefix = cc.InnerIdentityPrefix
+			if cc.InnerIdentitySuffix != "" {
+				suffix = fmt.Sprintf("@%s", cc.InnerIdentitySuffix)
+			}
+		}
+
+	}
+	mt := method.Type(m.EAPMethod.Type)
+	// get the inner auth
+	it, err := m.preferredInnerAuthType(mt)
 	if err != nil {
-		return 0, err
+		return nil, errors.New("no preferred inner authentication found")
 	}
-	if am.InnerAuthenticationMethod == nil || len(am.InnerAuthenticationMethod) < 1 {
-		return 0, errors.New("inner authentication method couldn't be found")
+
+	return &network.NonTLS{
+		Base:         base,
+		Username:     username,
+		Prefix:       prefix,
+		Suffix:       suffix,
+		Password:     password,
+		MethodType:   method.Type(m.EAPMethod.Type),
+		InnerAuth:    it,
+		AnonIdentity: identity,
+	}, nil
+}
+
+// Network gets a network for an authentication method
+func (m *AuthenticationMethod) Network(ssid string, minrsn string) (network.Network, error) {
+	// We check if the eap method is valid
+	if m.EAPMethod == nil || !method.Valid(m.EAPMethod.Type) {
+		return nil, errors.New("no EAP method")
 	}
-	// TODO: Use the first supported instead
-	inner := am.InnerAuthenticationMethod[0]
-	if inner.EAPMethod == nil {
-		return 0, errors.New("EAP method for inner authentication couldn't be found")
+	mt := m.EAPMethod.Type
+
+	// Get the server side credentials
+	ss := m.ServerSideCredential
+	if ss == nil {
+		return nil, errors.New("no server side credentials")
 	}
-	t := inner.EAPMethod.Type
-	if !ValidInnerAuth(t) {
-		return 0, fmt.Errorf("Inner authentication is not valid: %v", t)
+
+	CA, err := ss.CAList()
+	if err != nil {
+		return nil, errors.New("no preferred server side CA found")
 	}
-	return InnerAuthType(t), nil
+
+	// Create the Base
+	// These are the settings that are common for each network
+	sid := ss.ServerID
+	base := network.Base{
+		Cert:      CA,
+		SSID:      ssid,
+		MinRSN:    minrsn,
+		ServerIDs: sid,
+	}
+
+	// If TLS we need to construct different arguments than when we have Non TLS
+	if method.Type(mt) == method.TLS {
+		return m.TLSNetwork(base), nil
+	} else {
+		return m.NonTLSNetwork(base)
+	}
+}
+
+// Network creates a TLS or NON-TLS secured network from the EAP config
+// This network can then afterwards be imported into NetworkManager
+func (eap *EAPIdentityProviderList) Network() (network.Network, error) {
+	// Get the provider section
+	p := eap.EAPIdentityProvider
+	if p == nil {
+		return nil, errors.New("identity provider section couldn't be found")
+	}
+	methods, err := p.AuthMethods()
+	if err != nil {
+		return nil, err
+	}
+	ssid, minrsn, err := p.SSIDSettings()
+	if err != nil {
+		return nil, err
+	}
+	// TODO: clean this big boy up
+	for _, m := range methods {
+		n, err := m.Network(ssid, minrsn)
+		if err != nil {
+			// TODO: log error
+			continue
+		}
+		return n, nil
+	}
+	return nil, errors.New("no viable network settings found in EAP config")
 }
