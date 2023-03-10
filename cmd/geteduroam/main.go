@@ -6,11 +6,30 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
+	"syscall"
 
+	"golang.org/x/term"
+
+	"github.com/jwijenbergh/geteduroam-linux/internal/configure"
 	"github.com/jwijenbergh/geteduroam-linux/internal/discovery"
-	"github.com/jwijenbergh/geteduroam-linux/internal/eap"
 	"github.com/jwijenbergh/geteduroam-linux/internal/instance"
 )
+
+func askSecret(prompt string, validator func(input string) bool) string {
+	for {
+		fmt.Print(prompt)
+		pwd, err := term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to read password: %v", err)
+			continue
+		}
+		pwdS := string(pwd)
+		if validator(pwdS) {
+			return pwdS
+		}
+	}
+}
 
 func ask(prompt string, validator func(input string) bool) string {
 	for {
@@ -93,25 +112,68 @@ func profile(profiles []instance.Profile) *instance.Profile {
 	return &profiles[r-1]
 }
 
+func askUsername(p string, s string) string {
+	prompt := "Please enter your username"
+	if p != "" {
+		prompt += fmt.Sprintf(", beginning with: '%s'", p)
+	}
+	if s != "" {
+		if p != "" {
+			prompt += "and"
+		}
+		prompt += fmt.Sprintf(" ending with: '%s'", s)
+	}
+	prompt += ": "
+	username := ask(prompt, func(input string) bool {
+		if input == "" {
+			fmt.Fprintln(os.Stderr, "Please enter a username that is not empty")
+			return false
+		}
+		if !strings.HasPrefix(input, p) {
+			fmt.Fprintf(os.Stderr, "Your username does not begin with: '%s'\n", p)
+			return false
+		}
+		if !strings.HasSuffix(input, s) {
+			fmt.Fprintf(os.Stderr, "Your username does not end with: '%s'\n", s)
+			return false
+		}
+		return true
+	})
+
+	return username
+}
+
+func askPassword() string {
+	password := askSecret("Please enter your password: ", func(input string) bool {
+		if input == "" {
+			fmt.Fprintln(os.Stderr, "Please enter a password that is not empty")
+			return false
+		}
+		return true
+	})
+
+	return password
+}
+
+func askCertificate(name string, desc string) string {
+	panic("todo")
+}
+
 func direct(p *instance.Profile) {
 	config, err := p.EAPDirect()
 	if err != nil {
 		log.Fatalf("Could not obtain eap config: %v", err)
 	}
-	cp, err := eap.Parse(config)
-	if err != nil {
-		log.Fatalf("Error with EAP: %v", err)
+
+	c := configure.Configure{
+		UsernameH:    askUsername,
+		PasswordH:    askPassword,
+		CertificateH: askCertificate,
 	}
-	m, err := cp.MethodType()
+	err = c.Configure(config)
 	if err != nil {
-		log.Fatalf("error getting authentication: %v", err)
+		fmt.Println("failed to configure", err)
 	}
-	fmt.Println("Got authentication:", m)
-	in, err := cp.InnerAuthenticationType()
-	if err != nil {
-		log.Fatalf("error getting inner authentication: %v", err)
-	}
-	fmt.Println("Got inner authentication:", in)
 }
 
 func redirect(p *instance.Profile) {
@@ -144,6 +206,7 @@ func main() {
 	case instance.RedirectFlow:
 		redirect(p)
 	default:
-		fmt.Println("we do not support this flow just yet")
+		fmt.Fprint(os.Stderr, "\nWe do not support OAuth just yet")
 	}
+	fmt.Println("\nYour eduroam connection has been added to NetworkManager with the name eduroam (from Geteduroam)")
 }
