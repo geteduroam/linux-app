@@ -429,7 +429,6 @@ func (eap *EAPIdentityProviderList) Network() (network.Network, error) {
 	if err != nil {
 		return nil, err
 	}
-	// TODO: clean this big boy up
 	for _, m := range methods {
 		n, err := m.Network(ssid, minrsn)
 		if err != nil {
