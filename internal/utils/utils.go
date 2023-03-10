@@ -1,17 +1,18 @@
 package utils
 
 import (
+	"unicode"
+
+	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
-	"unicode"
 )
 
-func isNonSpacing(r rune) bool {
-	return unicode.Is(unicode.Mn, r)
-}
-
+// RemoveDiacritics removes "diacritics" :^)
+// Okay, diacritics are special characters, e.g. GÉANT, becomes GEANT
+// This is useful when using it for substring matching
 func RemoveDiacritics(text string) (string, error) {
-	t := transform.Chain(norm.NFD, transform.RemoveFunc(isNonSpacing), norm.NFC)
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 	result, _, err := transform.String(t, text)
 	if err != nil {
 		return "", err
