@@ -3,7 +3,7 @@ package inner
 import (
 	"fmt"
 
-	"github.com/jwijenbergh/geteduroam-linux/internal/network/method"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network/method"
 )
 
 // Type defines the inner authentication methods that are returned by the EAP xml

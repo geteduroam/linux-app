@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/jwijenbergh/geteduroam-linux/internal/instance"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/instance"
 )
 
 type Discovery struct {

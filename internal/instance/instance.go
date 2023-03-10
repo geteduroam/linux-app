@@ -3,7 +3,7 @@ package instance
 import (
 	"strings"
 
-	"github.com/jwijenbergh/geteduroam-linux/internal/utils"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/utils"
 )
 
 type Instance struct {

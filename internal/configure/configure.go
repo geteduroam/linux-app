@@ -3,9 +3,9 @@
 package configure
 
 import (
-	"github.com/jwijenbergh/geteduroam-linux/internal/eap"
-	"github.com/jwijenbergh/geteduroam-linux/internal/network"
-	"github.com/jwijenbergh/geteduroam-linux/internal/nm"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/eap"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/nm"
 )
 
 type Configure struct {

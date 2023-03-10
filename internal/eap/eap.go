@@ -10,9 +10,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jwijenbergh/geteduroam-linux/internal/network"
-	"github.com/jwijenbergh/geteduroam-linux/internal/network/inner"
-	"github.com/jwijenbergh/geteduroam-linux/internal/network/method"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network/inner"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network/method"
 )
 
 // VendorSpecificExtension ...

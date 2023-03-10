@@ -1,4 +1,4 @@
-module github.com/jwijenbergh/geteduroam-linux
+module gitlab.geant.org/TI_Incubator/geteduroam-linux
 
 go 1.18
 

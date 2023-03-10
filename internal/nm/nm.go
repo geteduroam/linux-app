@@ -7,10 +7,10 @@ import (
 	"path"
 	"strings"
 
-	"github.com/jwijenbergh/geteduroam-linux/internal/config"
-	"github.com/jwijenbergh/geteduroam-linux/internal/network"
-	"github.com/jwijenbergh/geteduroam-linux/internal/network/method"
-	"github.com/jwijenbergh/geteduroam-linux/internal/nm/connection"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/config"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network/method"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/nm/connection"
 )
 
 func encodePath(p string) []byte {

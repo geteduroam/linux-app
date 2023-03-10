@@ -2,7 +2,7 @@ package connection
 
 import (
 	"github.com/godbus/dbus/v5"
-	"github.com/jwijenbergh/geteduroam-linux/internal/nm/base"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/nm/base"
 )
 
 const (

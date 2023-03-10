@@ -11,9 +11,9 @@ import (
 
 	"golang.org/x/term"
 
-	"github.com/jwijenbergh/geteduroam-linux/internal/configure"
-	"github.com/jwijenbergh/geteduroam-linux/internal/discovery"
-	"github.com/jwijenbergh/geteduroam-linux/internal/instance"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/configure"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/discovery"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/instance"
 )
 
 func askSecret(prompt string, validator func(input string) bool) string {
