@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/url"
 	"net/http"
+	"net/url"
 	"time"
 )
 

@@ -1,8 +1,9 @@
 package instance
 
 import (
-	"github.com/jwijenbergh/geteduroam-linux/internal/utils"
 	"strings"
+
+	"github.com/jwijenbergh/geteduroam-linux/internal/utils"
 )
 
 type Instance struct {
