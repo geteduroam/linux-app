@@ -20,8 +20,6 @@ type Discovery struct {
 type Cache struct {
 	// Cached is the cached list of discovery
 	Cached Discovery `json:"previous"`
-	// Seq is the parsed sequence number
-	Seq Seq `json:"seq"`
 	// LastUpdate is the last time we updated the cache
 	LastUpdate time.Time `json:"updated"`
 }
@@ -74,17 +72,13 @@ func (c *Cache) Instances() (*instance.Instances, error) {
 		return &c.Cached.Instances, err
 	}
 
-	v, err := NewSeq(d.Seq)
-	if err != nil {
-		return &c.Cached.Instances, err
-	}
 	// Do not accept older versions
-	// This happens if the cached version is newer
-	if c.Seq.After(*v) {
-		return &c.Cached.Instances, fmt.Errorf("cached seq is newer")
+	// This happens if the cached version is higher
+	if c.Cached.Seq > d.Seq {
+		return &c.Cached.Instances, fmt.Errorf("cached seq is higher")
 	}
+
 	c.Cached = *d
-	c.Seq = *v
 	c.LastUpdate = time.Now()
 	return &d.Instances, nil
 }
