@@ -13,6 +13,9 @@ import (
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/nm/connection"
 )
 
+// encodePath encodes a string to a path expected by NetworkManager
+// This path is prefixed with file:// and is expicitly NULL terminated
+// It returns this path as a byte array
 func encodePath(p string) []byte {
 	// get the converted path
 	// see: https://github.com/NetworkManager/NetworkManager/blob/main/examples/python/dbus/add-wifi-eap-connection.py#L12
@@ -21,6 +24,9 @@ func encodePath(p string) []byte {
 	return []byte(c)
 }
 
+// buildCertFile creates a certificate file to be used by NetworkManager
+// It gets the name of the certificate that is used for the filename and ends it with .pem
+// Cert is the array of certificates that need to be inputted between the BEGIN and END certificate strings
 func buildCertFile(name string, cert []string) ([]byte, error) {
 	filename := fmt.Sprintf("%s.pem", name)
 	content := ""
@@ -48,6 +54,8 @@ func buildCertFile(name string, cert []string) ([]byte, error) {
 	return encodePath(p), nil
 }
 
+// Install installs a non TLS network and returns an error if it cannot configure it
+// Right now it adds a new profile that is not automatically added
 func Install(n network.NonTLS) error {
 	fID := fmt.Sprintf("%s (from Geteduroam)", n.SSID)
 	s, err := connection.NewSettings()

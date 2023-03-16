@@ -1,3 +1,4 @@
+// package discovery contains methods to parse the discovery format from https://discovery.eduroam.app/v1/discovery.json into instances
 package discovery
 
 import (
@@ -10,6 +11,7 @@ import (
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/instance"
 )
 
+// Discovery is the main structure that is used for unmarshalling the JSON
 type Discovery struct {
 	Instances instance.Instances `json:"instances"`
 	// See: https://github.com/geteduroam/windows-app/blob/22cd90f36031907c7174fbdc678edafaa627ce49/CHANGELOG.md#changed
@@ -17,6 +19,8 @@ type Discovery struct {
 	Version int `json:"version"`
 }
 
+// Cache is the cached discovery list
+// TODO: This should be read from disk so that the app can function when the discovery is offline
 type Cache struct {
 	// Cached is the cached list of discovery
 	Cached Discovery `json:"previous"`
@@ -24,6 +28,7 @@ type Cache struct {
 	LastUpdate time.Time `json:"updated"`
 }
 
+// NewCache creates a new cache struct
 func NewCache() *Cache {
 	return &Cache{}
 }

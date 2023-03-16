@@ -216,6 +216,8 @@ func Parse(data []byte) (*EAPIdentityProviderList, error) {
 	return &eap, nil
 }
 
+// authenticationMethods gets the authentication methods from the EAP identity provider
+// It has additional checking for NULL pointers
 func (p *EAPIdentityProvider) authenticationMethods() (*AuthenticationMethods, error) {
 	m := p.AuthenticationMethods
 	if m == nil {
@@ -224,6 +226,7 @@ func (p *EAPIdentityProvider) authenticationMethods() (*AuthenticationMethods, e
 	return m, nil
 }
 
+// AuthMethods gets a list of authentication methods by checking if it is NON-NULL and NON-EMPTY
 func (p *EAPIdentityProvider) AuthMethods() ([]*AuthenticationMethod, error) {
 	ams, err := p.authenticationMethods()
 	if err != nil {
@@ -260,10 +263,13 @@ func (am *AuthenticationMethod) preferredInnerAuthType(mt method.Type) (inner.Ty
 	return inner.NONE, errors.New("no viable inner authentication method found")
 }
 
-// SSID gets the SSID from the eap identity provider
 // SSIDSettings returns the SSID and MinRSNProto associated with it
-// It loops trough the credential applicability list and gets the first candidate
+// It loops trough the credential applicability list and gets the first valid candidate
 // The candidate filtering was based on https://github.com/geteduroam/windows-app/blob/f11f00dee3eb71abd38537e18881463f83b180d3/EduroamConfigure/EapConfig.cs#L84
+// A candidate is valid if:
+//  - MinRSNProto is not empty, TODO: shouldn't we just default to CCMP?
+//  - The SSID is not empty
+//  - The MinRSNProto is NOT TKIP as that is insecure
 func (p *EAPIdentityProvider) SSIDSettings() (string, string, error) {
 	if p.CredentialApplicability == nil {
 		return "", "", errors.New("no Credential Applicability found")
@@ -296,6 +302,7 @@ func (p *EAPIdentityProvider) SSIDSettings() (string, string, error) {
 	return "", "", errors.New("no viable SSID entry found")
 }
 
+// Valid returns whether or not a certificate is valid by checking if the encoding is base64 and the format is X509
 func (ca *CertData) Valid() bool {
 	if ca.EncodingAttr != "base64" {
 		return false
@@ -308,6 +315,7 @@ func (ca *CertData) Valid() bool {
 	return true
 }
 
+// CaList gets a list of certificates by looping through the certificate list and returning all *valid* certificates
 func (ss *ServerCredentialVariants) CAList() ([]string, error) {
 	var ca []string
 	for _, c := range ss.CA {
@@ -321,7 +329,8 @@ func (ss *ServerCredentialVariants) CAList() ([]string, error) {
 	return ca, nil
 }
 
-// TLSNetwork creates a TLS network using the authentication method
+// TLSNetwork creates a TLS network using the authentication method.
+// The base that is passed here are settings that are common between TLS and NON-TLS networks
 func (m *AuthenticationMethod) TLSNetwork(base network.Base) network.Network {
 	// TODO: client certificate should be required right?
 	var ccert string
@@ -341,9 +350,11 @@ func (m *AuthenticationMethod) TLSNetwork(base network.Base) network.Network {
 }
 
 // NonTLSNetwork creates a network that is Non-TLS using the authentication method
+// The base that is passed here are settings that are common between TLS and NON-TLS networks
 func (m *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Network, error) {
 	// Define defaults
 	var username, password, identity, prefix, suffix string
+	// ClientSideCredential is defined, override the defaults
 	if cc := m.ClientSideCredential; cc != nil {
 		username = cc.UserName
 		password = cc.Password
@@ -376,7 +387,7 @@ func (m *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Network
 	}, nil
 }
 
-// Network gets a network for an authentication method
+// Network gets a network for an authentication method, the SSID and MinRSN are strings that are based to the network
 func (m *AuthenticationMethod) Network(ssid string, minrsn string) (network.Network, error) {
 	// We check if the eap method is valid
 	if m.EAPMethod == nil || !method.Valid(m.EAPMethod.Type) {
@@ -414,7 +425,7 @@ func (m *AuthenticationMethod) Network(ssid string, minrsn string) (network.Netw
 }
 
 // Network creates a TLS or NON-TLS secured network from the EAP config
-// This network can then afterwards be imported into NetworkManager
+// This network can then afterwards be imported into NetworkManager using the `nm` package
 func (eap *EAPIdentityProviderList) Network() (network.Network, error) {
 	// Get the provider section
 	p := eap.EAPIdentityProvider

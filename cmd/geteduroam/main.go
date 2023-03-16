@@ -16,6 +16,9 @@ import (
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/instance"
 )
 
+// askSecret is a tweak of thee 'ask' function that uses golang.org/x/term to read a secret securely
+// The prompt is the text to show e.g. "enter something: "
+// Validator is the function that checks if the secret is valid
 func askSecret(prompt string, validator func(input string) bool) string {
 	for {
 		fmt.Print(prompt)
@@ -24,6 +27,7 @@ func askSecret(prompt string, validator func(input string) bool) string {
 			fmt.Fprintf(os.Stderr, "failed to read password: %v", err)
 			continue
 		}
+		// get the password as a string
 		pwdS := string(pwd)
 		if validator(pwdS) {
 			return pwdS
@@ -31,6 +35,10 @@ func askSecret(prompt string, validator func(input string) bool) string {
 	}
 }
 
+// ask asks the user for an input
+// The prompt is the text to show e.g. "enter something: "
+// Validator is the function that checks if the input is valid
+// It loops until a valid input is given
 func ask(prompt string, validator func(input string) bool) string {
 	for {
 		var x string
@@ -43,6 +51,7 @@ func ask(prompt string, validator func(input string) bool) string {
 	}
 }
 
+// filteredOrganizations gets the instances as filtered by the user
 func filteredOrganizations(orgs *instance.Instances) (f *instance.Instances) {
 	for {
 		x := ask("Please enter your organization (e.g. SURF): ", func(x string) bool {
@@ -61,6 +70,7 @@ func filteredOrganizations(orgs *instance.Instances) (f *instance.Instances) {
 	return f
 }
 
+// validateRange validates if the input is in the range of 1-n (inclusive)
 func validateRange(input string, n int) bool {
 	r, err := strconv.ParseInt(input, 10, 32)
 	if err != nil {
@@ -74,6 +84,7 @@ func validateRange(input string, n int) bool {
 	return true
 }
 
+// organization gets an organization/instance from the user
 func organization(orgs *instance.Instances) *instance.Instance {
 	f := *filteredOrganizations(orgs)
 	fmt.Println("Found the following matches: ")
@@ -91,6 +102,7 @@ func organization(orgs *instance.Instances) *instance.Instance {
 	return &f[r-1]
 }
 
+// profile gets a profile for a list of profiles by asking the user one if there are multiple
 func profile(profiles []instance.Profile) *instance.Profile {
 	// Only one profile, return it immediately
 	if len(profiles) == 1 {
@@ -112,6 +124,9 @@ func profile(profiles []instance.Profile) *instance.Profile {
 	return &profiles[r-1]
 }
 
+// askUsername asks the user for the username
+// p is the prefix for which the username must start
+// s is the suffix for which the username must end
 func askUsername(p string, s string) string {
 	prompt := "Please enter your username"
 	if p != "" {
@@ -143,6 +158,7 @@ func askUsername(p string, s string) string {
 	return username
 }
 
+// askPassword asks the user for a password
 func askPassword() string {
 	password := askSecret("Please enter your password: ", func(input string) bool {
 		if input == "" {
@@ -152,13 +168,18 @@ func askPassword() string {
 		return true
 	})
 
+	// TODO: here we need to ask the user to provide the password again
+
 	return password
 }
 
+// askCertificate asks the user for a certificate
+// This is used in the TLS/OAuth flow
 func askCertificate(name string, desc string) string {
 	panic("todo")
 }
 
+// direct does the handling for the direct flow
 func direct(p *instance.Profile) {
 	config, err := p.EAPDirect()
 	if err != nil {
@@ -176,6 +197,7 @@ func direct(p *instance.Profile) {
 	}
 }
 
+// redirect does the handling for the redirect flow
 func redirect(p *instance.Profile) {
 	r, err := p.RedirectURI()
 	if err != nil {
@@ -200,6 +222,8 @@ func main() {
 	chosen := organization(i)
 	p := profile(chosen.Profiles)
 
+	// TODO: This switch statement should probably be moved to the profile code
+	// By providing an "EAP" method on profile
 	switch p.Flow() {
 	case instance.DirectFlow:
 		direct(p)

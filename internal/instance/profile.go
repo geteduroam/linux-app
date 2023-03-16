@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// Profile is the profile from discovery
 type Profile struct {
 	AuthorizationEndpoint string `json:"authorization_endpoint"`
 	Default               bool   `json:"default"`
@@ -20,6 +21,7 @@ type Profile struct {
 	Redirect              string `json:"redirect"`
 }
 
+// FlowCode is the type of flow that we will use to get the EAP config
 type FlowCode int8
 
 const (
@@ -47,6 +49,10 @@ func (p *Profile) Flow() FlowCode {
 	return DirectFlow
 }
 
+// RedirectURI gets the redirect URI from the profile
+// It does some additional work by:
+// - Checking if the redirect URI is a URL
+// - Setting the scheme to HTTPS
 func (p *Profile) RedirectURI() (string, error) {
 	if p.Redirect == "" {
 		return "", errors.New("No redirect found")
@@ -62,6 +68,8 @@ func (p *Profile) RedirectURI() (string, error) {
 	return u.String(), nil
 }
 
+// EAPDirect Gets an EAP config using the direct flow
+// It returns the byte array of the EAP config and an error if there is one
 func (p *Profile) EAPDirect() ([]byte, error) {
 	// Do request
 	req, err := http.NewRequest("GET", p.EapConfigEndpoint, nil)
