@@ -1,8 +1,6 @@
 package inner
 
 import (
-	"fmt"
-
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network/method"
 )
 
