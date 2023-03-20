@@ -267,9 +267,9 @@ func (am *AuthenticationMethod) preferredInnerAuthType(mt method.Type) (inner.Ty
 // It loops trough the credential applicability list and gets the first valid candidate
 // The candidate filtering was based on https://github.com/geteduroam/windows-app/blob/f11f00dee3eb71abd38537e18881463f83b180d3/EduroamConfigure/EapConfig.cs#L84
 // A candidate is valid if:
-//  - MinRSNProto is not empty, TODO: shouldn't we just default to CCMP?
-//  - The SSID is not empty
-//  - The MinRSNProto is NOT TKIP as that is insecure
+//   - MinRSNProto is not empty, TODO: shouldn't we just default to CCMP?
+//   - The SSID is not empty
+//   - The MinRSNProto is NOT TKIP as that is insecure
 func (p *EAPIdentityProvider) SSIDSettings() (string, string, error) {
 	if p.CredentialApplicability == nil {
 		return "", "", errors.New("no Credential Applicability found")
@@ -388,7 +388,7 @@ func (m *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Network
 }
 
 // Network gets a network for an authentication method, the SSID and MinRSN are strings that are based to the network
-func (m *AuthenticationMethod) Network(ssid string, minrsn string) (network.Network, error) {
+func (m *AuthenticationMethod) Network(ssid string, minrsn string, misc network.Misc) (network.Network, error) {
 	// We check if the eap method is valid
 	if m.EAPMethod == nil || !method.Valid(m.EAPMethod.Type) {
 		return nil, errors.New("no EAP method")
@@ -411,6 +411,7 @@ func (m *AuthenticationMethod) Network(ssid string, minrsn string) (network.Netw
 	sid := ss.ServerID
 	base := network.Base{
 		Cert:      CA,
+		Misc:      misc,
 		SSID:      ssid,
 		MinRSN:    minrsn,
 		ServerIDs: sid,
@@ -422,6 +423,78 @@ func (m *AuthenticationMethod) Network(ssid string, minrsn string) (network.Netw
 	} else {
 		return m.NonTLSNetwork(base)
 	}
+}
+
+// Logo returns the logo for the provider info elements
+// If the logo is an unexpected type: nil, no PNG, no base64, we return an empty string and an error
+// TODO: Note that right now we assume that every logo is a base64 and PNG, we need to determine if this is the only possible type that will be returned
+func (pi *ProviderInfoElements) Logo() (string, error) {
+	if pi.ProviderLogo == nil {
+		return "", errors.New("no provider logo found")
+	}
+	data := *pi.ProviderLogo
+	if data.MimeAttr != "image/png" {
+		return "", errors.New("logo is not a PNG image")
+	}
+	if data.EncodingAttr != "base64" {
+		return "", errors.New("image is not base64")
+	}
+	return data.Value, nil
+}
+
+// LocalizedInteractiveValue gets the first non-nil value from the localized interactive slice
+// if no value is available, it returns an error
+func LocalizedInteractiveValue(slice []*LocalizedInteractive) (string, error) {
+	if len(slice) == 0 {
+		return "", errors.New("No interactive localized value available")
+	}
+	for _, v := range slice {
+		if v == nil {
+			continue
+		}
+		// TODO: What is LangAttr used for?
+		return v.Value, nil
+	}
+	return "", errors.New("All interactive localized values are nil")
+}
+
+// LocalizedNonInteractiveValue gets the first non-nil value from the localized non interactive slice
+// if no value is available, it returns an error
+func LocalizedNonInteractiveValue(slice []*LocalizedNonInteractive) (string, error) {
+	if len(slice) == 0 {
+		return "", errors.New("No non interactive localized value available")
+	}
+	for _, v := range slice {
+		if v == nil {
+			continue
+		}
+		// TODO: What is LangAttr used for?
+		return v.Value, nil
+	}
+	return "", errors.New("All non interactive localized values are nil")
+}
+
+// Misc gets the miscellaneous information from the EAP identity provider
+// If it cannot find certain values this will fallback to the default of the type, e.g. an empty string
+// TODO: Log errors here
+func (p *EAPIdentityProvider) Misc() network.Misc {
+	var misc network.Misc
+	var help network.Help
+	pi := p.ProviderInfo
+	if pi != nil {
+		misc.Name, _ = LocalizedNonInteractiveValue(pi.DisplayName)
+		misc.Description, _ = LocalizedNonInteractiveValue(pi.Description)
+		misc.Logo, _ = p.ProviderInfo.Logo()
+		misc.Terms, _ = LocalizedNonInteractiveValue(pi.TermsOfUse)
+		desk := p.ProviderInfo.Helpdesk
+		if desk != nil {
+			help.Email, _ = LocalizedInteractiveValue(desk.EmailAddress)
+			help.Web, _ = LocalizedNonInteractiveValue(desk.WebAddress)
+			help.Phone, _ = LocalizedInteractiveValue(desk.Phone)
+		}
+		misc.Helpdesk = help
+	}
+	return misc
 }
 
 // Network creates a TLS or NON-TLS secured network from the EAP config
@@ -440,8 +513,9 @@ func (eap *EAPIdentityProviderList) Network() (network.Network, error) {
 	if err != nil {
 		return nil, err
 	}
+	misc := p.Misc()
 	for _, m := range methods {
-		n, err := m.Network(ssid, minrsn)
+		n, err := m.Network(ssid, minrsn, misc)
 		if err != nil {
 			// TODO: log error
 			continue

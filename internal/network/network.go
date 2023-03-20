@@ -11,6 +11,30 @@ type Network interface {
 	Method() method.Type
 }
 
+// Help is the struct that contains information on how to contact an organization
+type Help struct {
+	// Email is the e-mail address as a string
+	Email string
+	// Phone is the phone number as a string
+	Phone string
+	// Web is the web URL as a string
+	Web   string
+}
+
+// Misc is the miscellaneous information for the network
+type Misc struct {
+	// Helpdesk contains the help information on how to contact the organization that owns the network
+	Helpdesk    Help
+	// Name is the display name of the network as provided by the organization which should be represented in the UI
+	Name        string
+	// Description is the description of the network as provided by the organization
+	Description string
+	// Logo is the logo of the network, probably the logo of the organization in base64
+	Logo        string
+	// Terms is the terms of use for this network
+	Terms       string
+}
+
 // Base is the definition that each network always has
 type Base struct {
 	// Cert is the list of CA certificates that are used
@@ -21,6 +45,8 @@ type Base struct {
 	MinRSN string
 	// ServerIDs is the list of server names
 	ServerIDs []string
+	// Misc is the miscellaneous info
+	Misc Misc
 }
 
 // NonTLS is a structure for creating a network that has EAP method not TLS
