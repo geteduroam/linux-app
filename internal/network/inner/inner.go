@@ -49,12 +49,15 @@ func (t Type) String() string {
 // Valid returns whether or not an integer is a valid inner authentication type
 // See https://github.com/geteduroam/geteduroam-sh/blob/54044773812502487ad0f68898cd6b9e110cb0f6/eap-config.sh#L55
 func Valid(mt method.Type, input int, eap bool) bool {
-	if Type(input).EAP() != eap {
-		return false
-	}
 	// For TLS we do not have any inner, any is valid
 	if mt == method.TLS {
 		return true
+	}
+	// Check if the inner is an EAP or NON EAP type
+	// They should match with what we expect it to be
+	// So for example if we pass an input and expect an EAP type, but the input is actually NON-EAP, we return false as it's not valid
+	if Type(input).EAP() != eap {
+		return false
 	}
 	// For TTLS, we support PAP, MSCHAP, MSCHAPv2 and EAP MSCHAPV2
 	if mt == method.TTLS {
