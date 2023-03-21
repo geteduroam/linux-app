@@ -27,6 +27,7 @@ func askSecret(prompt string, validator func(input string) bool) string {
 			fmt.Fprintf(os.Stderr, "failed to read password: %v", err)
 			continue
 		}
+		fmt.Println()
 		// get the password as a string
 		pwdS := string(pwd)
 		if validator(pwdS) {
@@ -160,17 +161,27 @@ func askUsername(p string, s string) string {
 
 // askPassword asks the user for a password
 func askPassword() string {
-	password := askSecret("Please enter your password: ", func(input string) bool {
+	validator := func(input string) bool {
 		if input == "" {
 			fmt.Fprintln(os.Stderr, "Please enter a password that is not empty")
 			return false
 		}
 		return true
-	})
+	}
 
-	// TODO: here we need to ask the user to provide the password again
+	password1 := ""
+	password2 := ""
 
-	return password
+	for next := true; next; next = password1 != password2 {
+		password1 = askSecret("Please enter your password: ", validator)
+		password2 = askSecret("Please confirm your password: ", validator)
+
+		if password1 != password2 {
+			fmt.Fprintln(os.Stderr, "\nPasswords do not match, try again")
+		}
+	}
+
+	return password1
 }
 
 // askCertificate asks the user for a certificate
