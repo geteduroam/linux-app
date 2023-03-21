@@ -197,12 +197,24 @@ func direct(p *instance.Profile) {
 		log.Fatalf("Could not obtain eap config: %v", err)
 	}
 
-	c := configure.Configure{
+	c := configure.Config{
 		UsernameH:    askUsername,
 		PasswordH:    askPassword,
 		CertificateH: askCertificate,
 	}
-	err = c.Configure(config)
+
+	c, err = c.Parse(config)
+	if err != nil {
+		fmt.Println("failed to parse", err)
+	}
+
+	// Here we have access to Displayname and Description
+	fmt.Println("Displayname: " + c.Displayname)
+	fmt.Println("Description: " + c.Description)
+
+	// Finally, configure network
+	err = c.Configure()
+
 	if err != nil {
 		fmt.Println("failed to configure", err)
 	}
