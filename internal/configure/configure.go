@@ -44,8 +44,16 @@ func (c Config) Parse(config []byte) (Config, error) {
 		return c, err
 	}
 
-	c.Displayname = unpack.EAPIdentityProvider.ProviderInfo.DisplayName[0].Value
-	c.Description = unpack.EAPIdentityProvider.ProviderInfo.Description[0].Value
+	if len(unpack.EAPIdentityProvider.ProviderInfo.DisplayName) >= 1 {
+		c.Displayname = unpack.EAPIdentityProvider.ProviderInfo.DisplayName[0].Value
+	} else {
+		c.Displayname = "unknown"
+	}
+	if len(unpack.EAPIdentityProvider.ProviderInfo.Description) >= 1 {
+		c.Description = unpack.EAPIdentityProvider.ProviderInfo.Description[0].Value
+	} else {
+		c.Description = "unknown"
+	}
 
 	n, err := unpack.Network()
 	if err != nil {
