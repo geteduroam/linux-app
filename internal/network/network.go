@@ -77,6 +77,10 @@ func (n *NonTLS) Method() method.Type {
 	return n.MethodType
 }
 
+func (n *NonTLS) Misc() Misc {
+	return n.Base.Misc
+}
+
 // TLS is a structure for creating a network that has EAP method TLS
 type TLS struct {
 	Base
@@ -92,9 +96,5 @@ func (t *TLS) Method() method.Type {
 }
 
 func (n *TLS) Misc() Misc {
-	return n.Base.Misc
-}
-
-func (n *NonTLS) Misc() Misc {
 	return n.Base.Misc
 }
