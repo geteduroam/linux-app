@@ -24,51 +24,29 @@ type Config struct {
 	// CertificateH is the handler for asking for the client certificate from the user
 	// The handler is responsible for decrypting the certificate
 	CertificateH func(name string, desc string) string
-
-	// ProviderInfo.DisplayName from EAP metadata
-	Displayname string
-
-	// ProviderInfo.Description from EAP metadata
-	Description string
-
-	// The parsed network configuration
-	Network network.Network
 }
 
 // Parse parses the connection using the EAP byte array
 // It parses the config
-func (c Config) Parse(config []byte) (Config, error) {
+func (c Config) Parse(config []byte) (network.Network, error) {
 	// First we parse the config
 	unpack, err := eap.Parse(config)
 	if err != nil {
-		return c, err
-	}
-
-	if len(unpack.EAPIdentityProvider.ProviderInfo.DisplayName) >= 1 {
-		c.Displayname = unpack.EAPIdentityProvider.ProviderInfo.DisplayName[0].Value
-	} else {
-		c.Displayname = "unknown"
-	}
-	if len(unpack.EAPIdentityProvider.ProviderInfo.Description) >= 1 {
-		c.Description = unpack.EAPIdentityProvider.ProviderInfo.Description[0].Value
-	} else {
-		c.Description = "unknown"
+		return nil, err
 	}
 
 	n, err := unpack.Network()
 	if err != nil {
-		return c, err
+		return nil, err
 	}
 
-	c.Network = n
-
-	return c, nil
+	return n, nil
 }
 
 // Configure configures the connection using the parsed configuration
 // It installs it using NetworkManager
-func (c Config) Configure() error {
-	switch t := c.Network.(type) {
+func (c Config) Configure(n network.Network) error {
+	switch t := n.(type) {
 	case *network.NonTLS:
 		username := t.Username
 		password := t.Password

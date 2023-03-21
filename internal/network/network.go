@@ -9,6 +9,7 @@ import (
 type Network interface {
 	// Method returns the EAP method
 	Method() method.Type
+	Misc() Misc
 }
 
 // Help is the struct that contains information on how to contact an organization
@@ -88,4 +89,12 @@ type TLS struct {
 
 func (t *TLS) Method() method.Type {
 	return method.TLS
+}
+
+func (n *TLS) Misc() Misc {
+	return n.Base.Misc
+}
+
+func (n *NonTLS) Misc() Misc {
+	return n.Base.Misc
 }

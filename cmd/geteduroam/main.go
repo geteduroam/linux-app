@@ -203,17 +203,19 @@ func direct(p *instance.Profile) {
 		CertificateH: askCertificate,
 	}
 
-	c, err = c.Parse(config)
+	n, err := c.Parse(config)
 	if err != nil {
 		fmt.Println("failed to parse", err)
 	}
 
+	m := n.Misc()
+
 	// Here we have access to Displayname and Description
-	fmt.Println("Displayname: " + c.Displayname)
-	fmt.Println("Description: " + c.Description)
+	fmt.Println("Displayname: " + m.Name)
+	fmt.Println("Description: " + m.Description)
 
 	// Finally, configure network
-	err = c.Configure()
+	err = c.Configure(n)
 
 	if err != nil {
 		fmt.Println("failed to configure", err)
