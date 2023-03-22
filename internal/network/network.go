@@ -9,6 +9,7 @@ import (
 type Network interface {
 	// Method returns the EAP method
 	Method() method.Type
+	// ProviderInfo returns the EAP ProviderInfo
 	ProviderInfo() ProviderInfo
 }
 
