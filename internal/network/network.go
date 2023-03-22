@@ -95,6 +95,6 @@ func (t *TLS) Method() method.Type {
 	return method.TLS
 }
 
-func (n *TLS) ProviderInfo() ProviderInfo {
-	return n.Base.ProviderInfo
+func (t *TLS) ProviderInfo() ProviderInfo {
+	return t.Base.ProviderInfo
 }

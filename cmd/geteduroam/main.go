@@ -11,7 +11,7 @@ import (
 
 	"golang.org/x/term"
 
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/configure"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/handler"
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/discovery"
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/instance"
 )
@@ -197,13 +197,13 @@ func direct(p *instance.Profile) {
 		log.Fatalf("Could not obtain eap config: %v", err)
 	}
 
-	c := configure.Config{
+	h := handler.Handlers{
 		UsernameH:    askUsername,
 		PasswordH:    askPassword,
 		CertificateH: askCertificate,
 	}
 
-	n, err := c.Parse(config)
+	n, err := h.Network(config)
 	if err != nil {
 		fmt.Println("failed to parse", err)
 	}
@@ -217,7 +217,7 @@ func direct(p *instance.Profile) {
 	fmt.Println("Online: " + m.Helpdesk.Web)
 
 	// Finally, configure network
-	err = c.Configure(n)
+	err = h.Configure(n)
 
 	if err != nil {
 		fmt.Println("failed to configure", err)

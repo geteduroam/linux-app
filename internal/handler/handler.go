@@ -1,6 +1,6 @@
-// package configure configures the eduroam connection by parsing the byte array
+// package handlers handles the eduroam connection by parsing the byte array
 // It has handlers for UI events
-package configure
+package handler
 
 import (
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/eap"
@@ -10,7 +10,7 @@ import (
 
 // Configure is the structure that holds the handlers for UI events
 // Handlers are just functions that are called to get certain data
-type Config struct {
+type Handlers struct {
 	// UsernameH is the handler for asking for the username
 	// p is the prefix for the username that must be prefilled
 	// s is the suffix for the username that must be prefilled
@@ -28,7 +28,7 @@ type Config struct {
 
 // Parse parses the connection using the EAP byte array
 // It parses the config
-func (c Config) Parse(config []byte) (network.Network, error) {
+func (h Handlers) Network(config []byte) (network.Network, error) {
 	// First we parse the config
 	unpack, err := eap.Parse(config)
 	if err != nil {
@@ -45,16 +45,16 @@ func (c Config) Parse(config []byte) (network.Network, error) {
 
 // Configure configures the connection using the parsed configuration
 // It installs it using NetworkManager
-func (c Config) Configure(n network.Network) error {
+func (h Handlers) Configure(n network.Network) error {
 	switch t := n.(type) {
 	case *network.NonTLS:
 		username := t.Username
 		password := t.Password
 		if username == "" {
-			username = c.UsernameH(t.Prefix, t.Suffix)
+			username = h.UsernameH(t.Prefix, t.Suffix)
 		}
 		if password == "" {
-			password = c.PasswordH()
+			password = h.PasswordH()
 		}
 		t.Username = username
 		t.Password = password
