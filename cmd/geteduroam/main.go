@@ -11,8 +11,8 @@ import (
 
 	"golang.org/x/term"
 
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/handler"
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/discovery"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/handler"
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/instance"
 )
 

@@ -20,21 +20,21 @@ type Help struct {
 	// Phone is the phone number as a string
 	Phone string
 	// Web is the web URL as a string
-	Web   string
+	Web string
 }
 
 // ProviderInfo is the ProviderInfo element for the network
 type ProviderInfo struct {
 	// Helpdesk contains the help information on how to contact the organization that owns the network
-	Helpdesk    Help
+	Helpdesk Help
 	// Name is the display name of the network as provided by the organization which should be represented in the UI
-	Name        string
+	Name string
 	// Description is the description of the network as provided by the organization
 	Description string
 	// Logo is the logo of the network, probably the logo of the organization in base64
-	Logo        string
+	Logo string
 	// Terms is the terms of use for this network
-	Terms       string
+	Terms string
 }
 
 // Base is the definition that each network always has
