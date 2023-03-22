@@ -388,7 +388,7 @@ func (m *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Network
 }
 
 // Network gets a network for an authentication method, the SSID and MinRSN are strings that are based to the network
-func (m *AuthenticationMethod) Network(ssid string, minrsn string, misc network.Misc) (network.Network, error) {
+func (m *AuthenticationMethod) Network(ssid string, minrsn string, pinfo network.ProviderInfo) (network.Network, error) {
 	// We check if the eap method is valid
 	if m.EAPMethod == nil || !method.Valid(m.EAPMethod.Type) {
 		return nil, errors.New("no EAP method")
@@ -410,11 +410,11 @@ func (m *AuthenticationMethod) Network(ssid string, minrsn string, misc network.
 	// These are the settings that are common for each network
 	sid := ss.ServerID
 	base := network.Base{
-		Cert:      CA,
-		Misc:      misc,
-		SSID:      ssid,
-		MinRSN:    minrsn,
-		ServerIDs: sid,
+		Cert:         CA,
+		ProviderInfo: pinfo,
+		SSID:         ssid,
+		MinRSN:       minrsn,
+		ServerIDs:    sid,
 	}
 
 	// If TLS we need to construct different arguments than when we have Non TLS
@@ -474,27 +474,27 @@ func LocalizedNonInteractiveValue(slice []*LocalizedNonInteractive) (string, err
 	return "", errors.New("All non interactive localized values are nil")
 }
 
-// Misc gets the miscellaneous information from the EAP identity provider
+// PInfo gets the ProviderInfo element from the EAP identity provider
 // If it cannot find certain values this will fallback to the default of the type, e.g. an empty string
 // TODO: Log errors here
-func (p *EAPIdentityProvider) Misc() network.Misc {
-	var misc network.Misc
+func (p *EAPIdentityProvider) PInfo() network.ProviderInfo {
+	var pinfo network.ProviderInfo
 	var help network.Help
 	pi := p.ProviderInfo
 	if pi != nil {
-		misc.Name, _ = LocalizedNonInteractiveValue(pi.DisplayName)
-		misc.Description, _ = LocalizedNonInteractiveValue(pi.Description)
-		misc.Logo, _ = p.ProviderInfo.Logo()
-		misc.Terms, _ = LocalizedNonInteractiveValue(pi.TermsOfUse)
+		pinfo.Name, _ = LocalizedNonInteractiveValue(pi.DisplayName)
+		pinfo.Description, _ = LocalizedNonInteractiveValue(pi.Description)
+		pinfo.Logo, _ = p.ProviderInfo.Logo()
+		pinfo.Terms, _ = LocalizedNonInteractiveValue(pi.TermsOfUse)
 		desk := p.ProviderInfo.Helpdesk
 		if desk != nil {
 			help.Email, _ = LocalizedInteractiveValue(desk.EmailAddress)
 			help.Web, _ = LocalizedNonInteractiveValue(desk.WebAddress)
 			help.Phone, _ = LocalizedInteractiveValue(desk.Phone)
 		}
-		misc.Helpdesk = help
+		pinfo.Helpdesk = help
 	}
-	return misc
+	return pinfo
 }
 
 // Network creates a TLS or NON-TLS secured network from the EAP config
@@ -513,9 +513,9 @@ func (eap *EAPIdentityProviderList) Network() (network.Network, error) {
 	if err != nil {
 		return nil, err
 	}
-	misc := p.Misc()
+	pinfo := p.PInfo()
 	for _, m := range methods {
-		n, err := m.Network(ssid, minrsn, misc)
+		n, err := m.Network(ssid, minrsn, pinfo)
 		if err != nil {
 			// TODO: log error
 			continue

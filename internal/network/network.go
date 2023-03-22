@@ -9,7 +9,7 @@ import (
 type Network interface {
 	// Method returns the EAP method
 	Method() method.Type
-	Misc() Misc
+	ProviderInfo() ProviderInfo
 }
 
 // Help is the struct that contains information on how to contact an organization
@@ -22,8 +22,8 @@ type Help struct {
 	Web   string
 }
 
-// Misc is the miscellaneous information for the network
-type Misc struct {
+// ProviderInfo is the ProviderInfo element for the network
+type ProviderInfo struct {
 	// Helpdesk contains the help information on how to contact the organization that owns the network
 	Helpdesk    Help
 	// Name is the display name of the network as provided by the organization which should be represented in the UI
@@ -46,8 +46,8 @@ type Base struct {
 	MinRSN string
 	// ServerIDs is the list of server names
 	ServerIDs []string
-	// Misc is the miscellaneous info
-	Misc Misc
+	// ProviderInfo is the ProviderInfo info
+	ProviderInfo ProviderInfo
 }
 
 // NonTLS is a structure for creating a network that has EAP method not TLS
@@ -77,8 +77,8 @@ func (n *NonTLS) Method() method.Type {
 	return n.MethodType
 }
 
-func (n *NonTLS) Misc() Misc {
-	return n.Base.Misc
+func (n *NonTLS) ProviderInfo() ProviderInfo {
+	return n.Base.ProviderInfo
 }
 
 // TLS is a structure for creating a network that has EAP method TLS
@@ -95,6 +95,6 @@ func (t *TLS) Method() method.Type {
 	return method.TLS
 }
 
-func (n *TLS) Misc() Misc {
-	return n.Base.Misc
+func (n *TLS) ProviderInfo() ProviderInfo {
+	return n.Base.ProviderInfo
 }

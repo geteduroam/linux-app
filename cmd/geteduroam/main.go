@@ -208,11 +208,13 @@ func direct(p *instance.Profile) {
 		fmt.Println("failed to parse", err)
 	}
 
-	m := n.Misc()
+	m := n.ProviderInfo()
 
 	// Here we have access to Displayname and Description
-	fmt.Println("Displayname: " + m.Name)
+	fmt.Println("Title: " + m.Name)
 	fmt.Println("Description: " + m.Description)
+	fmt.Println("Helpdesk: " + m.Helpdesk.Email)
+	fmt.Println("Online: " + m.Helpdesk.Web)
 
 	// Finally, configure network
 	err = c.Configure(n)
