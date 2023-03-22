@@ -14,6 +14,7 @@ import (
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/discovery"
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/handler"
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/instance"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network"
 )
 
 // askSecret is a tweak of thee 'ask' function that uses golang.org/x/term to read a secret securely
@@ -184,9 +185,23 @@ func askPassword() string {
 	return password1
 }
 
+// askCredentials asks the user for credentials
+// It returns the username and password
+func askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string) {
+	username := c.Username
+	password := c.Password
+	if c.Username == "" {
+		username = askUsername(c.Prefix, c.Suffix)
+	}
+	if c.Password == "" {
+		password = askPassword()
+	}
+	return username, password
+}
+
 // askCertificate asks the user for a certificate
 // This is used in the TLS/OAuth flow
-func askCertificate(name string, desc string) string {
+func askCertificate(cert string, pi network.ProviderInfo) string {
 	panic("todo")
 }
 
@@ -198,27 +213,13 @@ func direct(p *instance.Profile) {
 	}
 
 	h := handler.Handlers{
-		UsernameH:    askUsername,
-		PasswordH:    askPassword,
+		CredentialsH: askCredentials,
 		CertificateH: askCertificate,
 	}
 
-	n, err := h.Network(config)
-	if err != nil {
-		fmt.Println("failed to parse", err)
-	}
-
-	m := n.ProviderInfo()
-
-	// Here we have access to Displayname and Description
-	fmt.Println("Title: " + m.Name)
-	fmt.Println("Description: " + m.Description)
-	fmt.Println("Helpdesk: " + m.Helpdesk.Email)
-	fmt.Println("Online: " + m.Helpdesk.Web)
-
-	// Finally, configure network
-	err = h.Configure(n)
-
+	// Configure the network further.
+	// The handlers will take care of the rest
+	err = h.Configure(config)
 	if err != nil {
 		fmt.Println("failed to configure", err)
 	}

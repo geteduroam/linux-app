@@ -375,12 +375,17 @@ func (m *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Network
 		return nil, errors.New("no preferred inner authentication found")
 	}
 
+	// Configure the credentials and associated metadata
+	c := network.Credentials{
+		Username: username,
+		Prefix:   prefix,
+		Suffix:   suffix,
+		Password: password,
+	}
+
 	return &network.NonTLS{
 		Base:         base,
-		Username:     username,
-		Prefix:       prefix,
-		Suffix:       suffix,
-		Password:     password,
+		Credentials:  c,
 		MethodType:   method.Type(m.EAPMethod.Type),
 		InnerAuth:    it,
 		AnonIdentity: identity,

@@ -97,10 +97,10 @@ func Install(n network.NonTLS) error {
 		"eap": []string{
 			n.Method().String(),
 		},
-		"identity":           n.Username,
+		"identity":           n.Credentials.Username,
 		"ca-cert":            cert,
 		"anonymous-identity": n.AnonIdentity,
-		"password":           n.Password,
+		"password":           n.Credentials.Password,
 		"password-flags":     0,
 		"altsubject-matches": sids,
 	}

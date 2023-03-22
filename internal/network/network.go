@@ -51,9 +51,8 @@ type Base struct {
 	ProviderInfo ProviderInfo
 }
 
-// NonTLS is a structure for creating a network that has EAP method not TLS
-type NonTLS struct {
-	Base
+// Credentials is the credentials belonging to the Non TLS network
+type Credentials struct {
 	// Username is the string that is configured as the identity for the connection
 	// This is gotten from the user
 	// This username is prefixed with the InnerIdentityPrefix
@@ -65,6 +64,13 @@ type NonTLS struct {
 	Suffix string
 	// Password is the string that is configured as the RADIUS password for the connection
 	Password string
+}
+
+// NonTLS is a structure for creating a network that has EAP method not TLS
+type NonTLS struct {
+	Base
+	// Credentials are the credentials belonging to the Non TLS network
+	Credentials Credentials
 	// MethodType is the method
 	MethodType method.Type
 	// InnerAuth is the inner authentication method
