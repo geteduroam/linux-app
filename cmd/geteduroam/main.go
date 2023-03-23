@@ -129,7 +129,11 @@ func profile(profiles []instance.Profile) *instance.Profile {
 // askUsername asks the user for the username
 // p is the prefix for which the username must start
 // s is the suffix for which the username must end
-func askUsername(p string, s string) string {
+func askUsername(p string, s string, pi network.ProviderInfo) string {
+	fmt.Fprintf(os.Stderr, "Title: %s\n", pi.Name)
+	fmt.Fprintf(os.Stderr, "Description: %s\n", pi.Description)
+	fmt.Fprintf(os.Stderr, "Helpdesk: %s\n", pi.Helpdesk.Email)
+
 	prompt := "Please enter your username"
 	if p != "" {
 		prompt += fmt.Sprintf(", beginning with: '%s'", p)
@@ -191,7 +195,7 @@ func askCredentials(c network.Credentials, pi network.ProviderInfo) (string, str
 	username := c.Username
 	password := c.Password
 	if c.Username == "" {
-		username = askUsername(c.Prefix, c.Suffix)
+		username = askUsername(c.Prefix, c.Suffix, pi)
 	}
 	if c.Password == "" {
 		password = askPassword()
