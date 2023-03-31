@@ -55,7 +55,7 @@ func (p *Profile) Flow() FlowCode {
 // - Setting the scheme to HTTPS
 func (p *Profile) RedirectURI() (string, error) {
 	if p.Redirect == "" {
-		return "", errors.New("No redirect found")
+		return "", errors.New("no redirect found")
 	}
 	u, err := url.Parse(p.Redirect)
 	if err != nil {
