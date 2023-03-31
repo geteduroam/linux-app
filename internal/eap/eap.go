@@ -24,7 +24,7 @@ type VendorSpecificExtension struct {
 type TypeSpecificExtension struct{}
 
 // EAPMethod ...
-type EAPMethod struct {
+type EAPMethod struct { //revive:disable-line:exported
 	Type           int                        `xml:"Type"`
 	TypeSpecific   *TypeSpecificExtension     `xml:"TypeSpecific"`
 	VendorSpecific []*VendorSpecificExtension `xml:"VendorSpecific"`
@@ -189,7 +189,7 @@ type AuthenticationMethods struct {
 }
 
 // EAPIdentityProvider ...
-type EAPIdentityProvider struct {
+type EAPIdentityProvider struct { //revive:disable-line:exported
 	IDAttr                  string                       `xml:"ID,attr"`
 	NamespaceAttr           string                       `xml:"namespace,attr"`
 	VersionAttr             int                          `xml:"version,attr,omitempty"`
@@ -202,7 +202,7 @@ type EAPIdentityProvider struct {
 }
 
 // EAPIdentityProviderList ...
-type EAPIdentityProviderList struct {
+type EAPIdentityProviderList struct { //revive:disable-line:exported
 	EAPIdentityProvider *EAPIdentityProvider `xml:"EAPIdentityProvider"`
 }
 
