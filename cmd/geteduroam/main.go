@@ -214,7 +214,7 @@ func askCredentials(c network.Credentials, pi network.ProviderInfo) (string, str
 
 // askCertificate asks the user for a certificate
 // This is used in the TLS/OAuth flow
-func askCertificate(cert string, pi network.ProviderInfo) string {
+func askCertificate(_ string, _ network.ProviderInfo) string {
 	panic("todo")
 }
 
