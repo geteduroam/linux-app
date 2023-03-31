@@ -425,9 +425,8 @@ func (m *AuthenticationMethod) Network(ssid string, minrsn string, pinfo network
 	// If TLS we need to construct different arguments than when we have Non TLS
 	if method.Type(mt) == method.TLS {
 		return m.TLSNetwork(base), nil
-	} else {
-		return m.NonTLSNetwork(base)
 	}
+	return m.NonTLSNetwork(base)
 }
 
 // Logo returns the logo for the provider info elements
