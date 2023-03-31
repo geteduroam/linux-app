@@ -331,11 +331,11 @@ func (ss *ServerCredentialVariants) CAList() ([]string, error) {
 
 // TLSNetwork creates a TLS network using the authentication method.
 // The base that is passed here are settings that are common between TLS and NON-TLS networks
-func (m *AuthenticationMethod) TLSNetwork(base network.Base) network.Network {
+func (am *AuthenticationMethod) TLSNetwork(base network.Base) network.Network {
 	// TODO: client certificate should be required right?
 	var ccert string
 	var passphrase string
-	if cc := m.ClientSideCredential; cc != nil {
+	if cc := am.ClientSideCredential; cc != nil {
 		if cc.ClientCertificate != nil && cc.ClientCertificate.Valid() {
 			ccert = cc.ClientCertificate.Value
 		}
@@ -351,11 +351,11 @@ func (m *AuthenticationMethod) TLSNetwork(base network.Base) network.Network {
 
 // NonTLSNetwork creates a network that is Non-TLS using the authentication method
 // The base that is passed here are settings that are common between TLS and NON-TLS networks
-func (m *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Network, error) {
+func (am *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Network, error) {
 	// Define defaults
 	var username, password, identity, prefix, suffix string
 	// ClientSideCredential is defined, override the defaults
-	if cc := m.ClientSideCredential; cc != nil {
+	if cc := am.ClientSideCredential; cc != nil {
 		username = cc.UserName
 		password = cc.Password
 		identity = cc.OuterIdentity
@@ -368,9 +368,9 @@ func (m *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Network
 		}
 
 	}
-	mt := method.Type(m.EAPMethod.Type)
+	mt := method.Type(am.EAPMethod.Type)
 	// get the inner auth
-	it, err := m.preferredInnerAuthType(mt)
+	it, err := am.preferredInnerAuthType(mt)
 	if err != nil {
 		return nil, errors.New("no preferred inner authentication found")
 	}
@@ -386,22 +386,22 @@ func (m *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Network
 	return &network.NonTLS{
 		Base:         base,
 		Credentials:  c,
-		MethodType:   method.Type(m.EAPMethod.Type),
+		MethodType:   method.Type(am.EAPMethod.Type),
 		InnerAuth:    it,
 		AnonIdentity: identity,
 	}, nil
 }
 
 // Network gets a network for an authentication method, the SSID and MinRSN are strings that are based to the network
-func (m *AuthenticationMethod) Network(ssid string, minrsn string, pinfo network.ProviderInfo) (network.Network, error) {
+func (am *AuthenticationMethod) Network(ssid string, minrsn string, pinfo network.ProviderInfo) (network.Network, error) {
 	// We check if the eap method is valid
-	if m.EAPMethod == nil || !method.Valid(m.EAPMethod.Type) {
+	if am.EAPMethod == nil || !method.Valid(am.EAPMethod.Type) {
 		return nil, errors.New("no EAP method")
 	}
-	mt := m.EAPMethod.Type
+	mt := am.EAPMethod.Type
 
 	// Get the server side credentials
-	ss := m.ServerSideCredential
+	ss := am.ServerSideCredential
 	if ss == nil {
 		return nil, errors.New("no server side credentials")
 	}
@@ -424,9 +424,9 @@ func (m *AuthenticationMethod) Network(ssid string, minrsn string, pinfo network
 
 	// If TLS we need to construct different arguments than when we have Non TLS
 	if method.Type(mt) == method.TLS {
-		return m.TLSNetwork(base), nil
+		return am.TLSNetwork(base), nil
 	}
-	return m.NonTLSNetwork(base)
+	return am.NonTLSNetwork(base)
 }
 
 // Logo returns the logo for the provider info elements
