@@ -242,7 +242,7 @@ func (p *EAPIdentityProvider) AuthMethods() ([]*AuthenticationMethod, error) {
 // preferredInnerAuthType gets the first valid inner authentication type
 func (am *AuthenticationMethod) preferredInnerAuthType(mt method.Type) (inner.Type, error) {
 	if len(am.InnerAuthenticationMethod) < 1 {
-		return inner.NONE, errors.New("inner authentication method couldn't be found")
+		return inner.None, errors.New("inner authentication method couldn't be found")
 	}
 
 	// loop through all methods and return the first valid one
@@ -260,7 +260,7 @@ func (am *AuthenticationMethod) preferredInnerAuthType(mt method.Type) (inner.Ty
 			}
 		}
 	}
-	return inner.NONE, errors.New("no viable inner authentication method found")
+	return inner.None, errors.New("no viable inner authentication method found")
 }
 
 // SSIDSettings returns the SSID and MinRSNProto associated with it
