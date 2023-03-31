@@ -7,8 +7,8 @@ import (
 )
 
 type geo struct {
-	lat  float32 `json:"lat"`
-	long float32 `json:"long"`
+	Lat  float32 `json:"lat"`
+	Long float32 `json:"long"`
 }
 
 type Instance struct {
