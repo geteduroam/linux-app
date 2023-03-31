@@ -109,10 +109,10 @@ func Install(n network.NonTLS) error {
 	} else {
 		s8021x["phase2-auth"] = n.InnerAuth.String()
 	}
-	sIp4 := map[string]interface{}{
+	sIP4 := map[string]interface{}{
 		"method": "auto",
 	}
-	sIp6 := map[string]interface{}{
+	sIP6 := map[string]interface{}{
 		"method": "auto",
 	}
 	settings := map[string]map[string]interface{}{
@@ -120,8 +120,8 @@ func Install(n network.NonTLS) error {
 		"802-11-wireless":          sWifi,
 		"802-11-wireless-security": sWsec,
 		"802-1x":                   s8021x,
-		"ipv4":                     sIp4,
-		"ipv6":                     sIp6,
+		"ipv4":                     sIP4,
+		"ipv6":                     sIP6,
 	}
 	_, err = s.AddConnection(settings)
 	if err != nil {
