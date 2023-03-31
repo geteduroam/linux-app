@@ -55,6 +55,4 @@ func (h Handlers) Configure(config []byte) error {
 	default:
 		panic("TLS networks are not yet supported")
 	}
-
-	return nil
 }
