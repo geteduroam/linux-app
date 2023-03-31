@@ -450,7 +450,7 @@ func (pi *ProviderInfoElements) Logo() (string, error) {
 // if no value is available, it returns an error
 func LocalizedInteractiveValue(slice []*LocalizedInteractive) (string, error) {
 	if len(slice) == 0 {
-		return "", errors.New("No interactive localized value available")
+		return "", errors.New("no interactive localized value available")
 	}
 	for _, v := range slice {
 		if v == nil {
@@ -459,14 +459,14 @@ func LocalizedInteractiveValue(slice []*LocalizedInteractive) (string, error) {
 		// TODO: What is LangAttr used for?
 		return v.Value, nil
 	}
-	return "", errors.New("All interactive localized values are nil")
+	return "", errors.New("all interactive localized values are nil")
 }
 
 // LocalizedNonInteractiveValue gets the first non-nil value from the localized non interactive slice
 // if no value is available, it returns an error
 func LocalizedNonInteractiveValue(slice []*LocalizedNonInteractive) (string, error) {
 	if len(slice) == 0 {
-		return "", errors.New("No non interactive localized value available")
+		return "", errors.New("no non interactive localized value available")
 	}
 	for _, v := range slice {
 		if v == nil {
@@ -475,7 +475,7 @@ func LocalizedNonInteractiveValue(slice []*LocalizedNonInteractive) (string, err
 		// TODO: What is LangAttr used for?
 		return v.Value, nil
 	}
-	return "", errors.New("All non interactive localized values are nil")
+	return "", errors.New("all non interactive localized values are nil")
 }
 
 // PInfo gets the ProviderInfo element from the EAP identity provider
