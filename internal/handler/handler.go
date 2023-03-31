@@ -51,7 +51,7 @@ func (h Handlers) Configure(config []byte) error {
 		username, password := h.CredentialsH(t.Credentials, n.ProviderInfo())
 		t.Credentials.Username = username
 		t.Credentials.Password = password
-		nm.Install(*t)
+		return nm.Install(*t)
 	default:
 		panic("TLS networks are not yet supported")
 	}
