@@ -2,6 +2,8 @@ package eap
 
 import (
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network/inner"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network/method"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/utils"
 	"testing"
 	"os"
 )
@@ -10,12 +12,13 @@ import (
 func Test_Parse(t *testing.T) {
 	var err error
 	var b []byte
-	var EIPL *EAPIdentityProviderList
 
 	b, err = os.ReadFile("eduroam-eap-generic-eVAe.eap-config.xml")
 	if err != nil {
 		t.Fatalf("Error: %s", err.Error())
 	}
+
+	var EIPL *EAPIdentityProviderList
 	EIPL, err = Parse(b)
 	if err != nil {
 		t.Fatalf("Error: %s", err.Error())
@@ -30,38 +33,44 @@ func Test_Parse(t *testing.T) {
 		t.Fatalf("Error: %s", err.Error())
 	}
 
-	var method *AuthenticationMethod
+	cases := []struct {
+		authmethod    int
+		preferred     method.Type
+		want          string
+		err           string
+	}{
+		{
+			// The first AuthenticationMethod
+			authmethod: 0,
+			preferred:  25,
+			want:       "mschapv2",
+			err:        "",
+		},
+		{
+			// The second AuthenticationMethod
+			authmethod: 1,
+			preferred:  25,
+			want:       "mschapv2",
+			err:        "",
+		},
+		{
+			// The third AuthenticationMethod
+			authmethod: 2,
+			preferred:  25,
+			want:       "",
+			err:        "no viable inner authentication method found",
+		},
+	}
 
-	// The first AuthenticationMethod
-	method = methods.AuthenticationMethod[0]
+	var m *AuthenticationMethod
+	var r inner.Type
 
-	var PIAT inner.Type
-	PIAT, err = method.preferredInnerAuthType(25)
-	// t.Fatalf("preferred type: %d", PIAT)
-	if PIAT.String() != "mschapv2" {
-		t.Fatalf("preferred type: %s", PIAT)
-	}
-	if err != nil {
-		t.Fatalf("Error: %s", err.Error())
-	}
-
-	// The second AuthenticationMethod
-	method = methods.AuthenticationMethod[1]
-	PIAT, err = method.preferredInnerAuthType(25)
-	if PIAT.String() != "mschapv2" {
-		t.Fatalf("preferred type: %s", PIAT)
-	}
-	if err != nil {
-		t.Fatalf("Error: %s", err.Error())
-	}
-
-	// The third AuthenticationMethod, incompatible type
-	method = methods.AuthenticationMethod[2]
-	PIAT, err = method.preferredInnerAuthType(25)
-	if PIAT.String() != "" {
-		t.Fatalf("preferred type: %s", PIAT)
-	}
-	if err != nil && err.Error() != "no viable inner authentication method found" {
-		t.Fatalf("Error: %s, %s", PIAT, err.Error())
+	for _, c := range cases {
+		m = methods.AuthenticationMethod[c.authmethod]
+		r, err = m.preferredInnerAuthType(c.preferred)
+		es := utils.EtoString(err)
+		if r.String() != c.want || es != c.err {
+			t.Fatalf("Result: %s, %s Want: %s, %s", r, es, c.want, c.err)
+		}
 	}
 }

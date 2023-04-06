@@ -19,3 +19,11 @@ func RemoveDiacritics(text string) (string, error) {
 	}
 	return result, nil
 }
+
+func EtoString(e error) string {
+	if e != nil {
+		return e.Error()
+	} else {
+		return ""
+	}
+}
