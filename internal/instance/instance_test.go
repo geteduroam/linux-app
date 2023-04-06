@@ -47,30 +47,41 @@ func Test_Filter(t *testing.T) {
 
 	cases := []struct {
 		input string
+		length int
 		want  string
 	}{
 		{
 			// Normal test
 			input: "One",
+			length: 1,
 			want:  "Instance One",
 		},
 		{
 			// Filter case-insensitive
 			input: "one",
+			length: 1,
 			want:  "Instance One",
 		},
 		{
 			// Filter case-insensitive diacriticless
 			input: "two",
+			length: 1,
 			want:  "Instånce Twö",
+		},
+		{
+			// Filter all case-insensitive diacriticless
+			input: "instance",
+			length: 2,
+			want:  "Instance One",
 		},
 	}
 
 	for _, c := range cases {
 		result := i.Filter(c.input)
+		length := len(*result)
 		name := (*result)[0].Name
-		if name != c.want {
-			t.Fatalf("Result: %s, Want: %s", name, c.want)
+		if name != c.want || length != c.length {
+			t.Fatalf("Result: %s, %d, Want: %s, %d", name, length, c.want, c.length)
 		}
 	}
 }
