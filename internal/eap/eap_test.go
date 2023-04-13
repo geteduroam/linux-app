@@ -1,7 +1,6 @@
 package eap
 
 import (
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network/inner"
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network/method"
 	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/utils"
 	"testing"
@@ -18,17 +17,14 @@ func Test_Parse(t *testing.T) {
 		t.Fatalf("Error: %s", err.Error())
 	}
 
-	var EIPL *EAPIdentityProviderList
-	EIPL, err = Parse(b)
+	EIPL, err := Parse(b)
 	if err != nil {
 		t.Fatalf("Error: %s", err.Error())
 	}
 
-	var EIP *EAPIdentityProvider
-	EIP = EIPL.EAPIdentityProvider
+	EIP := EIPL.EAPIdentityProvider
 
-	var methods *AuthenticationMethods
-	methods, err = EIP.authenticationMethods()
+	methods, err := EIP.authenticationMethods()
 	if err != nil {
 		t.Fatalf("Error: %s", err.Error())
 	}
@@ -62,13 +58,9 @@ func Test_Parse(t *testing.T) {
 		},
 	}
 
-	var m *AuthenticationMethod
-	var r inner.Type
-
 	for _, c := range cases {
-		m = methods.AuthenticationMethod[c.authmethod]
-		r, err = m.preferredInnerAuthType(c.preferred)
-		es := utils.EtoString(err)
+		m := methods.AuthenticationMethod[c.authmethod]
+		r, err := m.preferredInnerAuthType(c.preferred)
 		es := utils.ErrorString(err)
 		if r.String() != c.want || es != c.err {
 			t.Fatalf("Result: %s, %s Want: %s, %s", r, es, c.want, c.err)
