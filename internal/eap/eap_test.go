@@ -69,6 +69,7 @@ func Test_Parse(t *testing.T) {
 		m = methods.AuthenticationMethod[c.authmethod]
 		r, err = m.preferredInnerAuthType(c.preferred)
 		es := utils.EtoString(err)
+		es := utils.ErrorString(err)
 		if r.String() != c.want || es != c.err {
 			t.Fatalf("Result: %s, %s Want: %s, %s", r, es, c.want, c.err)
 		}

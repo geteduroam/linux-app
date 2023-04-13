@@ -2,6 +2,7 @@ package instance
 
 import (
 	"testing"
+	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/utils"
 )
 
 func Test_Filter(t *testing.T) {
@@ -89,13 +90,6 @@ func Test_Flow(t *testing.T) {
 }
 
 func Test_RedirectURI(t *testing.T) {
-	EtoString := func(e error) string {
-		if e != nil {
-			return e.Error()
-		}
-		return ""
-	}
-
 	p := Profile{
 		AuthorizationEndpoint: "https://instance1.geteduroam.nl/oauth/authorize/",
 		Default:               true,
@@ -141,7 +135,7 @@ func Test_RedirectURI(t *testing.T) {
 	for _, c := range cases {
 		p.Redirect = c.input
 		r, e := p.RedirectURI()
-		es := EtoString(e)
+		es := utils.ErrorString(e)
 		if r != c.want || es != c.e {
 			t.Fatalf("Result: %s, %s Want: %s, %s", r, es, c.want, c.e)
 		}
