@@ -1,4 +1,4 @@
-module gitlab.geant.org/TI_Incubator/geteduroam-linux
+module github.com/geteduroam/linux-app
 
 go 1.18
 

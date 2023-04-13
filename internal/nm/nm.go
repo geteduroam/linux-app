@@ -7,10 +7,10 @@ import (
 	"path"
 	"strings"
 
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/config"
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network"
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network/method"
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/nm/connection"
+	"github.com/geteduroam/linux-app/internal/config"
+	"github.com/geteduroam/linux-app/internal/network"
+	"github.com/geteduroam/linux-app/internal/network/method"
+	"github.com/geteduroam/linux-app/internal/nm/connection"
 )
 
 // encodePath encodes a string to a path expected by NetworkManager

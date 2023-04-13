@@ -2,7 +2,7 @@ package instance
 
 import (
 	"testing"
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/utils"
+	"github.com/geteduroam/linux-app/internal/utils"
 )
 
 func Test_Filter(t *testing.T) {

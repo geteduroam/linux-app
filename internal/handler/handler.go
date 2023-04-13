@@ -3,9 +3,9 @@
 package handler
 
 import (
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/eap"
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network"
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/nm"
+	"github.com/geteduroam/linux-app/internal/eap"
+	"github.com/geteduroam/linux-app/internal/network"
+	"github.com/geteduroam/linux-app/internal/nm"
 )
 
 // Handlers is the structure that holds the handlers for UI events

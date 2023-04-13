@@ -3,7 +3,7 @@ package inner
 import (
 	"testing"
 
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network/method"
+	"github.com/geteduroam/linux-app/internal/network/method"
 )
 
 func Test_Valid(t *testing.T) {

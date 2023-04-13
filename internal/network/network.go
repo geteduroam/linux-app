@@ -1,8 +1,8 @@
 package network
 
 import (
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network/inner"
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network/method"
+	"github.com/geteduroam/linux-app/internal/network/inner"
+	"github.com/geteduroam/linux-app/internal/network/method"
 )
 
 // A network belongs to the network interface when it has a method

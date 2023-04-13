@@ -1,8 +1,8 @@
 package eap
 
 import (
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network/method"
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/utils"
+	"github.com/geteduroam/linux-app/internal/network/method"
+	"github.com/geteduroam/linux-app/internal/utils"
 	"testing"
 	"os"
 )

@@ -3,7 +3,7 @@ package instance
 import (
 	"strings"
 
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/utils"
+	"github.com/geteduroam/linux-app/internal/utils"
 )
 
 type geo struct {

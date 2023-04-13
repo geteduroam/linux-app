@@ -11,10 +11,10 @@ import (
 
 	"golang.org/x/term"
 
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/discovery"
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/handler"
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/instance"
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/network"
+	"github.com/geteduroam/linux-app/internal/discovery"
+	"github.com/geteduroam/linux-app/internal/handler"
+	"github.com/geteduroam/linux-app/internal/instance"
+	"github.com/geteduroam/linux-app/internal/network"
 )
 
 // askSecret is a tweak of thee 'ask' function that uses golang.org/x/term to read a secret securely

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"gitlab.geant.org/TI_Incubator/geteduroam-linux/internal/instance"
+	"github.com/geteduroam/linux-app/internal/instance"
 )
 
 // Discovery is the main structure that is used for unmarshalling the JSON
