@@ -5,10 +5,8 @@ import (
 )
 
 func Test_Filter(t *testing.T) {
-	i := Instances{}
-
-	i = []Instance {
-		Instance {
+	i := []Instance {
+		{
 			Name:         "Instance One",
 			/*
 			For the moment we can do without these since
@@ -39,7 +37,7 @@ func Test_Filter(t *testing.T) {
 			},
 			*/
 		},
-		Instance {
+		{
 			// Diacritics
 			Name:         "Instånce Twö",
 		},
@@ -122,9 +120,8 @@ func Test_RedirectURI(t *testing.T) {
 	EtoString := func(e error) string {
 		if e != nil {
 			return e.Error()
-		} else {
-			return ""
 		}
+		return ""
 	}
 
 	p := Profile{
