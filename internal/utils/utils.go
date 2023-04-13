@@ -20,10 +20,11 @@ func RemoveDiacritics(text string) (string, error) {
 	return result, nil
 }
 
-func EtoString(e error) string {
-	if e != nil {
-		return e.Error()
-	} else {
+// ErrorString returns an error message for an error
+// If the error is nil it returns the empty string
+func ErrorString(e error) string {
+	if e == nil {
 		return ""
 	}
+	return e.Error()
 }
