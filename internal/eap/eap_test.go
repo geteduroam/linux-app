@@ -12,7 +12,7 @@ func Test_Parse(t *testing.T) {
 	var err error
 	var b []byte
 
-	b, err = os.ReadFile("eduroam-eap-generic-eVAe.eap-config.xml")
+	b, err = os.ReadFile("test_data/eduroam-eap-generic-eVAe.eap-config.xml")
 	if err != nil {
 		t.Fatalf("Error: %s", err.Error())
 	}
