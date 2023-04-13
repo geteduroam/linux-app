@@ -5,37 +5,9 @@ import (
 )
 
 func Test_Filter(t *testing.T) {
-	i := []Instance {
+	i := Instances {
 		{
 			Name:         "Instance One",
-			/*
-			For the moment we can do without these since
-			filtering only takes place on Name, but we might
-			need them later if Filtering logic changes
-
-			CatIDP:       0001,
-			Country:      "NL",
-			Geo: []geo {
-				{
-					lat:  float32(0),
-					long: float32(0),
-				},
-
-			},
-			ID:           "cat_0001",
-			Profiles: []Profile {
-				{
-					AuthorizationEndpoint: "https://instance1.geteduroam.nl/oauth/authorize/",
-					Default:               true,
-					EapConfigEndpoint:     "https://instance1.geteduroam.nl/api/eap-config/",
-					ID:                    "letswifi_cat_0001",
-					Name:                  "geteduroam",
-					OAuth:                 true,
-					TokenEndpoint:         "https://instance1.geteduroam.nl/oauth/token/",
-					Redirect:              "https://instance1.geteduroam.nl/",
-				},
-			},
-			*/
 		},
 		{
 			// Diacritics
@@ -150,7 +122,7 @@ func Test_RedirectURI(t *testing.T) {
 			// No Redirect
 			input: "",
 			want:  "",
-			e:     "No redirect found",
+			e:     "no redirect found",
 		},
 		{
 			// Enforce Test
