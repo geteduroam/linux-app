@@ -1,10 +1,9 @@
 package nm
 
 import (
+	"errors"
 	"fmt"
-	"os"
 	"os/user"
-	"path"
 	"strings"
 
 	"github.com/geteduroam/linux-app/internal/config"
@@ -40,35 +39,55 @@ func buildCertFile(name string, cert []string) ([]byte, error) {
 -----END CERTIFICATE-----`,
 			c)
 	}
-	// TODO: or XDG_DATA_HOME?
-	home := os.Getenv("XDG_CONFIG_HOME")
-	if home == "" {
-		// TODO: expand with $HOME instead?
-		home = "~/.config"
-	}
-	c := &config.Config{Directory: path.Join(home, "geteduroam")}
-	p, err := c.Write(filename, content)
+	p, err := config.WriteFile(filename, []byte(content))
 	if err != nil {
 		return nil, err
 	}
 	return encodePath(p), nil
 }
 
-// Install installs a non TLS network and returns an error if it cannot configure it
-// Right now it adds a new profile that is not automatically added
-func Install(n network.NonTLS) error {
-	fID := fmt.Sprintf("%s (from Geteduroam)", n.SSID)
+// previousCon gets a connection object using the previous UUID
+func previousCon(pUUID string) (*connection.Connection, error) {
+	if pUUID == "" {
+		return nil, errors.New("UUID is empty")
+	}
 	s, err := connection.NewSettings()
 	if err != nil {
-		return nil
+		return nil, err
 	}
+	return s.ConnectionByUUID(pUUID)
+}
+
+// createCon creates a new connection using the arguments
+// if a previous connection was found with pUUID, it updates that one instead
+// it returns the newly created or updated connection object
+func createCon(pUUID string, args connection.SettingsArgs) (*connection.Connection, error) {
+	prev, err := previousCon(pUUID)
+	// previous connection found, update it with the new settings args
+	if err == nil {
+		return prev, prev.Update(args)
+	}
+	// create a connection settings object
+	s, err := connection.NewSettings()
+	if err != nil {
+		return nil, err
+	}
+	// create a new connection
+	return s.AddConnection(args)
+}
+
+// Install installs a non TLS network and returns an error if it cannot configure it
+// Right now it adds a new profile that is not automatically added
+// It returns the uuid if the connection was added successfully
+func Install(n network.NonTLS, pUUID string) (string, error) {
+	fID := fmt.Sprintf("%s (from Geteduroam)", n.SSID)
 	cUser, err := user.Current()
 	if err != nil {
-		return err
+		return "", err
 	}
 	cert, err := buildCertFile("ca-cert", n.Cert)
 	if err != nil {
-		return err
+		return "", err
 	}
 	sCon := map[string]interface{}{
 		"permissions": []string{
@@ -123,9 +142,18 @@ func Install(n network.NonTLS) error {
 		"ipv4":                     sIP4,
 		"ipv6":                     sIP6,
 	}
-	_, err = s.AddConnection(settings)
+	con, err := createCon(pUUID, settings)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	return nil
+	// get the settings from the added connection
+	gs, err := con.GetSettings()
+	if err != nil {
+		return "", err
+	}
+	uuid, err := gs.UUID()
+	if err != nil {
+		return "", err
+	}
+	return uuid, nil
 }

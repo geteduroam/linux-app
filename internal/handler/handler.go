@@ -3,6 +3,7 @@
 package handler
 
 import (
+	"github.com/geteduroam/linux-app/internal/config"
 	"github.com/geteduroam/linux-app/internal/eap"
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/geteduroam/linux-app/internal/nm"
@@ -40,19 +41,36 @@ func (h Handlers) network(config []byte) (network.Network, error) {
 
 // Configure configures the connection using the parsed configuration
 // It installs it using NetworkManager
-func (h Handlers) Configure(config []byte) error {
+func (h Handlers) Configure(eap []byte) (err error) {
 	// Get the network
-	n, err := h.network(config)
+	n, err := h.network(eap)
 	if err != nil {
 		return err
 	}
+	var uuid string
+
+	// get the previous UUID if the config can be loaded
+	c, err := config.Load()
+	if err == nil {
+		uuid = c.UUID
+	}
+
 	switch t := n.(type) {
 	case *network.NonTLS:
 		username, password := h.CredentialsH(t.Credentials, n.ProviderInfo())
 		t.Credentials.Username = username
 		t.Credentials.Password = password
-		return nm.Install(*t)
+		uuid, err = nm.Install(*t, uuid)
 	default:
 		panic("TLS networks are not yet supported")
 	}
+	if err != nil {
+		return
+	}
+	// save the config with the uuid
+	nc := config.Config{
+		UUID: uuid,
+	}
+	err = nc.Write()
+	return
 }
