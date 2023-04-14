@@ -1,10 +1,12 @@
 package eap
 
 import (
+	"os"
+	"testing"
+
+	"github.com/geteduroam/linux-app/internal/network/inner"
 	"github.com/geteduroam/linux-app/internal/network/method"
 	"github.com/geteduroam/linux-app/internal/utils"
-	"testing"
-	"os"
 )
 
 // These are very rudimentary tests, needs parametrization
@@ -30,40 +32,39 @@ func Test_Parse(t *testing.T) {
 	}
 
 	cases := []struct {
-		authmethod    int
-		preferred     method.Type
-		want          string
-		err           string
+		method method.Type
+		want   inner.Type
+		err    string
 	}{
+		// The first autentication method only has 26 defined EapMschapv2
+		// This is a valid method for PEAP
 		{
-			// The first AuthenticationMethod
-			authmethod: 0,
-			preferred:  25,
-			want:       "mschapv2",
-			err:        "",
+			method: method.PEAP,
+			want:   inner.EapMschapv2,
+			err:    "",
 		},
+		// We want 26, EapMschapv2 again due to it only having 26 defined again
 		{
-			// The second AuthenticationMethod
-			authmethod: 1,
-			preferred:  25,
-			want:       "mschapv2",
-			err:        "",
+			method: method.PEAP,
+			want:   inner.EapMschapv2,
+			err:    "",
 		},
+		// This only has a non eap auth method so no viable is found here
 		{
-			// The third AuthenticationMethod
-			authmethod: 2,
-			preferred:  25,
-			want:       "",
-			err:        "no viable inner authentication method found",
+			method: method.PEAP,
+			want:   inner.None,
+			err:    "no viable inner authentication method found",
 		},
 	}
 
-	for _, c := range cases {
-		m := methods.AuthenticationMethod[c.authmethod]
-		r, err := m.preferredInnerAuthType(c.preferred)
-		es := utils.ErrorString(err)
-		if r.String() != c.want || es != c.err {
-			t.Fatalf("Result: %s, %s Want: %s, %s", r, es, c.want, c.err)
+	for i, c := range cases {
+		m := methods.AuthenticationMethod[i]
+		r, err := m.preferredInnerAuthType(c.method)
+		if r != c.want {
+			t.Fatalf("method is not what is expected, got: %d, want: %d", r, c.want)
+		}
+		if utils.ErrorString(err) != c.err {
+			t.Fatalf("error is not expected, got: %v, want: %v", err, c.err)
 		}
 	}
 }
