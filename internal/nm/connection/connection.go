@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	Interface = SettingsInterface + ".Connection"
-	Update    = Interface + ".Update"
+	Interface   = SettingsInterface + ".Connection"
+	Update      = Interface + ".Update"
+	GetSettings = Interface + ".GetSettings"
 )
 
 type Connection struct {
@@ -23,6 +24,16 @@ func New(path dbus.ObjectPath) (*Connection, error) {
 	return c, nil
 }
 
-func (c *Connection) Update(settings Settings) error {
+func (c *Connection) Update(settings SettingsArgs) error {
 	return c.Call(Update, settings)
+}
+
+func (c *Connection) GetSettings() (SettingsArgs, error) {
+	var settings map[string]map[string]dbus.Variant
+
+	if err := c.CallReturn(&settings, GetSettings); err != nil {
+		return nil, err
+	}
+
+	return decodeSettings(settings), nil
 }
