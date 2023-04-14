@@ -13,8 +13,8 @@ import (
 )
 
 type authMethodTest struct {
-	want   inner.Type
-	err    string
+	want inner.Type
+	err  string
 }
 
 func testAuthMethod(t *testing.T, eip *EAPIdentityProvider, cases []authMethodTest) {
@@ -43,9 +43,9 @@ func testProviderInfo(t *testing.T, eip *EAPIdentityProvider, pi network.Provide
 }
 
 type ssidSettingsTest struct {
-	SSID string
+	SSID   string
 	MinRSN string
-	err string
+	err    string
 }
 
 func testSSIDSettings(t *testing.T, eip *EAPIdentityProvider, settings ssidSettingsTest) {
@@ -63,7 +63,7 @@ func testSSIDSettings(t *testing.T, eip *EAPIdentityProvider, settings ssidSetti
 }
 
 type networkTest struct {
-	n network.Network
+	n   network.Network
 	err string
 }
 
@@ -71,8 +71,8 @@ type parseTest struct {
 	filename         string
 	authMethodTests  []authMethodTest
 	providerInfoTest network.ProviderInfo
-	ssidTest ssidSettingsTest
-	netTest networkTest
+	ssidTest         ssidSettingsTest
+	netTest          networkTest
 }
 
 func TestParse(t *testing.T) {
@@ -83,18 +83,18 @@ func TestParse(t *testing.T) {
 				// In this file we expect everything to be valid so errors are nil
 				// The first autentication method, PEAP, only has EapMschapv2 (26) as inner defined
 				{
-					want:   inner.EapMschapv2,
-					err:    "",
+					want: inner.EapMschapv2,
+					err:  "",
 				},
 				// The second authentication method, 21 (TTLS), only has 26 again, EapMschapv2
 				{
-					want:   inner.EapMschapv2,
-					err:    "",
+					want: inner.EapMschapv2,
+					err:  "",
 				},
 				// The third authentication method, 21 TTLS, only has a Non EAP Auth method 1
 				{
-					want:   inner.Pap,
-					err:    "",
+					want: inner.Pap,
+					err:  "",
 				},
 			},
 			providerInfoTest: network.ProviderInfo{
@@ -102,9 +102,9 @@ func TestParse(t *testing.T) {
 				Description: "eVA",
 			},
 			ssidTest: ssidSettingsTest{
-				SSID: "eduroam",
+				SSID:   "eduroam",
 				MinRSN: "CCMP",
-				err: "",
+				err:    "",
 			},
 			netTest: networkTest{
 				n: &network.NonTLS{
@@ -114,7 +114,7 @@ func TestParse(t *testing.T) {
 							"MIIDeTCCAv+gAwIBAg...",
 							"MIIEMjCCAxqgAwIBAg...",
 						},
-						SSID: "eduroam",
+						SSID:   "eduroam",
 						MinRSN: "CCMP",
 						ServerIDs: []string{
 							"edu.nl",
@@ -127,8 +127,8 @@ func TestParse(t *testing.T) {
 					Credentials: network.Credentials{
 						Suffix: "@edu.nl",
 					},
-					MethodType: method.PEAP,
-					InnerAuth: inner.EapMschapv2,
+					MethodType:   method.PEAP,
+					InnerAuth:    inner.EapMschapv2,
 					AnonIdentity: "anonymous@edu.nl",
 				},
 				err: "",
@@ -143,28 +143,28 @@ func TestParse(t *testing.T) {
 			authMethodTests: []authMethodTest{
 				// The first autentication method, PEAP, has no inners defined
 				{
-					want:   inner.None,
-					err:    "the authentication method has no inner authentication methods",
+					want: inner.None,
+					err:  "the authentication method has no inner authentication methods",
 				},
 				// The second autentication method, also PEAP, has changed inner type to Non EAP
 				{
-					want:   inner.None,
-					err:    "no viable inner authentication method found",
+					want: inner.None,
+					err:  "no viable inner authentication method found",
 				},
 				// The third authentication method, PEAP, has changed inner type to Non EAP
 				{
-					want:   inner.Mschap,
-					err:    "",
+					want: inner.Mschap,
+					err:  "",
 				},
 			},
 			providerInfoTest: network.ProviderInfo{},
 			ssidTest: ssidSettingsTest{
-				SSID: "",
+				SSID:   "",
 				MinRSN: "",
-				err: "no viable SSID entry found",
+				err:    "no viable SSID entry found",
 			},
 			netTest: networkTest{
-				n: nil,
+				n:   nil,
 				err: "no viable SSID entry found",
 			},
 		},
