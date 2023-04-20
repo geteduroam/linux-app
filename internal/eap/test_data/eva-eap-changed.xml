@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<EAPIdentityProviderList xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="eap-metadata.xsd">
+  <EAPIdentityProvider version="1" lang="en" ID="edu.nl" namespace="urn:RFC4282:realm">
+    <AuthenticationMethods>
+      <AuthenticationMethod>
+        <EAPMethod>
+          <Type>25</Type>
+        </EAPMethod>
+        <ServerSideCredential>
+          <CA format="X.509" encoding="base64">MIID0zCCArugAwIBAg...</CA>
+          <CA format="X.509" encoding="base64">MIIDeTCCAv+gAwIBAg...</CA>
+          <CA format="X.509" encoding="base64">MIIEMjCCAxqgAwIBAg...</CA>
+          <ServerID>edu.nl</ServerID>
+        </ServerSideCredential>
+        <ClientSideCredential>
+          <OuterIdentity>anonymous@edu.nl</OuterIdentity>
+          <InnerIdentitySuffix>edu.nl</InnerIdentitySuffix>
+          <InnerIdentityHint>true</InnerIdentityHint>
+        </ClientSideCredential>
+      </AuthenticationMethod>
+      <AuthenticationMethod>
+        <EAPMethod>
+          <Type>21</Type>
+        </EAPMethod>
+        <ServerSideCredential>
+          <CA format="X.509" encoding="base64">MIID0zCCArugAwIBAg...</CA>
+          <CA format="X.509" encoding="base64">MIIDeTCCAv+gAwIBAg...</CA>
+          <CA format="X.509" encoding="base64">MIIEMjCCAxqgAwIBAg...</CA>
+          <ServerID>edu.nl</ServerID>
+        </ServerSideCredential>
+        <ClientSideCredential>
+          <OuterIdentity>anonymous@edu.nl</OuterIdentity>
+          <InnerIdentitySuffix>edu.nl</InnerIdentitySuffix>
+          <InnerIdentityHint>true</InnerIdentityHint>
+        </ClientSideCredential>
+        <InnerAuthenticationMethod>
+          <NonEAPAuthMethod>
+            <Type>26</Type>
+          </NonEAPAuthMethod>
+        </InnerAuthenticationMethod>
+      </AuthenticationMethod>
+      <AuthenticationMethod>
+        <EAPMethod>
+          <Type>21</Type>
+        </EAPMethod>
+        <ServerSideCredential>
+          <CA format="X.509" encoding="base64">MIID0zCCArugAwIBAg...</CA>
+          <CA format="X.509" encoding="base64">MIIDeTCCAv+gAwIBAg...</CA>
+          <CA format="X.509" encoding="base64">MIIEMjCCAxqgAwIBAg...</CA>
+          <ServerID>edu.nl</ServerID>
+        </ServerSideCredential>
+        <ClientSideCredential>
+          <OuterIdentity>anonymous@edu.nl</OuterIdentity>
+          <InnerIdentitySuffix>edu.nl</InnerIdentitySuffix>
+          <InnerIdentityHint>true</InnerIdentityHint>
+        </ClientSideCredential>
+        <InnerAuthenticationMethod>
+          <NonEAPAuthMethod>
+            <Type>2</Type>
+          </NonEAPAuthMethod>
+        </InnerAuthenticationMethod>
+      </AuthenticationMethod>
+    </AuthenticationMethods>
+    <CredentialApplicability>
+      <IEEE80211>
+        <ConsortiumOID>001bc50460</ConsortiumOID>
+      </IEEE80211>
+      <IEEE80211>
+        <ConsortiumOID>004096</ConsortiumOID>
+      </IEEE80211>
+    </CredentialApplicability>
+  </EAPIdentityProvider>
+</EAPIdentityProviderList>
