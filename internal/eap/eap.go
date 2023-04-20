@@ -242,7 +242,7 @@ func (p *EAPIdentityProvider) AuthMethods() ([]*AuthenticationMethod, error) {
 // preferredInnerAuthType gets the first valid inner authentication type
 func (am *AuthenticationMethod) preferredInnerAuthType() (inner.Type, error) {
 	if len(am.InnerAuthenticationMethod) < 1 {
-		return inner.None, errors.New("inner authentication method couldn't be found")
+		return inner.None, errors.New("the authentication method has no inner authentication methods")
 	}
 
 	mt := method.Type(am.EAPMethod.Type)
