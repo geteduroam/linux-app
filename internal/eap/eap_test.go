@@ -13,7 +13,6 @@ import (
 )
 
 type authMethodTest struct {
-	method method.Type
 	want   inner.Type
 	err    string
 }
