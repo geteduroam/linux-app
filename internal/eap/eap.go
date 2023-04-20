@@ -240,10 +240,12 @@ func (p *EAPIdentityProvider) AuthMethods() ([]*AuthenticationMethod, error) {
 }
 
 // preferredInnerAuthType gets the first valid inner authentication type
-func (am *AuthenticationMethod) preferredInnerAuthType(mt method.Type) (inner.Type, error) {
+func (am *AuthenticationMethod) preferredInnerAuthType() (inner.Type, error) {
 	if len(am.InnerAuthenticationMethod) < 1 {
 		return inner.None, errors.New("inner authentication method couldn't be found")
 	}
+
+	mt := method.Type(am.EAPMethod.Type)
 
 	// loop through all methods and return the first valid one
 	for _, i := range am.InnerAuthenticationMethod {
@@ -368,9 +370,8 @@ func (am *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Networ
 		}
 
 	}
-	mt := method.Type(am.EAPMethod.Type)
 	// get the inner auth
-	it, err := am.preferredInnerAuthType(mt)
+	it, err := am.preferredInnerAuthType()
 	if err != nil {
 		return nil, errors.New("no preferred inner authentication found")
 	}
