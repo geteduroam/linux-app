@@ -1,8 +1,8 @@
 package connection
 
 import (
-	"github.com/godbus/dbus/v5"
 	"github.com/geteduroam/linux-app/internal/nm/base"
+	"github.com/godbus/dbus/v5"
 )
 
 const (

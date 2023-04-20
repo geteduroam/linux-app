@@ -15,7 +15,7 @@ const (
 	Mschapv2 Type = 3
 	// TODO: remove this? https://github.com/geteduroam/windows-app/blob/f11f00dee3eb71abd38537e18881463f83b180d3/CHANGELOG.md?plain=1#L34
 	EapPeapMschapv2 Type = 25
-	EapMschapv2      Type = 26
+	EapMschapv2     Type = 26
 )
 
 // EAP returns whether the type is an EAP inner type

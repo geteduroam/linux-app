@@ -2,48 +2,49 @@ package instance
 
 import (
 	"testing"
+
 	"github.com/geteduroam/linux-app/internal/utils"
 )
 
 func Test_Filter(t *testing.T) {
-	i := Instances {
+	i := Instances{
 		{
-			Name:         "Instance One",
+			Name: "Instance One",
 		},
 		{
 			// Diacritics
-			Name:         "Instånce Twö",
+			Name: "Instånce Twö",
 		},
 	}
 
 	cases := []struct {
-		input string
+		input  string
 		length int
-		want  string
+		want   string
 	}{
 		{
 			// Normal test
-			input: "One",
+			input:  "One",
 			length: 1,
-			want:  "Instance One",
+			want:   "Instance One",
 		},
 		{
 			// Filter case-insensitive
-			input: "one",
+			input:  "one",
 			length: 1,
-			want:  "Instance One",
+			want:   "Instance One",
 		},
 		{
 			// Filter case-insensitive diacriticless
-			input: "two",
+			input:  "two",
 			length: 1,
-			want:  "Instånce Twö",
+			want:   "Instånce Twö",
 		},
 		{
 			// Filter all case-insensitive diacriticless
-			input: "instance",
+			input:  "instance",
 			length: 2,
-			want:  "Instance One",
+			want:   "Instance One",
 		},
 	}
 
@@ -86,7 +87,6 @@ func Test_Flow(t *testing.T) {
 	if flow != DirectFlow {
 		t.Fatalf("Flow should be DirectFlow")
 	}
-
 }
 
 func Test_RedirectURI(t *testing.T) {
