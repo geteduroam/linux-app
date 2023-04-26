@@ -101,7 +101,7 @@ func Install(n network.NonTLS) error {
 		"ca-cert":            cert,
 		"anonymous-identity": n.AnonIdentity,
 		"password":           n.Credentials.Password,
-		"password-flags":     0,
+		"password-flags":     1,
 		"altsubject-matches": sids,
 	}
 	if n.InnerAuth.EAP() && n.MethodType == method.TTLS {
