@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -288,7 +289,18 @@ func oauth(p *instance.Profile) {
 	}
 }
 
-func main() {
+func doLocal(filename string) {
+	    b, err := os.ReadFile(filename)
+	    if err != nil {
+		    log.Fatalf("Failed to read local file: %v", err)
+	    }
+	    err = file(b)
+	    if err != nil {
+		    log.Fatalf("Failed to configure the connection using the metadata: %v", err)
+	    }
+}
+
+func doDiscovery() {
 	c := discovery.NewCache()
 	i, err := c.Instances()
 	if err != nil {
@@ -308,6 +320,17 @@ func main() {
 		return
 	case instance.OAuthFlow:
 		oauth(p)
+	}
+}
+
+func main() {
+	local := flag.String("local", "", "The path to a local EAP metadata file")
+	flag.Parse()
+
+	if local != nil && *local != "" {
+		doLocal(*local)
+	} else {
+		doDiscovery()
 	}
 	fmt.Println("\nYour eduroam connection has been added to NetworkManager with the name eduroam (from Geteduroam)")
 }
