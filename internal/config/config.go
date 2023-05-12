@@ -44,9 +44,9 @@ func WriteFile(filename string, content []byte) (string, error) {
 	return fpath, nil
 }
 
-var configName = "cache"
+var configName = "state"
 
-// Load loads the configuration from the cache
+// Load loads the configuration from the state
 func Load() (*Config, error) {
 	dir := Directory()
 
@@ -66,7 +66,7 @@ func Load() (*Config, error) {
 	return &v.Config, nil
 }
 
-// Write writes the configuration to the cache
+// Write writes the configuration to the state
 func (c Config) Write() (err error) {
 	// we pack the struct in a versioned struct
 	// This is so that we can in the future migrate configs if we drastically change the format
