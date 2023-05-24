@@ -1,5 +1,7 @@
 github.com/godbus/dbus/v5 v5.1.0 h1:4KLkAxT3aOY8Li4FRJe/KvhoNFFxo0m6fNuFUO8QJUk=
 github.com/godbus/dbus/v5 v5.1.0/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
+github.com/jwijenbergh/eduoauth-go v0.0.0-20230524082648-1e5d1c810d35 h1:3hMLNVJ1C1xN2SSQmDKd3z0ij4aPtsZBTOKTJw1lkhc=
+github.com/jwijenbergh/eduoauth-go v0.0.0-20230524082648-1e5d1c810d35/go.mod h1:HidfCfBBI7U0edu2f0tNM/4/kkm4pD+nrp6IlANo214=
 golang.org/x/sys v0.6.0 h1:MVltZSvRTcU2ljQOhs94SXPftV6DCNnZViHeQps87pQ=
 golang.org/x/sys v0.6.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.6.0 h1:clScbb1cHjoCkyRbWwBEUZ5H/tIFu5TAXIqaZD0Gcjw=

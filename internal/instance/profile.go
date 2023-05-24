@@ -1,12 +1,15 @@
 package instance
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os/exec"
 	"time"
+	"github.com/jwijenbergh/eduoauth-go"
 )
 
 // Profile is the profile from discovery
@@ -68,6 +71,20 @@ func (p *Profile) RedirectURI() (string, error) {
 	return u.String(), nil
 }
 
+// readResponse reads the HTTP response and returns the body and error
+// It also ensures the body is closed in the end to prevent a resource leak
+func readResponse(res *http.Response) ([]byte, error) {
+	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode < 200 || res.StatusCode > 299 {
+		return nil, fmt.Errorf("status code is not 2xx for eap. Status code: %v, body: %v", res.StatusCode, string(body))
+	}
+	return body, nil
+}
+
 // EAPDirect Gets an EAP config using the direct flow
 // It returns the byte array of the EAP config and an error if there is one
 func (p *Profile) EAPDirect() ([]byte, error) {
@@ -82,14 +99,41 @@ func (p *Profile) EAPDirect() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	return readResponse(res)
+}
 
-	body, err := io.ReadAll(res.Body)
+// EAPOAuth gets the EAP metadata using OAuth
+func (p *Profile) EAPOAuth() ([]byte, error) {
+	o := eduoauth.OAuth{
+		ClientID: "app.geteduroam.sh",
+		BaseAuthorizationURL: p.AuthorizationEndpoint,
+		TokenURL: p.TokenEndpoint,
+		RedirectPath: "/",
+	}
+	url, err := o.AuthURL("eap-metadata")
 	if err != nil {
 		return nil, err
 	}
-	if res.StatusCode < 200 || res.StatusCode > 299 {
-		return nil, fmt.Errorf("status code is not 2xx for eap. Status code: %v, body: %v", res.StatusCode, string(body))
+
+	// TODO: This UI message should be moved to the CLI
+	fmt.Println("Opening the browser. Please authorize the client...")
+	err = exec.Command("xdg-open", url).Start()
+	if err != nil {
+		return nil, err
 	}
-	return body, nil
+	err = o.Exchange(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	c := o.NewHTTPClient()
+	req, err := http.NewRequestWithContext(context.Background(), "POST", p.EapConfigEndpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return readResponse(res)
 }
