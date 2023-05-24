@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/geteduroam/linux-app/internal/network"
+	"github.com/geteduroam/linux-app/internal/network/cert"
 	"github.com/geteduroam/linux-app/internal/network/inner"
 	"github.com/geteduroam/linux-app/internal/network/method"
 )
@@ -305,30 +306,26 @@ func (p *EAPIdentityProvider) SSIDSettings() (string, string, error) {
 }
 
 // Valid returns whether or not a certificate is valid by checking if the encoding is base64 and the format is X509
-func (ca *CertData) Valid() bool {
-	if ca.EncodingAttr != "base64" {
-		return false
-	}
-
-	if ca.FormatAttr != "X.509" {
-		return false
-	}
-
-	return true
-}
-
 // CaList gets a list of certificates by looping through the certificate list and returning all *valid* certificates
-func (ss *ServerCredentialVariants) CAList() ([]string, error) {
-	var ca []string
+func (ss *ServerCredentialVariants) CAList() (*cert.Certs, error) {
+	var certs []string
 	for _, c := range ss.CA {
-		if c != nil && c.Valid() {
-			ca = append(ca, c.Value)
+		if c == nil {
+			continue
 		}
+
+		if c.EncodingAttr != "base64" {
+			continue
+		}
+		if c.FormatAttr != "X.509" {
+			continue
+		}
+		certs = append(certs, c.Value)
 	}
-	if len(ca) == 0 {
+	if len(certs) == 0 {
 		return nil, errors.New("no viable server side CA entry found")
 	}
-	return ca, nil
+	return cert.New(certs)
 }
 
 // TLSNetwork creates a TLS network using the authentication method.
@@ -337,11 +334,12 @@ func (am *AuthenticationMethod) TLSNetwork(base network.Base) network.Network {
 	// TODO: client certificate should be required right?
 	var ccert string
 	var passphrase string
-	if cc := am.ClientSideCredential; cc != nil {
-		if cc.ClientCertificate != nil && cc.ClientCertificate.Valid() {
-			ccert = cc.ClientCertificate.Value
+	if csc := am.ClientSideCredential; csc != nil {
+		cc := csc.ClientCertificate
+		if cc != nil && cc.EncodingAttr == "base64" && cc.FormatAttr == "PKCS12" {
+			ccert = cc.Value
+			passphrase = csc.Passphrase
 		}
-		passphrase = cc.Passphrase
 	}
 
 	return &network.TLS{
@@ -416,7 +414,7 @@ func (am *AuthenticationMethod) Network(ssid string, minrsn string, pinfo networ
 	// These are the settings that are common for each network
 	sid := ss.ServerID
 	base := network.Base{
-		Cert:         CA,
+		Certs:        *CA,
 		ProviderInfo: pinfo,
 		SSID:         ssid,
 		MinRSN:       minrsn,

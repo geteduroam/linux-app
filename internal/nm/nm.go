@@ -6,45 +6,10 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/geteduroam/linux-app/internal/config"
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/geteduroam/linux-app/internal/network/method"
 	"github.com/geteduroam/linux-app/internal/nm/connection"
 )
-
-// encodePath encodes a string to a path expected by NetworkManager
-// This path is prefixed with file:// and is expicitly NULL terminated
-// It returns this path as a byte array
-func encodePath(p string) []byte {
-	// get the converted path
-	// see: https://github.com/NetworkManager/NetworkManager/blob/main/examples/python/dbus/add-wifi-eap-connection.py#L12
-	// \x00 is just NUL termination which NM expects
-	c := fmt.Sprintf("file://%s\x00", p)
-	return []byte(c)
-}
-
-// buildCertFile creates a certificate file to be used by NetworkManager
-// It gets the name of the certificate that is used for the filename and ends it with .pem
-// Cert is the array of certificates that need to be inputted between the BEGIN and END certificate strings
-func buildCertFile(name string, cert []string) ([]byte, error) {
-	filename := fmt.Sprintf("%s.pem", name)
-	content := ""
-	for i, c := range cert {
-		if i != 0 {
-			content += "\n"
-		}
-		content += fmt.Sprintf(
-			`-----BEGIN CERTIFICATE-----
-%s
------END CERTIFICATE-----`,
-			c)
-	}
-	p, err := config.WriteFile(filename, []byte(content))
-	if err != nil {
-		return nil, err
-	}
-	return encodePath(p), nil
-}
 
 // previousCon gets a connection object using the previous UUID
 func previousCon(pUUID string) (*connection.Connection, error) {
@@ -85,10 +50,6 @@ func Install(n network.NonTLS, pUUID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	cert, err := buildCertFile("ca-cert", n.Cert)
-	if err != nil {
-		return "", err
-	}
 	sCon := map[string]interface{}{
 		"permissions": []string{
 			fmt.Sprintf("user:%s", cUser.Username),
@@ -117,7 +78,7 @@ func Install(n network.NonTLS, pUUID string) (string, error) {
 			n.Method().String(),
 		},
 		"identity":           n.Credentials.Username,
-		"ca-cert":            cert,
+		"ca-cert":            n.Certs.ToPEM(),
 		"anonymous-identity": n.AnonIdentity,
 		"password":           n.Credentials.Password,
 		"password-flags":     0,
