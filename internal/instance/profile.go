@@ -17,7 +17,7 @@ type Profile struct {
 	ID                    string `json:"id"`
 	Name                  string `json:"name"`
 	OAuth                 bool   `json:"oauth"`
-	TokenEndpoint         string `json:"string"`
+	TokenEndpoint         string `json:"token_endpoint"`
 	Redirect              string `json:"redirect"`
 }
 
