@@ -253,6 +253,17 @@ func redirect(p *instance.Profile) {
 	fmt.Println("Opened your browser, please continue the process there")
 }
 
+// oauth does the handling for the OAuth flow
+func oauth(p *instance.Profile) {
+	_, err := p.EAPOAuth()
+	if err != nil {
+		log.Fatalf("Could not obtain eap config with OAuth: %v", err)
+	}
+
+	// TODO: configuring of TLS profiles
+	log.Println("Warning: TLS profiles are not yet supported")
+}
+
 func main() {
 	c := discovery.NewCache()
 	i, err := c.Instances()
@@ -270,8 +281,11 @@ func main() {
 		direct(p)
 	case instance.RedirectFlow:
 		redirect(p)
-	default:
-		fmt.Fprint(os.Stderr, "\nWe do not support OAuth just yet")
+		return
+	case instance.OAuthFlow:
+		oauth(p)
+		// TODO: Remove this return once supported
+		return
 	}
 	fmt.Println("\nYour eduroam connection has been added to NetworkManager with the name eduroam (from Geteduroam)")
 }
