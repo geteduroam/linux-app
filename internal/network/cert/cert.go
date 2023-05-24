@@ -2,10 +2,10 @@ package cert
 
 import (
 	"bytes"
-	"errors"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
-	"crypto/x509"
+	"errors"
 )
 
 // toPEM converts an x509 certificate to a PEM encoded block
@@ -20,7 +20,7 @@ func isRoot(cert *x509.Certificate) bool {
 }
 
 type Certs struct {
-	Root *x509.Certificate
+	Root          *x509.Certificate
 	Intermediates []*x509.Certificate
 }
 
@@ -60,7 +60,7 @@ func New(data []string) (*Certs, error) {
 		return nil, errors.New("no root CA found")
 	}
 	return &Certs{
-		Root: root,
+		Root:          root,
 		Intermediates: inter,
 	}, nil
 }

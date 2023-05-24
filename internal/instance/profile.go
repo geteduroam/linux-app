@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os/exec"
 	"time"
+
 	"github.com/jwijenbergh/eduoauth-go"
 )
 
@@ -105,10 +106,10 @@ func (p *Profile) EAPDirect() ([]byte, error) {
 // EAPOAuth gets the EAP metadata using OAuth
 func (p *Profile) EAPOAuth() ([]byte, error) {
 	o := eduoauth.OAuth{
-		ClientID: "app.geteduroam.sh",
+		ClientID:             "app.geteduroam.sh",
 		BaseAuthorizationURL: p.AuthorizationEndpoint,
-		TokenURL: p.TokenEndpoint,
-		RedirectPath: "/",
+		TokenURL:             p.TokenEndpoint,
+		RedirectPath:         "/",
 	}
 	url, err := o.AuthURL("eap-metadata")
 	if err != nil {

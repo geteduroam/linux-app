@@ -120,14 +120,13 @@ func TestParse(t *testing.T) {
 					Base: network.Base{
 						Certs: mustParseCert(t,
 							"MIIDtzCCAp+gAwIBAgIUCVQbKTO9PsqghECzGPqq6Fiy8REwDQYJKoZIhvcNAQELBQAwazELMAkGA1UEBhMCTkwxEzARBgNVBAgMClNvbWUtU3RhdGUxEjAQBgNVBAcMCUFtc3RlcmRhbTEQMA4GA1UECgwHVGVzdGluZzENMAsGA1UECwwEVGVzdDESMBAGA1UEAwwJVGVzdCB0ZXN0MB4XDTIzMDUyNDEzNTUxMFoXDTMzMDUyMTEzNTUxMFowazELMAkGA1UEBhMCTkwxEzARBgNVBAgMClNvbWUtU3RhdGUxEjAQBgNVBAcMCUFtc3RlcmRhbTEQMA4GA1UECgwHVGVzdGluZzENMAsGA1UECwwEVGVzdDESMBAGA1UEAwwJVGVzdCB0ZXN0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyLqG9yuMhbVC5y9zofPDLeCDIUVjgPbxXHtM6uveBUtqG4PxDkTczOlYN1IsYRh2iLNRYY4cqYZ1qtW+1CZaFVowhUMbTR7Y8Ik10CrCJQqoGq1CIICBd50wTFBLU2MZU3LQTwKYb5VQgbCMvRVHWdQOYg5GSlgdJRtIbzV1d+Q7+N5jiEBsT6psSu2gBduF1ueGICKe6Fk+ckOHDpwjVGeNIxnN2hJ5ft3WReDJ7fcHLMx7lNS+ZeY35LtpYiT6I8RGlMh2bu9hMTY1jXNbEqqZ2/5TmjVygS7BEMrVage9K2I5eM8++yX27OV3Di/SM3q/RVIcu1lNKaSj0IxXhwIDAQABo1MwUTAdBgNVHQ4EFgQU0M2QAnLWEDSFdFLCm5OxvVA9D1swHwYDVR0jBBgwFoAU0M2QAnLWEDSFdFLCm5OxvVA9D1swDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAHHdxGNUmyZa4ER9oqSalwVy9W5y1cNr4VpxBbxJe/fBPp+xdtnYRbz1/93LwcA+bTJlvT8ez2ijOJj5QODrgeVy5r4p5/1cABnJhsszk6ffJy/n5vIqo9jp8+7ZTFGxm1QQAOoZfJM+3ft8ZFf5e8Vjh090QV2OZvV69sey+TvfAlNMVotf/CaA2zA/j4z2bmWdrLAc5VVrb1Mil4z7LHhL62oOwXrS85zuoVBQVMbh5tnYgzMnbuy0hmMDg3ClkmSQTqzPyEi0SjhqKjgLgyVa47myhxvr1y77k0rZBRzkSEMsopu+ANYoVKRpw7gmjgMmXWzvdNlbD6RgpGlR4iA=="),
-						SSID: "eduroam",
+						SSID:   "eduroam",
 						MinRSN: "CCMP",
 						ServerIDs: []string{
 							"edu.nl",
 						},
 						ProviderInfo: network.ProviderInfo{
-							Name:
-							"eduroam Visitor Access (eVA)",
+							Name:        "eduroam Visitor Access (eVA)",
 							Description: "eVA",
 						},
 					},
