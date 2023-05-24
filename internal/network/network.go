@@ -1,6 +1,7 @@
 package network
 
 import (
+	"github.com/geteduroam/linux-app/internal/network/cert"
 	"github.com/geteduroam/linux-app/internal/network/inner"
 	"github.com/geteduroam/linux-app/internal/network/method"
 )
@@ -39,8 +40,8 @@ type ProviderInfo struct {
 
 // Base is the definition that each network always has
 type Base struct {
-	// Cert is the list of CA certificates that are used
-	Cert []string
+	// Certs is the list of CA certificates that are used
+	Certs cert.Certs
 	// SSID is the name of the network
 	SSID string
 	// MinRSN is the minimum RSN proto
