@@ -1,0 +1,20 @@
+---
+version: "2.3"
+
+services:
+  letswifi:
+    build:
+      context: ./letswifi
+    image: letswifi
+    ports:
+        - 8080:8080
+
+networks:
+  geteduroam:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.11.0/24
+          gateway: 172.21.11.1
+
