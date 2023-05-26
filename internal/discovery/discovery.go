@@ -77,6 +77,19 @@ func (c *Cache) Instances() (*instance.Instances, error) {
 		return &c.Cached.Instances, err
 	}
 
+	d.Instances = append(d.Instances, instance.Instance{
+		Name: "LetsWifi development banaan",
+		Profiles: []instance.Profile{
+			{
+				AuthorizationEndpoint: "http://0.0.0.0:8080/oauth/authorize/",
+				Default: true,
+				EapConfigEndpoint: "http://0.0.0.0:8080/api/eap-config/",
+				OAuth: true,
+				TokenEndpoint: "http://0.0.0.0:8080/oauth/token/",
+			},
+		},
+	})
+
 	// Do not accept older versions
 	// This happens if the cached version is higher
 	if c.Cached.Seq > d.Seq {
