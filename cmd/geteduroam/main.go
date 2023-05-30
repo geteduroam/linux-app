@@ -218,13 +218,8 @@ func askCertificate(_ string, _ network.ProviderInfo) string {
 	panic("todo")
 }
 
-// direct does the handling for the direct flow
-func direct(p *instance.Profile) {
-	config, err := p.EAPDirect()
-	if err != nil {
-		log.Fatalf("Could not obtain eap config: %v", err)
-	}
-
+// file does the flow when the file has been obtained
+func file(metadata []byte) (err error) {
 	h := handler.Handlers{
 		CredentialsH: askCredentials,
 		CertificateH: askCertificate,
@@ -232,9 +227,19 @@ func direct(p *instance.Profile) {
 
 	// Configure the network further.
 	// The handlers will take care of the rest
-	err = h.Configure(config)
+	return h.Configure(metadata)
+}
+
+// direct does the handling for the direct flow
+func direct(p *instance.Profile) {
+	config, err := p.EAPDirect()
 	if err != nil {
-		fmt.Println("failed to configure", err)
+		log.Fatalf("Could not obtain eap config: %v", err)
+	}
+
+	err = file(config)
+	if err != nil {
+		log.Fatalf("Failed to configure the connection using the metadata: %v", err)
 	}
 }
 
@@ -255,13 +260,15 @@ func redirect(p *instance.Profile) {
 
 // oauth does the handling for the OAuth flow
 func oauth(p *instance.Profile) {
-	_, err := p.EAPOAuth()
+	config, err := p.EAPOAuth()
 	if err != nil {
 		log.Fatalf("Could not obtain eap config with OAuth: %v", err)
 	}
 
-	// TODO: configuring of TLS profiles
-	log.Println("Warning: TLS profiles are not yet supported")
+	err = file(config)
+	if err != nil {
+		log.Fatalf("Failed to configure the connection using the OAuth metadata: %v", err)
+	}
 }
 
 func main() {
@@ -284,8 +291,6 @@ func main() {
 		return
 	case instance.OAuthFlow:
 		oauth(p)
-		// TODO: Remove this return once supported
-		return
 	}
 	fmt.Println("\nYour eduroam connection has been added to NetworkManager with the name eduroam (from Geteduroam)")
 }

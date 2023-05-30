@@ -337,23 +337,32 @@ func (ss *ServerCredentialVariants) CAList() (*cert.Certs, error) {
 
 // TLSNetwork creates a TLS network using the authentication method.
 // The base that is passed here are settings that are common between TLS and NON-TLS networks
-func (am *AuthenticationMethod) TLSNetwork(base network.Base) network.Network {
+func (am *AuthenticationMethod) TLSNetwork(base network.Base) (network.Network, error) {
 	// TODO: client certificate should be required right?
 	var ccert string
 	var passphrase string
+	var identity string
 	if csc := am.ClientSideCredential; csc != nil {
 		cc := csc.ClientCertificate
 		if cc.isValid("PKCS12") {
 			ccert = cc.Value
 			passphrase = csc.Passphrase
 		}
+		identity = csc.OuterIdentity
 	}
 
-	return &network.TLS{
-		Base:              base,
-		ClientCertificate: ccert,
-		Password:          passphrase,
+	// create the final client certificate structure
+	fcc, err := cert.NewClient(ccert, passphrase)
+	if err != nil {
+		return nil, err
 	}
+
+	base.AnonIdentity = identity
+	return &network.TLS{
+		Base:       base,
+		ClientCert: fcc,
+		Password:   passphrase,
+	}, nil
 }
 
 // NonTLSNetwork creates a network that is Non-TLS using the authentication method
@@ -381,6 +390,8 @@ func (am *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Networ
 		return nil, errors.New("no preferred inner authentication found")
 	}
 
+	base.AnonIdentity = identity
+
 	// Configure the credentials and associated metadata
 	c := network.Credentials{
 		Username: username,
@@ -390,11 +401,10 @@ func (am *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Networ
 	}
 
 	return &network.NonTLS{
-		Base:         base,
-		Credentials:  c,
-		MethodType:   method.Type(am.EAPMethod.Type),
-		InnerAuth:    it,
-		AnonIdentity: identity,
+		Base:        base,
+		Credentials: c,
+		MethodType:  method.Type(am.EAPMethod.Type),
+		InnerAuth:   it,
 	}, nil
 }
 
@@ -430,7 +440,7 @@ func (am *AuthenticationMethod) Network(ssid string, minrsn string, pinfo networ
 
 	// If TLS we need to construct different arguments than when we have Non TLS
 	if method.Type(mt) == method.TLS {
-		return am.TLSNetwork(base), nil
+		return am.TLSNetwork(base)
 	}
 	return am.NonTLSNetwork(base)
 }
