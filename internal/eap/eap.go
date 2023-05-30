@@ -305,19 +305,27 @@ func (p *EAPIdentityProvider) SSIDSettings() (string, string, error) {
 	return "", "", errors.New("no viable SSID entry found")
 }
 
-// Valid returns whether or not a certificate is valid by checking if the encoding is base64 and the format is X509
+// Valid returns whether or not a certificate is valid by checking if the encoding is base64 and the format is `format`
+func (ca *CertData) Valid(format string) bool {
+	if ca == nil {
+		return false
+	}
+	if ca.EncodingAttr != "base64" {
+		return false
+	}
+
+	if ca.FormatAttr != format {
+		return false
+	}
+
+	return true
+}
+
 // CaList gets a list of certificates by looping through the certificate list and returning all *valid* certificates
 func (ss *ServerCredentialVariants) CAList() (*cert.Certs, error) {
 	var certs []string
 	for _, c := range ss.CA {
-		if c == nil {
-			continue
-		}
-
-		if c.EncodingAttr != "base64" {
-			continue
-		}
-		if c.FormatAttr != "X.509" {
+		if !c.Valid("X.509") {
 			continue
 		}
 		certs = append(certs, c.Value)
@@ -336,7 +344,7 @@ func (am *AuthenticationMethod) TLSNetwork(base network.Base) network.Network {
 	var passphrase string
 	if csc := am.ClientSideCredential; csc != nil {
 		cc := csc.ClientCertificate
-		if cc != nil && cc.EncodingAttr == "base64" && cc.FormatAttr == "PKCS12" {
+		if cc.Valid("PKCS12") {
 			ccert = cc.Value
 			passphrase = csc.Passphrase
 		}
