@@ -63,10 +63,10 @@ func createCon(pUUID string, args connection.SettingsArgs) (*connection.Connecti
 	return s.AddConnection(args)
 }
 
-// Install installs a non TLS network and returns an error if it cannot configure it
-// Right now it adds a new profile that is not automatically added
-// It returns the uuid if the connection was added successfully
-func Install(n network.NonTLS, pUUID string) (string, error) {
+// installBase contains the code for creating a network with NetworkManager
+// This contains the shared network settings between TLS and NonTLS
+// The specific 8021x settings are given as an argument `specific`
+func installBase(n network.Base, specifics map[string]interface{}, pUUID string) (string, error) {
 	fID := fmt.Sprintf("%s (from Geteduroam)", n.SSID)
 	cUser, err := user.Current()
 	if err != nil {
@@ -89,6 +89,12 @@ func Install(n network.NonTLS, pUUID string) (string, error) {
 		"pairwise": []string{strings.ToLower(n.MinRSN)},
 		"group":    []string{strings.ToLower(n.MinRSN)},
 	}
+	sIP4 := map[string]interface{}{
+		"method": "auto",
+	}
+	sIP6 := map[string]interface{}{
+		"method": "auto",
+	}
 	var sids []string
 
 	for _, sid := range n.ServerIDs {
@@ -100,27 +106,15 @@ func Install(n network.NonTLS, pUUID string) (string, error) {
 		return "", err
 	}
 	s8021x := map[string]interface{}{
-		"eap": []string{
-			n.Method().String(),
-		},
-		"identity":           n.Credentials.Username,
 		"ca-cert":            caFile,
-		"anonymous-identity": n.AnonIdentity,
-		"password":           n.Credentials.Password,
-		"password-flags":     0,
 		"altsubject-matches": sids,
+		"anonymous-identity": n.AnonIdentity,
 	}
-	if n.InnerAuth.EAP() && n.MethodType == method.TTLS {
-		s8021x["phase2-autheap"] = n.InnerAuth.String()
-	} else {
-		s8021x["phase2-auth"] = n.InnerAuth.String()
+	// add the network specific settings
+	for k, v := range specifics {
+		s8021x[k] = v
 	}
-	sIP4 := map[string]interface{}{
-		"method": "auto",
-	}
-	sIP6 := map[string]interface{}{
-		"method": "auto",
-	}
+
 	settings := map[string]map[string]interface{}{
 		"connection":               sCon,
 		"802-11-wireless":          sWifi,
@@ -143,4 +137,52 @@ func Install(n network.NonTLS, pUUID string) (string, error) {
 		return "", err
 	}
 	return uuid, nil
+}
+
+// Install installs a non TLS network and returns an error if it cannot configure it
+// Right now it adds a new profile that is not automatically added
+// It returns the uuid if the connection was added successfully
+func Install(n network.NonTLS, pUUID string) (string, error) {
+	s8021x := map[string]interface{}{
+		"eap": []string{
+			n.Method().String(),
+		},
+		"identity":       n.Credentials.Username,
+		"password":       n.Credentials.Password,
+		"password-flags": 0,
+	}
+	if n.InnerAuth.EAP() && n.MethodType == method.TTLS {
+		s8021x["phase2-autheap"] = n.InnerAuth.String()
+	} else {
+		s8021x["phase2-auth"] = n.InnerAuth.String()
+	}
+	return installBase(n.Base, s8021x, pUUID)
+}
+
+// InstallTLS installs a TLS network and returns an error if it cannot configure it
+// Right now it adds a new profile that is not automatically added
+// It returns the uuid if the connection was added successfully
+func InstallTLS(n network.TLS, pUUID string) (string, error) {
+	ccFile, err := encodeFileBytes("client-cert.pem", n.ClientCert.ToPEM())
+	if err != nil {
+		return "", err
+	}
+	pkp, pwd, err := n.ClientCert.PrivateKeyPEMEnc()
+	if err != nil {
+		return "", err
+	}
+	pkFile, err := encodeFileBytes("private-key.pem", pkp)
+	if err != nil {
+		return "", err
+	}
+	s8021x := map[string]interface{}{
+		"eap": []string{
+			"tls",
+		},
+		"client-cert":                ccFile,
+		"private-key":                pkFile,
+		"private-key-password":       pwd,
+		"private-key-password-flags": 0,
+	}
+	return installBase(n.Base, s8021x, pUUID)
 }

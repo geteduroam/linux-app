@@ -50,6 +50,9 @@ type Base struct {
 	ServerIDs []string
 	// ProviderInfo is the ProviderInfo info
 	ProviderInfo ProviderInfo
+	// AnonIdentity is the anonymous identity found in the EAP config, OuterIdentity in clientcredentials
+	// This is optional as when it's not set it will be set to the username in case of non TLS
+	AnonIdentity string
 }
 
 // Credentials is the credentials belonging to the Non TLS network
@@ -76,9 +79,6 @@ type NonTLS struct {
 	MethodType method.Type
 	// InnerAuth is the inner authentication method
 	InnerAuth inner.Type
-	// AnonIdentity is the anonymous identity found in the EAP config, OuterIdentity in clientcredentials
-	// This is optional as when it's not set it will be set to the username
-	AnonIdentity string
 }
 
 func (n *NonTLS) Method() method.Type {
@@ -92,8 +92,8 @@ func (n *NonTLS) ProviderInfo() ProviderInfo {
 // TLS is a structure for creating a network that has EAP method TLS
 type TLS struct {
 	Base
-	// ClientCertificate is the client certificate that is optionally protected by a password
-	ClientCertificate string
+	// ClientCertificate is the client certificate that is protected by a password in a PKCS12 container
+	ClientCert *cert.Client
 
 	// Password is the password that encrypts the ClientCertificate
 	Password string
