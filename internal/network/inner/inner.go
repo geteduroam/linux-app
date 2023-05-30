@@ -46,9 +46,9 @@ func (t Type) String() string {
 	return ""
 }
 
-// Valid returns whether or not an integer is a valid inner authentication type
+// IsValid returns whether or not an integer is a valid inner authentication type
 // See https://github.com/geteduroam/geteduroam-sh/blob/54044773812502487ad0f68898cd6b9e110cb0f6/eap-config.sh#L55
-func Valid(mt method.Type, input int, eap bool) bool {
+func IsValid(mt method.Type, input int, eap bool) bool {
 	// For TLS we do not have any inner, any is valid
 	if mt == method.TLS {
 		return true
