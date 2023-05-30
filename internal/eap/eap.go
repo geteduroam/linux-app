@@ -251,14 +251,14 @@ func (am *AuthenticationMethod) preferredInnerAuthType() (inner.Type, error) {
 	// loop through all methods and return the first valid one
 	for _, i := range am.InnerAuthenticationMethod {
 		if i.EAPMethod != nil {
-			if inner.Valid(mt, i.EAPMethod.Type, true) {
+			if inner.IsValid(mt, i.EAPMethod.Type, true) {
 				return inner.Type(i.EAPMethod.Type), nil
 			}
 		}
 
 		// Otherwise try to get Non eap
 		if i.NonEAPAuthMethod != nil {
-			if inner.Valid(mt, i.NonEAPAuthMethod.Type, false) {
+			if inner.IsValid(mt, i.NonEAPAuthMethod.Type, false) {
 				return inner.Type(i.NonEAPAuthMethod.Type), nil
 			}
 		}
@@ -305,8 +305,8 @@ func (p *EAPIdentityProvider) SSIDSettings() (string, string, error) {
 	return "", "", errors.New("no viable SSID entry found")
 }
 
-// Valid returns whether or not a certificate is valid by checking if the encoding is base64 and the format is `format`
-func (ca *CertData) Valid(format string) bool {
+// isValid returns whether or not a certificate is valid by checking if the encoding is base64 and the format is `format`
+func (ca *CertData) isValid(format string) bool {
 	if ca == nil {
 		return false
 	}
@@ -325,10 +325,9 @@ func (ca *CertData) Valid(format string) bool {
 func (ss *ServerCredentialVariants) CAList() (*cert.Certs, error) {
 	var certs []string
 	for _, c := range ss.CA {
-		if !c.Valid("X.509") {
-			continue
+		if c.isValid("X.509") {
+			certs = append(certs, c.Value)
 		}
-		certs = append(certs, c.Value)
 	}
 	if len(certs) == 0 {
 		return nil, errors.New("no viable server side CA entry found")
@@ -344,7 +343,7 @@ func (am *AuthenticationMethod) TLSNetwork(base network.Base) network.Network {
 	var passphrase string
 	if csc := am.ClientSideCredential; csc != nil {
 		cc := csc.ClientCertificate
-		if cc.Valid("PKCS12") {
+		if cc.isValid("PKCS12") {
 			ccert = cc.Value
 			passphrase = csc.Passphrase
 		}
@@ -402,7 +401,7 @@ func (am *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Networ
 // Network gets a network for an authentication method, the SSID and MinRSN are strings that are based to the network
 func (am *AuthenticationMethod) Network(ssid string, minrsn string, pinfo network.ProviderInfo) (network.Network, error) {
 	// We check if the eap method is valid
-	if am.EAPMethod == nil || !method.Valid(am.EAPMethod.Type) {
+	if am.EAPMethod == nil || !method.IsValid(am.EAPMethod.Type) {
 		return nil, errors.New("no EAP method")
 	}
 	mt := am.EAPMethod.Type

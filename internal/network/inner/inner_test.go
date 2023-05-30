@@ -6,7 +6,7 @@ import (
 	"github.com/geteduroam/linux-app/internal/network/method"
 )
 
-func Test_Valid(t *testing.T) {
+func Test_IsValid(t *testing.T) {
 	cases := []struct {
 		mt    method.Type
 		input int
@@ -92,7 +92,7 @@ func Test_Valid(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		got := Valid(c.mt, c.input, c.eap)
+		got := IsValid(c.mt, c.input, c.eap)
 		if got != c.want {
 			t.Fatalf("Got: %v, Want: %v, when testing method type: %v, input: %v, eap: %v", got, c.want, c.mt, c.input, c.eap)
 		}
