@@ -6,10 +6,32 @@ import (
 	"os/user"
 	"strings"
 
+	"github.com/geteduroam/linux-app/internal/config"
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/geteduroam/linux-app/internal/network/method"
 	"github.com/geteduroam/linux-app/internal/nm/connection"
 )
+
+// encodePath encodes a string to a path expected by NetworkManager
+// This path is prefixed with file:// and is expicitly NULL terminated
+// It returns this path as a byte array
+func encodePath(p string) []byte {
+	// get the converted path
+	// see: https://github.com/NetworkManager/NetworkManager/blob/main/examples/python/dbus/add-wifi-eap-connection.py#L12
+	// \x00 is just NUL termination which NM expects
+	c := fmt.Sprintf("file://%s\x00", p)
+	return []byte(c)
+}
+
+// encodeFileBytes creates a file in the config directory with name `name` and contents `contents`
+// it ensures that the path is encoded the way NetworkManager expects it to be
+func encodeFileBytes(name string, contents []byte) ([]byte, error) {
+	p, err := config.WriteFile(name, contents)
+	if err != nil {
+		return nil, err
+	}
+	return encodePath(p), nil
+}
 
 // previousCon gets a connection object using the previous UUID
 func previousCon(pUUID string) (*connection.Connection, error) {
@@ -73,12 +95,16 @@ func Install(n network.NonTLS, pUUID string) (string, error) {
 		v := fmt.Sprintf("DNS:%s", sid)
 		sids = append(sids, v)
 	}
+	caFile, err := encodeFileBytes("ca-cert.pem", n.Certs.ToPEM())
+	if err != nil {
+		return "", err
+	}
 	s8021x := map[string]interface{}{
 		"eap": []string{
 			n.Method().String(),
 		},
 		"identity":           n.Credentials.Username,
-		"ca-cert":            n.Certs.ToPEM(),
+		"ca-cert":            caFile,
 		"anonymous-identity": n.AnonIdentity,
 		"password":           n.Credentials.Password,
 		"password-flags":     0,
