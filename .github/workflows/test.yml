@@ -1,6 +1,6 @@
 name: "Test & check build"
 
-on: [ push, pull_request ]
+on: [push, pull_request]
 
 jobs:
   lint-go:
