@@ -82,10 +82,10 @@ func (c *Cache) Instances() (*instance.Instances, error) {
 		Profiles: []instance.Profile{
 			{
 				AuthorizationEndpoint: "http://0.0.0.0:8080/oauth/authorize/",
-				Default: true,
-				EapConfigEndpoint: "http://0.0.0.0:8080/api/eap-config/",
-				OAuth: true,
-				TokenEndpoint: "http://0.0.0.0:8080/oauth/token/",
+				Default:               true,
+				EapConfigEndpoint:     "http://0.0.0.0:8080/api/eap-config/",
+				OAuth:                 true,
+				TokenEndpoint:         "http://0.0.0.0:8080/oauth/token/",
 			},
 		},
 	})
