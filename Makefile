@@ -1,3 +1,5 @@
+export CGO_ENABLED := 0
+
 .build:
 	go build -o geteduroam-cli cmd/geteduroam/main.go
 
