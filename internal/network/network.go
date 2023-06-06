@@ -93,7 +93,7 @@ func (n *NonTLS) ProviderInfo() ProviderInfo {
 type TLS struct {
 	Base
 	// ClientCertificate is the client certificate that is protected by a password in a PKCS12 container
-	ClientCert *cert.Client
+	ClientCert *cert.ClientCert
 
 	// Password is the password that encrypts the ClientCertificate
 	Password string

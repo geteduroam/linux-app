@@ -352,7 +352,7 @@ func (am *AuthenticationMethod) TLSNetwork(base network.Base) (network.Network, 
 	}
 
 	// create the final client certificate structure
-	fcc, err := cert.NewClient(ccert, passphrase)
+	fcc, err := cert.NewClientCert(ccert, passphrase)
 	if err != nil {
 		return nil, err
 	}
