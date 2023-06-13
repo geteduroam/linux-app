@@ -134,8 +134,8 @@ func TestParse(t *testing.T) {
 					Credentials: network.Credentials{
 						Suffix: "@edu.nl",
 					},
-					MethodType:   method.PEAP,
-					InnerAuth:    inner.EapMschapv2,
+					MethodType: method.PEAP,
+					InnerAuth:  inner.EapMschapv2,
 				},
 				err: "",
 			},

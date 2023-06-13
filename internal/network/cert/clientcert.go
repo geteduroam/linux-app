@@ -6,8 +6,8 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 
-	"software.sslmate.com/src/go-pkcs12"
 	"github.com/youmark/pkcs8"
+	"software.sslmate.com/src/go-pkcs12"
 )
 
 // ClientCert is the client certificate structure
