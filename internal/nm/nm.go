@@ -108,7 +108,6 @@ func installBase(n network.Base, specifics map[string]interface{}, pUUID string)
 	s8021x := map[string]interface{}{
 		"ca-cert":            caFile,
 		"altsubject-matches": sids,
-		"anonymous-identity": n.AnonIdentity,
 	}
 	// add the network specific settings
 	for k, v := range specifics {
@@ -147,9 +146,10 @@ func Install(n network.NonTLS, pUUID string) (string, error) {
 		"eap": []string{
 			n.Method().String(),
 		},
-		"identity":       n.Credentials.Username,
-		"password":       n.Credentials.Password,
-		"password-flags": 0,
+		"anonymous-identity": n.AnonIdentity,
+		"identity":           n.Credentials.Username,
+		"password":           n.Credentials.Password,
+		"password-flags":     0,
 	}
 	if n.InnerAuth.EAP() && n.MethodType == method.TTLS {
 		s8021x["phase2-autheap"] = n.InnerAuth.String()
@@ -179,6 +179,7 @@ func InstallTLS(n network.TLS, pUUID string) (string, error) {
 		"eap": []string{
 			"tls",
 		},
+		"identity":                   n.AnonIdentity,
 		"client-cert":                ccFile,
 		"private-key":                pkFile,
 		"private-key-password":       pwd,
