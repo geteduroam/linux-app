@@ -4,7 +4,6 @@ package config
 import (
 	"encoding/json"
 	"os"
-	"path"
 	"path/filepath"
 )
 
@@ -32,7 +31,7 @@ func Directory() (p string, err error) {
 		}
 		dir = filepath.Join(home, ".local/share")
 	}
-	p = path.Join(dir, "geteduroam")
+	p = filepath.Join(dir, "geteduroam")
 	return
 }
 
@@ -45,7 +44,7 @@ func WriteFile(filename string, content []byte) (string, error) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return "", err
 	}
-	fpath := path.Join(dir, filename)
+	fpath := filepath.Join(dir, filename)
 	if err := os.WriteFile(fpath, content, 0o600); err != nil {
 		return "", err
 	}
@@ -61,7 +60,7 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
-	p := path.Join(dir, configName)
+	p := filepath.Join(dir, configName)
 
 	b, err := os.ReadFile(p)
 	if err != nil {
