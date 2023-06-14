@@ -1,6 +1,7 @@
 package network
 
 import (
+	"github.com/geteduroam/linux-app/internal/network/cert"
 	"github.com/geteduroam/linux-app/internal/network/inner"
 	"github.com/geteduroam/linux-app/internal/network/method"
 )
@@ -39,8 +40,8 @@ type ProviderInfo struct {
 
 // Base is the definition that each network always has
 type Base struct {
-	// Cert is the list of CA certificates that are used
-	Cert []string
+	// Certs is the list of CA certificates that are used
+	Certs cert.Certs
 	// SSID is the name of the network
 	SSID string
 	// MinRSN is the minimum RSN proto
@@ -49,6 +50,9 @@ type Base struct {
 	ServerIDs []string
 	// ProviderInfo is the ProviderInfo info
 	ProviderInfo ProviderInfo
+	// AnonIdentity is the anonymous identity found in the EAP config, OuterIdentity in clientcredentials
+	// This is optional as when it's not set it will be set to the username in case of non TLS
+	AnonIdentity string
 }
 
 // Credentials is the credentials belonging to the Non TLS network
@@ -75,9 +79,6 @@ type NonTLS struct {
 	MethodType method.Type
 	// InnerAuth is the inner authentication method
 	InnerAuth inner.Type
-	// AnonIdentity is the anonymous identity found in the EAP config, OuterIdentity in clientcredentials
-	// This is optional as when it's not set it will be set to the username
-	AnonIdentity string
 }
 
 func (n *NonTLS) Method() method.Type {
@@ -91,8 +92,8 @@ func (n *NonTLS) ProviderInfo() ProviderInfo {
 // TLS is a structure for creating a network that has EAP method TLS
 type TLS struct {
 	Base
-	// ClientCertificate is the client certificate that is optionally protected by a password
-	ClientCertificate string
+	// ClientCertificate is the client certificate that is protected by a password in a PKCS12 container
+	ClientCert *cert.ClientCert
 
 	// Password is the password that encrypts the ClientCertificate
 	Password string

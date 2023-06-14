@@ -9,8 +9,8 @@ const (
 	PEAP Type = 25
 )
 
-// ValidMethod returns whether or not an integer is a valid method type
-func Valid(input int) bool {
+// IsValid returns whether or not an integer is a valid method type
+func IsValid(input int) bool {
 	switch Type(input) {
 	case TLS:
 		return true

@@ -2,7 +2,7 @@ package config
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -30,7 +30,11 @@ func TestWrite(t *testing.T) {
 		t.Fatalf("error occurred when writing config: %v", err)
 	}
 
-	r, err := os.ReadFile(path.Join(Directory(), configName))
+	cdir, err := Directory()
+	if err != nil {
+		t.Fatalf("error occurred when getting config directory: %v", dir)
+	}
+	r, err := os.ReadFile(filepath.Join(cdir, configName))
 	if err != nil {
 		t.Fatalf("failed when reading config file: %v", err)
 	}

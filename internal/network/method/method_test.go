@@ -2,7 +2,7 @@ package method
 
 import "testing"
 
-func Test_Valid(t *testing.T) {
+func Test_IsValid(t *testing.T) {
 	cases := []struct {
 		input int
 		want  bool
@@ -34,7 +34,7 @@ func Test_Valid(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		got := Valid(c.input)
+		got := IsValid(c.input)
 		if got != c.want {
 			t.Fatalf("Got: %v, Want: %v", got, c.want)
 		}

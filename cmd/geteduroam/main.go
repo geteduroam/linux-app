@@ -218,13 +218,8 @@ func askCertificate(_ string, _ network.ProviderInfo) string {
 	panic("todo")
 }
 
-// direct does the handling for the direct flow
-func direct(p *instance.Profile) {
-	config, err := p.EAPDirect()
-	if err != nil {
-		log.Fatalf("Could not obtain eap config: %v", err)
-	}
-
+// file does the flow when the file has been obtained
+func file(metadata []byte) (err error) {
 	h := handler.Handlers{
 		CredentialsH: askCredentials,
 		CertificateH: askCertificate,
@@ -232,9 +227,19 @@ func direct(p *instance.Profile) {
 
 	// Configure the network further.
 	// The handlers will take care of the rest
-	err = h.Configure(config)
+	return h.Configure(metadata)
+}
+
+// direct does the handling for the direct flow
+func direct(p *instance.Profile) {
+	config, err := p.EAPDirect()
 	if err != nil {
-		fmt.Println("failed to configure", err)
+		log.Fatalf("Could not obtain eap config: %v", err)
+	}
+
+	err = file(config)
+	if err != nil {
+		log.Fatalf("Failed to configure the connection using the metadata: %v", err)
 	}
 }
 
@@ -251,6 +256,19 @@ func redirect(p *instance.Profile) {
 		return
 	}
 	fmt.Println("Opened your browser, please continue the process there")
+}
+
+// oauth does the handling for the OAuth flow
+func oauth(p *instance.Profile) {
+	config, err := p.EAPOAuth()
+	if err != nil {
+		log.Fatalf("Could not obtain eap config with OAuth: %v", err)
+	}
+
+	err = file(config)
+	if err != nil {
+		log.Fatalf("Failed to configure the connection using the OAuth metadata: %v", err)
+	}
 }
 
 func main() {
@@ -270,8 +288,9 @@ func main() {
 		direct(p)
 	case instance.RedirectFlow:
 		redirect(p)
-	default:
-		fmt.Fprint(os.Stderr, "\nWe do not support OAuth just yet")
+		return
+	case instance.OAuthFlow:
+		oauth(p)
 	}
 	fmt.Println("\nYour eduroam connection has been added to NetworkManager with the name eduroam (from Geteduroam)")
 }

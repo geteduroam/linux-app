@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/geteduroam/linux-app/internal/network"
+	"github.com/geteduroam/linux-app/internal/network/cert"
 	"github.com/geteduroam/linux-app/internal/network/inner"
 	"github.com/geteduroam/linux-app/internal/network/method"
 )
@@ -250,14 +251,14 @@ func (am *AuthenticationMethod) preferredInnerAuthType() (inner.Type, error) {
 	// loop through all methods and return the first valid one
 	for _, i := range am.InnerAuthenticationMethod {
 		if i.EAPMethod != nil {
-			if inner.Valid(mt, i.EAPMethod.Type, true) {
+			if inner.IsValid(mt, i.EAPMethod.Type, true) {
 				return inner.Type(i.EAPMethod.Type), nil
 			}
 		}
 
 		// Otherwise try to get Non eap
 		if i.NonEAPAuthMethod != nil {
-			if inner.Valid(mt, i.NonEAPAuthMethod.Type, false) {
+			if inner.IsValid(mt, i.NonEAPAuthMethod.Type, false) {
 				return inner.Type(i.NonEAPAuthMethod.Type), nil
 			}
 		}
@@ -304,13 +305,16 @@ func (p *EAPIdentityProvider) SSIDSettings() (string, string, error) {
 	return "", "", errors.New("no viable SSID entry found")
 }
 
-// Valid returns whether or not a certificate is valid by checking if the encoding is base64 and the format is X509
-func (ca *CertData) Valid() bool {
+// isValid returns whether or not a certificate is valid by checking if the encoding is base64 and the format is `format`
+func (ca *CertData) isValid(format string) bool {
+	if ca == nil {
+		return false
+	}
 	if ca.EncodingAttr != "base64" {
 		return false
 	}
 
-	if ca.FormatAttr != "X.509" {
+	if ca.FormatAttr != format {
 		return false
 	}
 
@@ -318,37 +322,47 @@ func (ca *CertData) Valid() bool {
 }
 
 // CaList gets a list of certificates by looping through the certificate list and returning all *valid* certificates
-func (ss *ServerCredentialVariants) CAList() ([]string, error) {
-	var ca []string
+func (ss *ServerCredentialVariants) CAList() (*cert.Certs, error) {
+	var certs []string
 	for _, c := range ss.CA {
-		if c != nil && c.Valid() {
-			ca = append(ca, c.Value)
+		if c.isValid("X.509") {
+			certs = append(certs, c.Value)
 		}
 	}
-	if len(ca) == 0 {
+	if len(certs) == 0 {
 		return nil, errors.New("no viable server side CA entry found")
 	}
-	return ca, nil
+	return cert.New(certs)
 }
 
 // TLSNetwork creates a TLS network using the authentication method.
 // The base that is passed here are settings that are common between TLS and NON-TLS networks
-func (am *AuthenticationMethod) TLSNetwork(base network.Base) network.Network {
+func (am *AuthenticationMethod) TLSNetwork(base network.Base) (network.Network, error) {
 	// TODO: client certificate should be required right?
 	var ccert string
 	var passphrase string
-	if cc := am.ClientSideCredential; cc != nil {
-		if cc.ClientCertificate != nil && cc.ClientCertificate.Valid() {
-			ccert = cc.ClientCertificate.Value
+	var identity string
+	if csc := am.ClientSideCredential; csc != nil {
+		cc := csc.ClientCertificate
+		if cc.isValid("PKCS12") {
+			ccert = cc.Value
+			passphrase = csc.Passphrase
 		}
-		passphrase = cc.Passphrase
+		identity = csc.OuterIdentity
 	}
 
-	return &network.TLS{
-		Base:              base,
-		ClientCertificate: ccert,
-		Password:          passphrase,
+	// create the final client certificate structure
+	fcc, err := cert.NewClientCert(ccert, passphrase)
+	if err != nil {
+		return nil, err
 	}
+
+	base.AnonIdentity = identity
+	return &network.TLS{
+		Base:       base,
+		ClientCert: fcc,
+		Password:   passphrase,
+	}, nil
 }
 
 // NonTLSNetwork creates a network that is Non-TLS using the authentication method
@@ -376,6 +390,8 @@ func (am *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Networ
 		return nil, errors.New("no preferred inner authentication found")
 	}
 
+	base.AnonIdentity = identity
+
 	// Configure the credentials and associated metadata
 	c := network.Credentials{
 		Username: username,
@@ -385,18 +401,17 @@ func (am *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Networ
 	}
 
 	return &network.NonTLS{
-		Base:         base,
-		Credentials:  c,
-		MethodType:   method.Type(am.EAPMethod.Type),
-		InnerAuth:    it,
-		AnonIdentity: identity,
+		Base:        base,
+		Credentials: c,
+		MethodType:  method.Type(am.EAPMethod.Type),
+		InnerAuth:   it,
 	}, nil
 }
 
 // Network gets a network for an authentication method, the SSID and MinRSN are strings that are based to the network
 func (am *AuthenticationMethod) Network(ssid string, minrsn string, pinfo network.ProviderInfo) (network.Network, error) {
 	// We check if the eap method is valid
-	if am.EAPMethod == nil || !method.Valid(am.EAPMethod.Type) {
+	if am.EAPMethod == nil || !method.IsValid(am.EAPMethod.Type) {
 		return nil, errors.New("no EAP method")
 	}
 	mt := am.EAPMethod.Type
@@ -416,7 +431,7 @@ func (am *AuthenticationMethod) Network(ssid string, minrsn string, pinfo networ
 	// These are the settings that are common for each network
 	sid := ss.ServerID
 	base := network.Base{
-		Cert:         CA,
+		Certs:        *CA,
 		ProviderInfo: pinfo,
 		SSID:         ssid,
 		MinRSN:       minrsn,
@@ -425,7 +440,7 @@ func (am *AuthenticationMethod) Network(ssid string, minrsn string, pinfo networ
 
 	// If TLS we need to construct different arguments than when we have Non TLS
 	if method.Type(mt) == method.TLS {
-		return am.TLSNetwork(base), nil
+		return am.TLSNetwork(base)
 	}
 	return am.NonTLSNetwork(base)
 }

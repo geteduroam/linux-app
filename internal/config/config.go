@@ -4,7 +4,7 @@ package config
 import (
 	"encoding/json"
 	"os"
-	"path"
+	"path/filepath"
 )
 
 // Config is the main structure for the configuration
@@ -20,24 +20,31 @@ type Versioned struct {
 }
 
 // Directory returns the directory where the config files are stored
-func Directory() (p string) {
+func Directory() (p string, err error) {
 	// This follows the XDG specification at https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
 	//  From that doc: $XDG_DATA_HOME defines the base directory relative to which user-specific data files should be stored. If $XDG_DATA_HOME is either not set or empty, a default equal to $HOME/.local/share should be used.
 	dir := os.Getenv("XDG_DATA_HOME")
 	if dir == "" {
-		dir = "~/.local/share/"
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		dir = filepath.Join(home, ".local/share")
 	}
-	p = path.Join(dir, "geteduroam")
+	p = filepath.Join(dir, "geteduroam")
 	return
 }
 
 // Write writes the configuration to the filesystem with the filename and string
 func WriteFile(filename string, content []byte) (string, error) {
-	dir := Directory()
+	dir, err := Directory()
+	if err != nil {
+		return "", err
+	}
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return "", err
 	}
-	fpath := path.Join(dir, filename)
+	fpath := filepath.Join(dir, filename)
 	if err := os.WriteFile(fpath, content, 0o600); err != nil {
 		return "", err
 	}
@@ -48,9 +55,12 @@ var configName = "state"
 
 // Load loads the configuration from the state
 func Load() (*Config, error) {
-	dir := Directory()
+	dir, err := Directory()
+	if err != nil {
+		return nil, err
+	}
 
-	p := path.Join(dir, configName)
+	p := filepath.Join(dir, configName)
 
 	b, err := os.ReadFile(p)
 	if err != nil {

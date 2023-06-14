@@ -61,8 +61,10 @@ func (h Handlers) Configure(eap []byte) (err error) {
 		t.Credentials.Username = username
 		t.Credentials.Password = password
 		uuid, err = nm.Install(*t, uuid)
+	case *network.TLS:
+		uuid, err = nm.InstallTLS(*t, uuid)
 	default:
-		panic("TLS networks are not yet supported")
+		panic("unsupported network")
 	}
 	if err != nil {
 		return
