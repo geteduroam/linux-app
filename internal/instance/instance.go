@@ -1,11 +1,5 @@
 package instance
 
-import (
-	"strings"
-
-	"github.com/geteduroam/linux-app/internal/utils"
-)
-
 type geo struct {
 	Lat  float32 `json:"lat"`
 	Long float32 `json:"long"`
@@ -21,19 +15,3 @@ type Instance struct {
 }
 
 type Instances []Instance
-
-// Filter filters a list of instances
-func (i *Instances) Filter(search string) *Instances {
-	x := Instances{}
-	for _, i := range *i {
-		l1, err1 := utils.RemoveDiacritics(strings.ToLower(i.Name))
-		l2, err2 := utils.RemoveDiacritics(strings.ToLower(search))
-		if err1 != nil || err2 != nil {
-			continue
-		}
-		if strings.Contains(l1, l2) {
-			x = append(x, i)
-		}
-	}
-	return &x
-}

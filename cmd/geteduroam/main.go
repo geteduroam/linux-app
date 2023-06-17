@@ -15,6 +15,8 @@ import (
 	"github.com/geteduroam/linux-app/internal/handler"
 	"github.com/geteduroam/linux-app/internal/instance"
 	"github.com/geteduroam/linux-app/internal/network"
+	"github.com/geteduroam/linux-app/internal/utils"
+	"github.com/ktr0731/go-fuzzyfinder"
 )
 
 // askSecret is a tweak of thee 'ask' function that uses golang.org/x/term to read a secret securely
@@ -53,25 +55,6 @@ func ask(prompt string, validator func(input string) bool) string {
 	}
 }
 
-// filteredOrganizations gets the instances as filtered by the user
-func filteredOrganizations(orgs *instance.Instances) (f *instance.Instances) {
-	for {
-		x := ask("Please enter your organization (e.g. SURF): ", func(x string) bool {
-			if len(x) == 0 {
-				fmt.Fprintln(os.Stderr, "Your organization cannot be empty")
-				return false
-			}
-			return true
-		})
-		f = orgs.Filter(x)
-		if f != nil && len(*f) > 0 {
-			break
-		}
-		fmt.Fprintf(os.Stderr, "No organizations found with search term: %v. Please try again\n", x)
-	}
-	return f
-}
-
 // validateRange validates if the input is in the range of 1-n (inclusive)
 func validateRange(input string, n int) bool {
 	r, err := strconv.ParseInt(input, 10, 32)
@@ -84,24 +67,6 @@ func validateRange(input string, n int) bool {
 		return false
 	}
 	return true
-}
-
-// organization gets an organization/instance from the user
-func organization(orgs *instance.Instances) *instance.Instance {
-	f := *filteredOrganizations(orgs)
-	fmt.Println("Found the following matches: ")
-	for n, c := range f {
-		fmt.Printf("[%d] %s\n", n+1, c.Name)
-	}
-	input := ask("Please enter a choice for the organisation: ", func(input string) bool {
-		return validateRange(input, len(f))
-	})
-	r, err := strconv.ParseInt(input, 10, 32)
-	// This can't happen because we already validated that this can be parsed
-	if err != nil {
-		panic(err)
-	}
-	return &f[r-1]
 }
 
 // profile gets a profile for a list of profiles by asking the user one if there are multiple
@@ -278,7 +243,36 @@ func main() {
 		log.Fatalf("failed to get instances from discovery: %v", err)
 	}
 
-	chosen := organization(i)
+	instances := *i
+
+	gotIdx, err := fuzzyfinder.Find(
+		instances,
+		func(idx int) string {
+			raw := instances[idx].Name
+			conv, err := utils.RemoveDiacritics(raw)
+			if err != nil {
+				return raw
+			}
+			return conv
+		},
+		fuzzyfinder.WithPreviewWindow(func(idx, w, h int) string {
+			if idx == -1 {
+				return ""
+			}
+			// get the profile names
+			var pn strings.Builder
+			pn.WriteString("Profiles: \n")
+			for _, p := range instances[idx].Profiles {
+				pn.WriteString("- " + p.Name + "\n")
+			}
+			return pn.String()
+		}),
+		fuzzyfinder.WithHeader("Please enter your organization (e.g. SURF)"),
+	)
+	if err != nil {
+		log.Fatalf("Error when searching for an organization: %v", err)
+	}
+	chosen := instances[gotIdx]
 	p := profile(chosen.Profiles)
 
 	// TODO: This switch statement should probably be moved to the profile code
