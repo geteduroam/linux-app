@@ -54,9 +54,9 @@ func ask(prompt string, validator func(input string) bool) string {
 }
 
 // filteredOrganizations gets the instances as filtered by the user
-func filteredOrganizations(orgs *instance.Instances) (f *instance.Instances) {
+func filteredOrganizations(orgs *instance.Instances, q string) (f *instance.Instances) {
 	for {
-		x := ask("Please enter your organization (e.g. SURF): ", func(x string) bool {
+		x := ask(q, func(x string) bool {
 			if len(x) == 0 {
 				fmt.Fprintln(os.Stderr, "Your organization cannot be empty")
 				return false
@@ -88,20 +88,37 @@ func validateRange(input string, n int) bool {
 
 // organization gets an organization/instance from the user
 func organization(orgs *instance.Instances) *instance.Instance {
-	f := *filteredOrganizations(orgs)
-	fmt.Println("Found the following matches: ")
-	for n, c := range f {
-		fmt.Printf("[%d] %s\n", n+1, c.Name)
+	_, h, err := term.GetSize(0)
+	if err != nil {
+		fmt.Println("Could not get height")
+		h = 10
 	}
-	input := ask("Please enter a choice for the organisation: ", func(input string) bool {
-		return validateRange(input, len(f))
+	f := orgs
+	f = filteredOrganizations(f, "Please enter your organization (e.g. SURF): ")
+	for {
+		if len(*f) > h {
+			for _, c := range *f {
+				fmt.Printf("%s\n", c.Name)
+			}
+			fmt.Println("\nList is long...")
+			f = filteredOrganizations(f, "Please refine your search: ")
+		} else {
+			break
+		}
+	}
+	fmt.Println("\nFound the following matches: ")
+		for n, c := range *f {
+			fmt.Printf("[%d] %s\n", n+1, c.Name)
+		}
+	input := ask("\nPlease enter a choice for the organisation: ", func(input string) bool {
+		return validateRange(input, len(*f))
 	})
 	r, err := strconv.ParseInt(input, 10, 32)
 	// This can't happen because we already validated that this can be parsed
 	if err != nil {
 		panic(err)
 	}
-	return &f[r-1]
+	return &(*f)[r-1]
 }
 
 // profile gets a profile for a list of profiles by asking the user one if there are multiple
