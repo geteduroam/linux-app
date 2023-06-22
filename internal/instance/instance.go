@@ -25,8 +25,8 @@ type Instances []Instance
 
 type ByName []Instance
 
-func (s ByName) Len() int		{ return len(s) }
-func (s ByName) Swap(i, j int)		{ s[i], s[j] = s[j], s[i] }
+func (s ByName) Len() int      { return len(s) }
+func (s ByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s ByName) Less(i, j int) bool {
 	// Do we want to involve Profiles{}.Name in the sort
 	// And if so, how?
