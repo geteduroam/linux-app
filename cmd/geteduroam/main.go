@@ -107,9 +107,9 @@ func organization(orgs *instance.Instances) *instance.Instance {
 		}
 	}
 	fmt.Println("\nFound the following matches: ")
-		for n, c := range *f {
-			fmt.Printf("[%d] %s\n", n+1, c.Name)
-		}
+	for n, c := range *f {
+		fmt.Printf("[%d] %s\n", n+1, c.Name)
+	}
 	input := ask("\nPlease enter a choice for the organisation: ", func(input string) bool {
 		return validateRange(input, len(*f))
 	})
