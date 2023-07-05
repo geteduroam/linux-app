@@ -1,6 +1,7 @@
 package instance
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/geteduroam/linux-app/internal/utils"
@@ -22,6 +23,17 @@ type Instance struct {
 
 type Instances []Instance
 
+type ByName []Instance
+
+func (s ByName) Len() int      { return len(s) }
+func (s ByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s ByName) Less(i, j int) bool {
+	// Do we want to involve Profiles{}.Name in the sort
+	// And if so, how?
+	// For now we sort reverse as an example
+	return s[i].Name > s[j].Name
+}
+
 // Filter filters a list of instances
 func (i *Instances) Filter(search string) *Instances {
 	x := Instances{}
@@ -35,5 +47,6 @@ func (i *Instances) Filter(search string) *Instances {
 			x = append(x, i)
 		}
 	}
+	sort.Sort(ByName(x))
 	return &x
 }
