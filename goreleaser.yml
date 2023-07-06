@@ -37,7 +37,7 @@ nfpms:
     overrides:
      deb:
       dependencies:
-       - network-managet
+       - network-manager
 
 checksum:
   name_template: "checksums.txt"
