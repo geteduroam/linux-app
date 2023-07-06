@@ -9,15 +9,6 @@ builds:
     goarch:
       - amd64
     binary: geteduroam
-    #targets:
-    #  - linux
-    # Other configuration options...
-
-#archives:
-#  - name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-#    format_overrides:
-#      - goos: linux
-#    #    format: deb
 
 nfpms:
   - file_name_template: '{{ .Binary }}_{{ .Os }}_{{ .Arch }}'
@@ -30,26 +21,17 @@ nfpms:
     bindir: /usr/bin
     version_metadata: git
     release: 1
-#    dependencies:
-#     - network-manager
     description: |-
-      Geteduroam client for .deb based linux distributions.
+      Geteduroam client for linux distributions.
+
     overrides:
      deb:
       dependencies:
        - network-manager
+     rpm:
+      dependencies:
+       - NetworkManager
+
 
 checksum:
   name_template: "checksums.txt"
-
-#files:
-# overrides:
-#   deb:
-#    dependencies:
-#     - network-manager
-# Specify the files to include in the .deb package
-#files:
- # - ./path/to/binary/myproject=/usr/bin/myproject
-  # Include other necessary files...
-
-# Additional configuration options...
