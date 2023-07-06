@@ -1,3 +1,0 @@
-af6e71c043de82a447ad8e56d170f889e0db78357f63acca45ee9c2bf9a78d11  linux-app_0.0.0-SNAPSHOT-c5eff5b_linux_amd64.tar.gz
-eb6154648f1cc8743062c219de4b14b5dbf10bf758ddd828fd41cc987f17f55b  geteduroam_linux_amd64.deb
-edd28ae582d1e27dc893937b3dc73acbb26912ca06b7b3a4144d4c1720f4aa09  geteduroam_linux_amd64.rpm
