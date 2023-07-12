@@ -1,5 +1,5 @@
 .build:
-	go build -o geteduroam-cli cmd/geteduroam/main.go
+	go build -o geteduroam-cli ./cmd/geteduroam
 
 build: .build
 	@echo "Done building, run 'make run' to run the client"
