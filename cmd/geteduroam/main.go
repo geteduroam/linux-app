@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"syscall"
@@ -323,9 +324,30 @@ func doDiscovery() {
 	}
 }
 
+// findVersion gets the version in the following order:
+// - Gets a release version if it detects it is a release
+// - Gets the commit using debug info
+// - Returns a default
+func findVersion() string {
+	// TODO: Support a release version too
+	if dbg, ok := debug.ReadBuildInfo(); ok {
+		for _, s := range dbg.Settings {
+			if s.Key == "vcs.revision" {
+				return "Git checkout " + s.Value
+			}
+		}
+	}
+	return "0.0 (unknown)"
+}
+
 func main() {
+	version := flag.Bool("version", false, "Show version and exit")
 	local := flag.String("local", "", "The path to a local EAP metadata file")
 	flag.Parse()
+	if *version {
+		fmt.Println("Version:", findVersion())
+		os.Exit(0)
+	}
 
 	if local != nil && *local != "" {
 		doLocal(*local)
