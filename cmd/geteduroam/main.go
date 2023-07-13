@@ -358,7 +358,7 @@ func main() {
 	flag.StringVar(&local, "l", "", "The path to a local EAP metadata file")
 	flag.Usage = func() { fmt.Printf(usage, filepath.Base(os.Args[0])) }
 	flag.Parse()
-	if help == true {
+	if help {
 		flag.Usage()
 		return
 	}
