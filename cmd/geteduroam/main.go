@@ -345,16 +345,27 @@ func findVersion() string {
 
 // Testfunction to test logLevel setting
 func printLevels() {
-	slog.Debug("Debug")
-	slog.Info("Info")
-	slog.Warn("Warn")
-	slog.Error("Error %v", 1)
+	msg := "Test"
+	slog.Debug("Debug", "debug", msg)
+	slog.Info("Info", "info", msg)
+	slog.Warn("Warn", "warn", msg)
+	slog.Error("Error", "error", msg)
+	verbosef("Verbose: %s", msg)
 }
+
+func verbosef(msg string, args ...any) {
+	if isVerbose {
+		fmt.Printf(msg+"\n", args...)
+	}
+}
+
+var isVerbose bool
 
 const usage = `Usage of %s:
   -h, --help			Prints this help information
   --version			Prints version information
   -v				Verbose
+  -d, --debug			Debug
   -l <file>, --local=<file>	The path to a local EAP metadata file
 `
 
@@ -362,11 +373,14 @@ func main() {
 	var help bool
 	var version bool
 	var verbose bool
+	var debug bool
 	var local string
 	flag.BoolVar(&help, "help", false, "Show help")
 	flag.BoolVar(&help, "h", false, "Show help")
 	flag.BoolVar(&version, "version", false, "Show version")
 	flag.BoolVar(&verbose, "v", false, "Verbose")
+	flag.BoolVar(&debug, "d", false, "Debug")
+	flag.BoolVar(&debug, "debug", false, "Debug")
 	flag.StringVar(&local, "local", "", "The path to a local EAP metadata file")
 	flag.StringVar(&local, "l", "", "The path to a local EAP metadata file")
 	flag.Usage = func() { fmt.Printf(usage, filepath.Base(os.Args[0])) }
@@ -380,10 +394,11 @@ func main() {
 		Level: logLevel,
 	}
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, opts)))
+	if debug {
+		logLevel.Set(slog.LevelDebug)
+	}
 	if verbose {
-		logLevel.Set(slog.LevelInfo)
-	} else {
-		logLevel.Set(slog.LevelWarn)
+		isVerbose = true
 	}
 	printLevels()
 	if version {
