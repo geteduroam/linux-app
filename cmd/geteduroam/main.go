@@ -12,6 +12,7 @@ import (
 	"strings"
 	"syscall"
 
+	"golang.org/x/exp/slog"
 	"golang.org/x/term"
 
 	"github.com/geteduroam/linux-app/internal/discovery"
@@ -254,7 +255,8 @@ func file(metadata []byte) (err error) {
 func direct(p *instance.Profile) {
 	config, err := p.EAPDirect()
 	if err != nil {
-		log.Fatalf("Could not obtain eap config: %v", err)
+		slog.Error(fmt.Sprintf("Could not obtain eap config: %v", err))
+		os.Exit(1)
 	}
 
 	err = file(config)
@@ -341,19 +343,30 @@ func findVersion() string {
 	return "0.0 (unknown)"
 }
 
+// Testfunction to test logLevel setting
+func printLevels() {
+	slog.Debug("Debug")
+	slog.Info("Info")
+	slog.Warn("Warn")
+	slog.Error("Error %v", 1)
+}
+
 const usage = `Usage of %s:
   -h, --help			Prints this help information
   --version			Prints version information
+  -v				Verbose
   -l <file>, --local=<file>	The path to a local EAP metadata file
 `
 
 func main() {
 	var help bool
 	var version bool
+	var verbose bool
 	var local string
 	flag.BoolVar(&help, "help", false, "Show help")
 	flag.BoolVar(&help, "h", false, "Show help")
 	flag.BoolVar(&version, "version", false, "Show version")
+	flag.BoolVar(&verbose, "v", false, "Verbose")
 	flag.StringVar(&local, "local", "", "The path to a local EAP metadata file")
 	flag.StringVar(&local, "l", "", "The path to a local EAP metadata file")
 	flag.Usage = func() { fmt.Printf(usage, filepath.Base(os.Args[0])) }
@@ -362,6 +375,17 @@ func main() {
 		flag.Usage()
 		return
 	}
+	logLevel := &slog.LevelVar{}
+	opts := &slog.HandlerOptions{
+		Level: logLevel,
+	}
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, opts)))
+	if verbose {
+		logLevel.Set(slog.LevelInfo)
+	} else {
+		logLevel.Set(slog.LevelWarn)
+	}
+	printLevels()
 	if version {
 		fmt.Println("Version:", findVersion())
 		return
