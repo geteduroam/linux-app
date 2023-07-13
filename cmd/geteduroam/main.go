@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -340,17 +341,33 @@ func findVersion() string {
 	return "0.0 (unknown)"
 }
 
-func main() {
-	version := flag.Bool("version", false, "Show version and exit")
-	local := flag.String("local", "", "The path to a local EAP metadata file")
-	flag.Parse()
-	if *version {
-		fmt.Println("Version:", findVersion())
-		os.Exit(0)
-	}
+const usage = `Usage of %s:
+  -h, --help			Prints this help information
+  --version			Prints version information
+  -l <file>, --local=<file>	The path to a local EAP metadata file
+`
 
-	if local != nil && *local != "" {
-		doLocal(*local)
+func main() {
+	var help bool
+	var version bool
+	var local string
+	flag.BoolVar(&help, "help", false, "Show help")
+	flag.BoolVar(&help, "h", false, "Show help")
+	flag.BoolVar(&version, "version", false, "Show version")
+	flag.StringVar(&local, "local", "", "The path to a local EAP metadata file")
+	flag.StringVar(&local, "l", "", "The path to a local EAP metadata file")
+	flag.Usage = func() { fmt.Printf(usage, filepath.Base(os.Args[0])) }
+	flag.Parse()
+	if help == true {
+		flag.Usage()
+		return
+	}
+	if version {
+		fmt.Println("Version:", findVersion())
+		return
+	}
+	if local != "" {
+		doLocal(local)
 	} else {
 		doDiscovery()
 	}
