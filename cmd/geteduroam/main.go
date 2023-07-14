@@ -14,6 +14,7 @@ import (
 	"golang.org/x/exp/slog"
 	"golang.org/x/term"
 
+	"github.com/geteduroam/linux-app/internal/config"
 	"github.com/geteduroam/linux-app/internal/discovery"
 	"github.com/geteduroam/linux-app/internal/handler"
 	"github.com/geteduroam/linux-app/internal/instance"
@@ -348,6 +349,19 @@ func findVersion() string {
 	return "0.0 (unknown)"
 }
 
+func newLogFile() (*os.File, string, error) {
+	logfile := fmt.Sprintf("%s.log", filepath.Base(os.Args[0]))
+	dir, err := config.Directory()
+	if err != nil {
+		return nil, "", err
+	}
+	fpath := filepath.Join(dir, logfile)
+	fp, err := os.Create(fpath)
+	if err != nil {
+		return nil, "", err
+	}
+	return fp, fpath, nil
+}
 const usage = `Usage of %s:
   -h, --help			Prints this help information
   --version			Prints version information
@@ -376,16 +390,24 @@ func main() {
 		flag.Usage()
 		return
 	}
+	if verbose {
+		utils.IsVerbose = true
+	}
 	logLevel := &slog.LevelVar{}
 	opts := &slog.HandlerOptions{
 		Level: logLevel,
 	}
-	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, opts)))
-	if verbose {
-		utils.IsVerbose = true
+	logfile, fpath, err := newLogFile()
+	if err == nil {
+		utils.Verbosef("Writing debug logs to %s", fpath)
+		slog.SetDefault(slog.New(slog.NewTextHandler(logfile, opts)))
+	} else {
+		utils.Verbosef("Writing debug logs to console")
+		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, opts)))
 	}
 	if debug {
 		logLevel.Set(slog.LevelDebug)
+		// TODO Remove when we are done testing levels
 		utils.PrintLevels()
 	}
 	if version {

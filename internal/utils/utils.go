@@ -40,10 +40,10 @@ func Verbosef(msg string, args ...any) {
 	}
 }
 
+// TODO Remove when we are done testing levels
 // Testfunction to test logLevel setting
 func PrintLevels() {
 	msg := "Test"
-	Verbosef("Verbose: %s", msg)
 	slog.Debug("Debug", "debug", msg)
 	slog.Info("Info", "info", msg)
 	slog.Warn("Warn", "warn", msg)
