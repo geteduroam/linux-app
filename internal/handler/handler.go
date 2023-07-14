@@ -69,6 +69,7 @@ func (h Handlers) Configure(eap []byte) (err error) {
 		panic("unsupported network")
 	}
 	if err != nil {
+		slog.Debug("Error installing network", "error", err)
 		return
 	}
 	// save the config with the uuid

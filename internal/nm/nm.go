@@ -6,6 +6,8 @@ import (
 	"os/user"
 	"strings"
 
+	"golang.org/x/exp/slog"
+
 	"github.com/geteduroam/linux-app/internal/config"
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/geteduroam/linux-app/internal/network/method"
@@ -28,6 +30,7 @@ func encodePath(p string) []byte {
 func encodeFileBytes(name string, contents []byte) ([]byte, error) {
 	p, err := config.WriteFile(name, contents)
 	if err != nil {
+		slog.Debug("Error writing file", "error", err)
 		return nil, err
 	}
 	return encodePath(p), nil
@@ -40,6 +43,7 @@ func previousCon(pUUID string) (*connection.Connection, error) {
 	}
 	s, err := connection.NewSettings()
 	if err != nil {
+		slog.Debug("Error creating new settings", "error", err)
 		return nil, err
 	}
 	return s.ConnectionByUUID(pUUID)
@@ -57,6 +61,7 @@ func createCon(pUUID string, args connection.SettingsArgs) (*connection.Connecti
 	// create a connection settings object
 	s, err := connection.NewSettings()
 	if err != nil {
+		slog.Debug("Error creating new settings", "error", err)
 		return nil, err
 	}
 	// create a new connection
