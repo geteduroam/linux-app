@@ -339,7 +339,6 @@ func doDiscovery() {
 // - Gets the commit using debug info
 // - Returns a default
 func findVersion() string {
-	utils.Verbosef("findVersion")
 	// TODO: Support a release version too
 	if dbg, ok := debug.ReadBuildInfo(); ok {
 		for _, s := range dbg.Settings {
