@@ -362,6 +362,7 @@ func newLogFile() (*os.File, string, error) {
 	}
 	return fp, fpath, nil
 }
+
 const usage = `Usage of %s:
   -h, --help			Prints this help information
   --version			Prints version information
