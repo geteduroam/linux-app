@@ -256,7 +256,7 @@ func file(metadata []byte) (err error) {
 func direct(p *instance.Profile) {
 	config, err := p.EAPDirect()
 	if err != nil {
-		slog.Error(fmt.Sprintf("Could not obtain eap config: %v", err))
+		slog.Error("Could not obtain eap config", "error", err)
 		os.Exit(1)
 	}
 
