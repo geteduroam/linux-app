@@ -209,19 +209,17 @@ func askPassword() string {
 // askCredentials asks the user for credentials
 // It returns the username and password
 func askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string) {
-	if utils.IsVerbose {
-		fmt.Println("\nOrganization info:")
-		fmt.Println(" Title:", pi.Name)
-		fmt.Println(" Description:", pi.Description)
-		if pi.Helpdesk.Email != "" {
-			fmt.Println(" Helpdesk e-mail:", pi.Helpdesk.Email)
-		}
-		if pi.Helpdesk.Phone != "" {
-			fmt.Println(" Helpdesk phone number:", pi.Helpdesk.Phone)
-		}
-		if pi.Helpdesk.Web != "" {
-			fmt.Println(" Helpdesk URL:", pi.Helpdesk.Web)
-		}
+	fmt.Println("\nOrganization info:")
+	fmt.Println(" Title:", pi.Name)
+	fmt.Println(" Description:", pi.Description)
+	if pi.Helpdesk.Email != "" {
+		fmt.Println(" Helpdesk e-mail:", pi.Helpdesk.Email)
+	}
+	if pi.Helpdesk.Phone != "" {
+		fmt.Println(" Helpdesk phone number:", pi.Helpdesk.Phone)
+	}
+	if pi.Helpdesk.Web != "" {
+		fmt.Println(" Helpdesk URL:", pi.Helpdesk.Web)
 	}
 	username := c.Username
 	password := c.Password
