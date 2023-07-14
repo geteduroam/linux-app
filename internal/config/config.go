@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+
+	"golang.org/x/exp/slog"
+
+	"github.com/geteduroam/linux-app/internal/utils"
 )
 
 // Config is the main structure for the configuration
@@ -27,6 +31,7 @@ func Directory() (p string, err error) {
 	if dir == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
+			slog.Debug("Error finding user HomeDir", "error", err)
 			return "", err
 		}
 		dir = filepath.Join(home, ".local/share")
@@ -64,6 +69,7 @@ func Load() (*Config, error) {
 
 	b, err := os.ReadFile(p)
 	if err != nil {
+		slog.Debug("Error reading config file", "file", p, "error", err)
 		return nil, err
 	}
 
@@ -71,8 +77,10 @@ func Load() (*Config, error) {
 
 	err = json.Unmarshal(b, &v)
 	if err != nil {
+		slog.Debug("Error reading config file", "file", p, "error", err)
 		return nil, err
 	}
+	utils.Verbosef("Reading config file %s", p)
 	return &v.Config, nil
 }
 
@@ -86,8 +94,12 @@ func (c Config) Write() (err error) {
 	}
 	b, err := json.Marshal(&v)
 	if err != nil {
+		slog.Debug("Error writing config file", "file", configName, "error", err)
 		return err
 	}
 	_, err = WriteFile(configName, b)
+	if err != nil {
+		slog.Debug("Error writing config file", "file", configName, "error", err)
+	}
 	return
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,12 +11,15 @@ import (
 	"strings"
 	"syscall"
 
+	"golang.org/x/exp/slog"
 	"golang.org/x/term"
 
+	"github.com/geteduroam/linux-app/internal/config"
 	"github.com/geteduroam/linux-app/internal/discovery"
 	"github.com/geteduroam/linux-app/internal/handler"
 	"github.com/geteduroam/linux-app/internal/instance"
 	"github.com/geteduroam/linux-app/internal/network"
+	"github.com/geteduroam/linux-app/internal/utils"
 )
 
 // askSecret is a tweak of thee 'ask' function that uses golang.org/x/term to read a secret securely
@@ -93,13 +95,13 @@ func validateRange(input string, n int) bool {
 func organization(orgs *instance.Instances) *instance.Instance {
 	_, h, err := term.GetSize(0)
 	if err != nil {
-		fmt.Println("Could not get height")
+		slog.Warn("Could not get height")
 		h = 10
 	}
 	f := orgs
 	f = filteredOrganizations(f, "Please enter your organization (e.g. SURF): ")
 	for {
-		if len(*f) > h {
+		if len(*f) > h-3 {
 			for _, c := range *f {
 				fmt.Printf("%s\n", c.Name)
 			}
@@ -220,7 +222,6 @@ func askCredentials(c network.Credentials, pi network.ProviderInfo) (string, str
 	if pi.Helpdesk.Web != "" {
 		fmt.Println(" Helpdesk URL:", pi.Helpdesk.Web)
 	}
-
 	username := c.Username
 	password := c.Password
 	if c.Username == "" {
@@ -254,12 +255,16 @@ func file(metadata []byte) (err error) {
 func direct(p *instance.Profile) {
 	config, err := p.EAPDirect()
 	if err != nil {
-		log.Fatalf("Could not obtain eap config: %v", err)
+		slog.Error("Could not obtain eap config", "error", err)
+		fmt.Printf("Could not obtain eap config %v\n", err)
+		os.Exit(1)
 	}
 
 	err = file(config)
 	if err != nil {
-		log.Fatalf("Failed to configure the connection using the metadata: %v", err)
+		slog.Error("Failed to configure the connection using the metadata", "error", err)
+		fmt.Printf("Failed to configure the connection using the metadata %v\n", err)
+		os.Exit(1)
 	}
 }
 
@@ -267,11 +272,13 @@ func direct(p *instance.Profile) {
 func redirect(p *instance.Profile) {
 	r, err := p.RedirectURI()
 	if err != nil {
+		slog.Error("Failed to complete the flow, no redirect URI is available")
 		fmt.Fprintln(os.Stderr, "Failed to complete the flow, no redirect URI is available")
 		return
 	}
 	err = exec.Command("xdg-open", r).Start()
 	if err != nil {
+		slog.Error("Failed to complete the flow, cannot open browser with error", "error", err)
 		fmt.Fprintf(os.Stderr, "Failed to complete the flow, cannot open browser with error: %v\n", err)
 		return
 	}
@@ -282,31 +289,40 @@ func redirect(p *instance.Profile) {
 func oauth(p *instance.Profile) {
 	config, err := p.EAPOAuth()
 	if err != nil {
-		log.Fatalf("Could not obtain eap config with OAuth: %v", err)
+		slog.Error("Could not obtain eap config with OAuth", "error", err)
+		os.Exit(1)
 	}
 
 	err = file(config)
 	if err != nil {
-		log.Fatalf("Failed to configure the connection using the OAuth metadata: %v", err)
+		slog.Error("Failed to configure the connection using the OAuth metadata", "error", err)
+		fmt.Printf("Failed to configure the connection using the OAuth metadata %v\n", err)
+		os.Exit(1)
 	}
 }
 
 func doLocal(filename string) {
-	    b, err := os.ReadFile(filename)
-	    if err != nil {
-		    log.Fatalf("Failed to read local file: %v", err)
-	    }
-	    err = file(b)
-	    if err != nil {
-		    log.Fatalf("Failed to configure the connection using the metadata: %v", err)
-	    }
+	b, err := os.ReadFile(filename)
+	if err != nil {
+		slog.Error("Failed to read local file", "error", err)
+		fmt.Printf("Failed to read local file %v\n", err)
+		os.Exit(1)
+	}
+	err = file(b)
+	if err != nil {
+		slog.Error("Failed to configure the connection using the metadata", "error", err)
+		fmt.Printf("Failed to configure the connection using the metadata %v\n", err)
+		os.Exit(1)
+	}
 }
 
 func doDiscovery() {
 	c := discovery.NewCache()
 	i, err := c.Instances()
 	if err != nil {
-		log.Fatalf("failed to get instances from discovery: %v", err)
+		slog.Error("Failed to get instances from discovery", "error", err)
+		fmt.Printf("Failed to get instances from discovery %v\n", err)
+		os.Exit(1)
 	}
 
 	chosen := organization(i)
@@ -341,19 +357,40 @@ func findVersion() string {
 	return "0.0 (unknown)"
 }
 
+func newLogFile() (*os.File, string, error) {
+	logfile := fmt.Sprintf("%s.log", filepath.Base(os.Args[0]))
+	dir, err := config.Directory()
+	if err != nil {
+		return nil, "", err
+	}
+	fpath := filepath.Join(dir, logfile)
+	fp, err := os.Create(fpath)
+	if err != nil {
+		return nil, "", err
+	}
+	return fp, fpath, nil
+}
+
 const usage = `Usage of %s:
   -h, --help			Prints this help information
   --version			Prints version information
+  -v				Verbose
+  -d, --debug			Debug
   -l <file>, --local=<file>	The path to a local EAP metadata file
 `
 
 func main() {
 	var help bool
 	var version bool
+	var verbose bool
+	var debug bool
 	var local string
 	flag.BoolVar(&help, "help", false, "Show help")
 	flag.BoolVar(&help, "h", false, "Show help")
 	flag.BoolVar(&version, "version", false, "Show version")
+	flag.BoolVar(&verbose, "v", false, "Verbose")
+	flag.BoolVar(&debug, "d", false, "Debug")
+	flag.BoolVar(&debug, "debug", false, "Debug")
 	flag.StringVar(&local, "local", "", "The path to a local EAP metadata file")
 	flag.StringVar(&local, "l", "", "The path to a local EAP metadata file")
 	flag.Usage = func() { fmt.Printf(usage, filepath.Base(os.Args[0])) }
@@ -361,6 +398,26 @@ func main() {
 	if help {
 		flag.Usage()
 		return
+	}
+	if verbose {
+		utils.IsVerbose = true
+	}
+	logLevel := &slog.LevelVar{}
+	opts := &slog.HandlerOptions{
+		Level: logLevel,
+	}
+	logfile, fpath, err := newLogFile()
+	if err == nil {
+		utils.Verbosef("Writing debug logs to %s", fpath)
+		slog.SetDefault(slog.New(slog.NewTextHandler(logfile, opts)))
+	} else {
+		utils.Verbosef("Writing debug logs to console")
+		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, opts)))
+	}
+	if debug {
+		logLevel.Set(slog.LevelDebug)
+		// TODO Remove when we are done testing levels
+		utils.PrintLevels()
 	}
 	if version {
 		fmt.Println("Version:", findVersion())

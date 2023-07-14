@@ -10,6 +10,8 @@ import (
 	"errors"
 	"fmt"
 
+	"golang.org/x/exp/slog"
+
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/geteduroam/linux-app/internal/network/cert"
 	"github.com/geteduroam/linux-app/internal/network/inner"
@@ -527,17 +529,19 @@ func (eap *EAPIdentityProviderList) Network() (network.Network, error) {
 	}
 	methods, err := p.AuthMethods()
 	if err != nil {
+		slog.Debug("Error getting AuthMethods", "error", err)
 		return nil, err
 	}
 	ssid, minrsn, err := p.SSIDSettings()
 	if err != nil {
+		slog.Debug("Error getting SSIDSettings", "error", err)
 		return nil, err
 	}
 	pinfo := p.PInfo()
 	for _, m := range methods {
 		n, err := m.Network(ssid, minrsn, pinfo)
 		if err != nil {
-			// TODO: log error
+			slog.Debug("Error getting ProviderInfo", "error", err)
 			continue
 		}
 		return n, nil

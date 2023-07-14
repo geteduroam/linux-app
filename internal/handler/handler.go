@@ -3,6 +3,8 @@
 package handler
 
 import (
+	"golang.org/x/exp/slog"
+
 	"github.com/geteduroam/linux-app/internal/config"
 	"github.com/geteduroam/linux-app/internal/eap"
 	"github.com/geteduroam/linux-app/internal/network"
@@ -67,6 +69,7 @@ func (h Handlers) Configure(eap []byte) (err error) {
 		panic("unsupported network")
 	}
 	if err != nil {
+		slog.Debug("Error installing network", "error", err)
 		return
 	}
 	// save the config with the uuid
@@ -74,5 +77,8 @@ func (h Handlers) Configure(eap []byte) (err error) {
 		UUID: uuid,
 	}
 	err = nc.Write()
+	if err != nil {
+		slog.Debug("Error configuring network", "error", err)
+	}
 	return
 }
