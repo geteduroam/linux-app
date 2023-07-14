@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -19,6 +18,7 @@ import (
 	"github.com/geteduroam/linux-app/internal/handler"
 	"github.com/geteduroam/linux-app/internal/instance"
 	"github.com/geteduroam/linux-app/internal/network"
+	"github.com/geteduroam/linux-app/internal/utils"
 )
 
 // askSecret is a tweak of thee 'ask' function that uses golang.org/x/term to read a secret securely
@@ -94,13 +94,13 @@ func validateRange(input string, n int) bool {
 func organization(orgs *instance.Instances) *instance.Instance {
 	_, h, err := term.GetSize(0)
 	if err != nil {
-		fmt.Println("Could not get height")
+		slog.Warn("Could not get height")
 		h = 10
 	}
 	f := orgs
 	f = filteredOrganizations(f, "Please enter your organization (e.g. SURF): ")
 	for {
-		if len(*f) > h {
+		if len(*f) > h-3 {
 			for _, c := range *f {
 				fmt.Printf("%s\n", c.Name)
 			}
@@ -209,19 +209,20 @@ func askPassword() string {
 // askCredentials asks the user for credentials
 // It returns the username and password
 func askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string) {
-	fmt.Println("\nOrganization info:")
-	fmt.Println(" Title:", pi.Name)
-	fmt.Println(" Description:", pi.Description)
-	if pi.Helpdesk.Email != "" {
-		fmt.Println(" Helpdesk e-mail:", pi.Helpdesk.Email)
+	if utils.IsVerbose {
+		fmt.Println("\nOrganization info:")
+		fmt.Println(" Title:", pi.Name)
+		fmt.Println(" Description:", pi.Description)
+		if pi.Helpdesk.Email != "" {
+			fmt.Println(" Helpdesk e-mail:", pi.Helpdesk.Email)
+		}
+		if pi.Helpdesk.Phone != "" {
+			fmt.Println(" Helpdesk phone number:", pi.Helpdesk.Phone)
+		}
+		if pi.Helpdesk.Web != "" {
+			fmt.Println(" Helpdesk URL:", pi.Helpdesk.Web)
+		}
 	}
-	if pi.Helpdesk.Phone != "" {
-		fmt.Println(" Helpdesk phone number:", pi.Helpdesk.Phone)
-	}
-	if pi.Helpdesk.Web != "" {
-		fmt.Println(" Helpdesk URL:", pi.Helpdesk.Web)
-	}
-
 	username := c.Username
 	password := c.Password
 	if c.Username == "" {
@@ -261,7 +262,8 @@ func direct(p *instance.Profile) {
 
 	err = file(config)
 	if err != nil {
-		log.Fatalf("Failed to configure the connection using the metadata: %v", err)
+		slog.Error("Failed to configure the connection using the metadata", "error", err)
+		os.Exit(1)
 	}
 }
 
@@ -284,31 +286,36 @@ func redirect(p *instance.Profile) {
 func oauth(p *instance.Profile) {
 	config, err := p.EAPOAuth()
 	if err != nil {
-		log.Fatalf("Could not obtain eap config with OAuth: %v", err)
+		slog.Error("Could not obtain eap config with OAuth", "error", err)
+		os.Exit(1)
 	}
 
 	err = file(config)
 	if err != nil {
-		log.Fatalf("Failed to configure the connection using the OAuth metadata: %v", err)
+		slog.Error("Failed to configure the connection using the OAuth metadata", "error", err)
+		os.Exit(1)
 	}
 }
 
 func doLocal(filename string) {
-	    b, err := os.ReadFile(filename)
-	    if err != nil {
-		    log.Fatalf("Failed to read local file: %v", err)
-	    }
-	    err = file(b)
-	    if err != nil {
-		    log.Fatalf("Failed to configure the connection using the metadata: %v", err)
-	    }
+	b, err := os.ReadFile(filename)
+	if err != nil {
+		slog.Error("Failed to read local file", "error", err)
+		os.Exit(1)
+	}
+	err = file(b)
+	if err != nil {
+		slog.Error("Failed to configure the connection using the metadata", "error", err)
+		os.Exit(1)
+	}
 }
 
 func doDiscovery() {
 	c := discovery.NewCache()
 	i, err := c.Instances()
 	if err != nil {
-		log.Fatalf("failed to get instances from discovery: %v", err)
+		slog.Error("failed to get instances from discovery", "error", err)
+		os.Exit(1)
 	}
 
 	chosen := organization(i)
@@ -332,6 +339,7 @@ func doDiscovery() {
 // - Gets the commit using debug info
 // - Returns a default
 func findVersion() string {
+	utils.Verbosef("findVersion")
 	// TODO: Support a release version too
 	if dbg, ok := debug.ReadBuildInfo(); ok {
 		for _, s := range dbg.Settings {
@@ -342,24 +350,6 @@ func findVersion() string {
 	}
 	return "0.0 (unknown)"
 }
-
-// Testfunction to test logLevel setting
-func printLevels() {
-	msg := "Test"
-	slog.Debug("Debug", "debug", msg)
-	slog.Info("Info", "info", msg)
-	slog.Warn("Warn", "warn", msg)
-	slog.Error("Error", "error", msg)
-	verbosef("Verbose: %s", msg)
-}
-
-func verbosef(msg string, args ...any) {
-	if isVerbose {
-		fmt.Printf(msg+"\n", args...)
-	}
-}
-
-var isVerbose bool
 
 const usage = `Usage of %s:
   -h, --help			Prints this help information
@@ -394,13 +384,13 @@ func main() {
 		Level: logLevel,
 	}
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, opts)))
+	if verbose {
+		utils.IsVerbose = true
+	}
 	if debug {
 		logLevel.Set(slog.LevelDebug)
+		utils.PrintLevels()
 	}
-	if verbose {
-		isVerbose = true
-	}
-	printLevels()
 	if version {
 		fmt.Println("Version:", findVersion())
 		return

@@ -1,6 +1,8 @@
 package connection
 
 import (
+	"golang.org/x/exp/slog"
+
 	"github.com/geteduroam/linux-app/internal/nm/base"
 	"github.com/godbus/dbus/v5"
 )
@@ -19,6 +21,7 @@ func New(path dbus.ObjectPath) (*Connection, error) {
 	c := &Connection{}
 	err := c.Init(base.Interface, path)
 	if err != nil {
+		slog.Debug("Error initiating DBus connection", "error", err)
 		return nil, err
 	}
 	return c, nil
