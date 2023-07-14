@@ -256,12 +256,14 @@ func direct(p *instance.Profile) {
 	config, err := p.EAPDirect()
 	if err != nil {
 		slog.Error("Could not obtain eap config", "error", err)
+		fmt.Printf("Could not obtain eap config %v\n", err)
 		os.Exit(1)
 	}
 
 	err = file(config)
 	if err != nil {
 		slog.Error("Failed to configure the connection using the metadata", "error", err)
+		fmt.Printf("Failed to configure the connection using the metadata %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -270,11 +272,13 @@ func direct(p *instance.Profile) {
 func redirect(p *instance.Profile) {
 	r, err := p.RedirectURI()
 	if err != nil {
+		slog.Error("Failed to complete the flow, no redirect URI is available")
 		fmt.Fprintln(os.Stderr, "Failed to complete the flow, no redirect URI is available")
 		return
 	}
 	err = exec.Command("xdg-open", r).Start()
 	if err != nil {
+		slog.Error("Failed to complete the flow, cannot open browser with error", "error", err)
 		fmt.Fprintf(os.Stderr, "Failed to complete the flow, cannot open browser with error: %v\n", err)
 		return
 	}
@@ -292,6 +296,7 @@ func oauth(p *instance.Profile) {
 	err = file(config)
 	if err != nil {
 		slog.Error("Failed to configure the connection using the OAuth metadata", "error", err)
+		fmt.Printf("Failed to configure the connection using the OAuth metadata %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -300,11 +305,13 @@ func doLocal(filename string) {
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		slog.Error("Failed to read local file", "error", err)
+		fmt.Printf("Failed to read local file %v\n", err)
 		os.Exit(1)
 	}
 	err = file(b)
 	if err != nil {
 		slog.Error("Failed to configure the connection using the metadata", "error", err)
+		fmt.Printf("Failed to configure the connection using the metadata %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -313,7 +320,8 @@ func doDiscovery() {
 	c := discovery.NewCache()
 	i, err := c.Instances()
 	if err != nil {
-		slog.Error("failed to get instances from discovery", "error", err)
+		slog.Error("Failed to get instances from discovery", "error", err)
+		fmt.Printf("Failed to get instances from discovery %v\n", err)
 		os.Exit(1)
 	}
 
