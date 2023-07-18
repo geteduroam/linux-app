@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"golang.org/x/exp/slog"
+
 	"github.com/geteduroam/linux-app/internal/instance"
 )
 
@@ -59,12 +61,14 @@ func (c *Cache) Instances() (*instance.Instances, error) {
 	client := http.Client{Timeout: 10 * time.Second}
 	res, err := client.Do(req)
 	if err != nil {
+		slog.Debug("Error requesting discovery.json", "error", err)
 		return &c.Cached.Instances, err
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
+		slog.Debug("Error reading discovery.json response", "error", err)
 		return &c.Cached.Instances, err
 	}
 	if res.StatusCode < 200 || res.StatusCode > 299 {
@@ -74,6 +78,7 @@ func (c *Cache) Instances() (*instance.Instances, error) {
 	var d *Discovery
 	err = json.Unmarshal(body, &d)
 	if err != nil {
+		slog.Debug("Error loading discovery.json", "error", err)
 		return &c.Cached.Instances, err
 	}
 

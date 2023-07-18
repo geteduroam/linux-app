@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"fmt"
 	"unicode"
 
+	"golang.org/x/exp/slog"
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
@@ -27,4 +29,23 @@ func ErrorString(e error) string {
 		return ""
 	}
 	return e.Error()
+}
+
+var IsVerbose bool
+
+// Conditionally (format) print verbose messages
+func Verbosef(msg string, args ...any) {
+	if IsVerbose {
+		fmt.Printf(msg+"\n", args...)
+	}
+}
+
+// TODO Remove when we are done testing levels
+// Testfunction to test logLevel setting
+func PrintLevels() {
+	msg := "Test"
+	slog.Debug("Debug", "debug", msg)
+	slog.Info("Info", "info", msg)
+	slog.Warn("Warn", "warn", msg)
+	slog.Error("Error", "error", msg)
 }
