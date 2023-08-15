@@ -1,3 +1,2 @@
-main
-geteduroam-cli
-dist/
+./geteduroam-cli
+./dist/

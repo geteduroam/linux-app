@@ -1,13 +1,14 @@
-.build:
-	go build -o geteduroam-cli ./cmd/geteduroam
+.build-cli:
+	go build -o geteduroam-cli ./cmd/geteduroam-cli
 
-build: .build
-	@echo "Done building, run 'make run' to run the client"
+build-cli: .build-cli
+	@echo "Done building, run 'make run-cli' to run the CLI"
+
 
 test:
 	go test ./...
 
-run: .build
+run-cli: .build-cli
 	./geteduroam-cli
 
 clean:
