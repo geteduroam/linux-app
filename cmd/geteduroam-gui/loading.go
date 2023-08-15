@@ -25,7 +25,7 @@ func (l *LoadingState) Show() {
 	var label gtk.Label
 	l.builder.GetObject("loadingText").Cast(&label)
 	label.SetText(l.Message)
-	styleWidget(&label, "./resources/label.css")
+	styleWidget(&label, "label")
 	l.stack.SetVisibleChild(page.GetChild().GetLayoutManager().GetWidget())
 
 	var spinner gtk.Spinner
