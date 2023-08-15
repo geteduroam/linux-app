@@ -8,12 +8,12 @@ This repository contains the source code for the geteduroam Linux client. Curren
 
 # Building
 ```bash
-make
+make build-cli
 ```
 
 # Running
 ```bash
-make run
+make run-cli
 ```
 
 # Testing
