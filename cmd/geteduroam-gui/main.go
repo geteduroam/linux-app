@@ -108,7 +108,7 @@ func (m *mainState) initTree() {
 	// style the treeview
 	var tree gtk.TreeView
 	m.builder.GetObject("searchTree").Cast(&tree)
-	styleWidget(&tree, "resources/tree.css")
+	styleWidget(&tree, "tree")
 	tree.SetHeadersVisible(false)
 	column := gtk.NewTreeViewColumn()
 	tree.AppendColumn(column)
@@ -201,7 +201,7 @@ type ui struct {
 
 func (ui *ui) initBuilder() {
 	// open the builder
-	ui.builder = gtk.NewFromFileBuilder("resources/geteduroam.ui")
+	ui.builder = gtk.NewFromStringBuilder(MustResource("geteduroam.ui"), -1)
 }
 
 func (ui *ui) initWindow() {
@@ -215,7 +215,7 @@ func (ui *ui) initWindow() {
 	var search adw.ViewStackPage
 	ui.builder.GetObject("searchPage").Cast(&search)
 	widg := search.GetChild().GetLayoutManager().GetWidget()
-	styleWidget(widg, "resources/window.css")
+	styleWidget(widg, "window")
 	ui.app.AddWindow(&win)
 	win.Show()
 }
