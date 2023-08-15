@@ -5,21 +5,21 @@ import (
 	"github.com/jwijenbergh/puregotk/v4/gtk"
 )
 
-type loadingState struct {
+type LoadingState struct {
 	builder *gtk.Builder
 	stack *adw.ViewStack
 	Message string
 }
 
-func NewLoadingPage(builder *gtk.Builder, stack *adw.ViewStack, message string) *loadingState {
-	return &loadingState{
+func NewLoadingPage(builder *gtk.Builder, stack *adw.ViewStack, message string) *LoadingState {
+	return &LoadingState{
 		builder: builder,
 		stack: stack,
 		Message: message,
 	}
 }
 
-func (l *loadingState) Show() {
+func (l *LoadingState) Show() {
 	var page adw.ViewStackPage
 	l.builder.GetObject("loadingPage").Cast(&page)
 	var label gtk.Label
