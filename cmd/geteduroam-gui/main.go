@@ -96,6 +96,10 @@ func (m *mainState) rowActived(tree gtk.TreeView) {
 		switch p.Flow() {
 		case instance.DirectFlow:
 			fmt.Println("DIRECT FLOW")
+		case instance.OAuthFlow:
+			fmt.Println("OAUTH FLOW")
+		case instance.RedirectFlow:
+			fmt.Println("REDIRECT FLOW")
 		}
 	}()
 }
