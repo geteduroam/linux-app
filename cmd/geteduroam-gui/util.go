@@ -13,8 +13,6 @@ func styleWidget(widget StyledWidget, resName string) {
 	provider := gtk.NewCssProvider()
 	provider.LoadFromData(MustResource(resName+".css"), -1)
 	sc := widget.GetStyleContext()
-	// TODO: This casts the css style context to the underlying pointer
-	// we should have to do this and this has to be fixed in puregotk
 	sc.AddProvider(provider, 800)
 }
 
