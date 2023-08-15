@@ -7,9 +7,7 @@ const (
 	MainState
 )
 
-
-type State interface{
+type State interface {
 	State() StateType
 	Initialize() error
 }
-
