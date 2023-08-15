@@ -249,7 +249,7 @@ func (ui *ui) Run() int {
 	ui.app.ConnectActivate(func (o gio.Application) {
 		ui.activate()
 	})
-	return int(ui.app.Run(int32(len(os.Args)), os.Args))
+	return ui.app.Run(len(os.Args), os.Args)
 }
 
 func main() {
