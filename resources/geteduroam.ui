@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<interface>
+  <requires lib="gtk" version="4.10"/>
+  <requires lib="libadwaita" version="1.3"/>
+  <object class="GtkWindow" id="mainWindow">
+    <child>
+      <object class="AdwViewStack" id="pageStack">
+	<child>
+	  <object class="AdwViewStackPage" id="searchPage">
+	    <property name="child">
+	      <object class="AdwClamp">
+		<child>
+		  <object class="GtkBox">
+		    <property name="orientation">vertical</property>
+		    <child>
+		      <object class="GtkImage"/>
+		    </child>
+		    <child>
+		      <object class="GtkSearchEntry" id="searchBox">
+			<property name="placeholder-text">Search for your organization (e.g. SURF)</property>
+		      </object>
+		    </child>
+		    <child>
+		      <object class="GtkScrolledWindow" id="searchScroll">
+			<property name="child">
+			  <object class="GtkTreeView" id="searchTree"/>
+			</property>
+			<property name="propagate-natural-height">True</property>
+			<property name="propagate-natural-width">True</property>
+			<property name="visible">False</property>
+		      </object>
+		    </child>
+		  </object>
+		</child>
+	      </object>
+	    </property>
+	  </object>
+	</child>
+	<child>
+	  <object class="AdwViewStackPage" id="loadingPage">
+	    <property name="child">
+	      <object class="GtkBox">
+		<property name="halign">center</property>
+		<property name="orientation">vertical</property>
+		<property name="valign">center</property>
+		<child>
+		  <object class="GtkLabel" id="loadingText"/>
+		</child>
+		<child>
+		  <object class="GtkSpinner" id="loadingSpinner">
+		    <property name="margin-top">5</property>
+		  </object>
+		</child>
+	      </object>
+	    </property>
+	  </object>
+	</child>
+      </object>
+    </child>
+  </object>
+</interface>
