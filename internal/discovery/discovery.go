@@ -43,7 +43,7 @@ func (c *Cache) ToUpdate() bool {
 	// We update every hour
 	u := c.LastUpdate.Add(1 * time.Hour)
 	n := time.Now()
-	return !n.After(u)
+	return n.After(u)
 }
 
 // Instances gets the instances either from the cache or from scratch
