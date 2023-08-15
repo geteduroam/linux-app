@@ -12,4 +12,3 @@ func MustResource(name string) string {
 	}
 	return string(b)
 }
-

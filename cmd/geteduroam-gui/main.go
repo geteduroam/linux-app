@@ -4,13 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/jwijenbergh/puregotk/v4/adw"
 	"github.com/jwijenbergh/puregotk/v4/gio"
 	"github.com/jwijenbergh/puregotk/v4/gobject"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
-
-	"sync"
 
 	"github.com/geteduroam/linux-app/internal/discovery"
 
@@ -19,8 +18,8 @@ import (
 
 type serverList struct {
 	sync.Mutex
-	iter *gtk.TreeIter
-	store *gtk.ListStore
+	iter      *gtk.TreeIter
+	store     *gtk.ListStore
 	instances instance.Instances
 }
 
@@ -63,10 +62,10 @@ func (s *serverList) Model() gtk.TreeModel {
 	return s.store
 }
 
-type mainState struct{
+type mainState struct {
 	builder *gtk.Builder
 	servers *serverList
-	scroll *gtk.ScrolledWindow
+	scroll  *gtk.ScrolledWindow
 }
 
 func (m *mainState) initServers() {
@@ -139,7 +138,7 @@ func (m *mainState) initSearch() {
 	m.builder.GetObject("searchBox").Cast(&search)
 	c := discovery.NewCache()
 	search.ConnectSearchChanged(func(gtk.SearchEntry) {
-		// get the query 
+		// get the query
 		var val gobject.Value
 		search.GetProperty("text", &val)
 		q := val.String()
@@ -165,7 +164,7 @@ func (m *mainState) fillSearch(cache *discovery.Cache, search string) {
 	m.servers.Lock()
 	defer m.servers.Unlock()
 	if search == "" {
-		uiThread(func () {
+		uiThread(func() {
 			m.scroll.Hide()
 			m.servers.Clear()
 		})
@@ -181,7 +180,7 @@ func (m *mainState) fillSearch(cache *discovery.Cache, search string) {
 	wg.Add(1)
 
 	// update the list in the gtk thread
-	uiThread( func() {
+	uiThread(func() {
 		m.servers.Clear()
 		for idx, ins := range m.servers.instances {
 			m.servers.Add(idx, ins)
@@ -192,11 +191,10 @@ func (m *mainState) fillSearch(cache *discovery.Cache, search string) {
 	wg.Wait()
 }
 
-
 type ui struct {
 	builder *gtk.Builder
-	app *adw.Application
-	state State
+	app     *adw.Application
+	state   State
 }
 
 func (ui *ui) initBuilder() {
@@ -209,7 +207,6 @@ func (ui *ui) initWindow() {
 	var win gtk.Window
 	ui.builder.GetObject("mainWindow").Cast(&win)
 	win.SetDefaultSize(400, 600)
-
 
 	// style the window using the css
 	var search adw.ViewStackPage
@@ -246,7 +243,7 @@ func (ui *ui) Run() int {
 	const id = "com.geteduroam.linux"
 	ui.app = adw.NewApplication(id, gio.GApplicationFlagsNoneValue)
 	defer ui.app.Unref()
-	ui.app.ConnectActivate(func (o gio.Application) {
+	ui.app.ConnectActivate(func(o gio.Application) {
 		ui.activate()
 	})
 	return ui.app.Run(len(os.Args), os.Args)

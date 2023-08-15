@@ -7,14 +7,14 @@ import (
 
 type LoadingState struct {
 	builder *gtk.Builder
-	stack *adw.ViewStack
+	stack   *adw.ViewStack
 	Message string
 }
 
 func NewLoadingPage(builder *gtk.Builder, stack *adw.ViewStack, message string) *LoadingState {
 	return &LoadingState{
 		builder: builder,
-		stack: stack,
+		stack:   stack,
 		Message: message,
 	}
 }
