@@ -142,8 +142,14 @@ func (m *mainState) initSearch() {
 		var val gobject.Value
 		search.GetProperty("text", &val)
 		q := val.String()
-		// update the search with the query
-		go m.fillSearch(c, q)
+		// TODO len returns length in bytes
+		// utf8.RuneCountInString() counts number of characters (runes)
+		if len(q) > 2 {
+			// update the search with the query
+			go m.fillSearch(c, q)
+		} else {
+			m.servers.Clear()
+		}
 	})
 }
 
