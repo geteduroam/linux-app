@@ -1,4 +1,4 @@
 ./geteduroam-cli
 ./dist/
-geteduroam-cli
-geteduroam-gui
+./geteduroam-cli
+./geteduroam-gui
