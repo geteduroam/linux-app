@@ -19,7 +19,7 @@ func NewLoadingPage(builder *gtk.Builder, stack *adw.ViewStack, message string) 
 	}
 }
 
-func (l *LoadingState) Show() {
+func (l *LoadingState) Initialize() error {
 	var page adw.ViewStackPage
 	l.builder.GetObject("loadingPage").Cast(&page)
 	var label gtk.Label
@@ -31,4 +31,5 @@ func (l *LoadingState) Show() {
 	var spinner gtk.Spinner
 	l.builder.GetObject("loadingSpinner").Cast(&spinner)
 	spinner.Start()
+	return nil
 }
