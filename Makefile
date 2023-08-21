@@ -1,4 +1,4 @@
-SHELL := /bin/bash
+SHELL := /usr/bin/env bash
 .PHONY: help
 
 help:  ## Print this help message
