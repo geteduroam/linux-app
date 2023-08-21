@@ -12,8 +12,9 @@ import (
 	"github.com/jwijenbergh/puregotk/v4/gtk"
 
 	"github.com/geteduroam/linux-app/internal/discovery"
-
+	"github.com/geteduroam/linux-app/internal/handler"
 	"github.com/geteduroam/linux-app/internal/instance"
+	"github.com/geteduroam/linux-app/internal/network"
 )
 
 type serverList struct {
@@ -75,6 +76,35 @@ func (m *mainState) initServers() {
 	m.servers.iter = &gtk.TreeIter{}
 }
 
+func (m *mainState) askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string) {
+	var stack adw.ViewStack
+	m.builder.GetObject("pageStack").Cast(&stack)
+	login := NewLoginState(m.builder, &stack, c, pi)
+	login.Initialize()
+	return login.Get()
+}
+
+func (m *mainState) file(metadata []byte) error {
+	h := handler.Handlers{
+		CredentialsH: m.askCredentials,
+		//CertificateH: askCertficiate,
+	}
+	return h.Configure(metadata)
+}
+
+func (m *mainState) direct(p instance.Profile) {
+	config, err := p.EAPDirect()
+	// TODO: error screen
+	if err != nil {
+		panic(err)
+	}
+	err = m.file(config)
+	// TODO: error screen
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (m *mainState) rowActived(tree gtk.TreeView) {
 	s, err := m.servers.GetSelected(tree.GetSelection())
 	if err != nil {
@@ -85,16 +115,18 @@ func (m *mainState) rowActived(tree gtk.TreeView) {
 	var page gtk.Box
 	m.builder.GetObject("searchPage").Cast(&page)
 	l := NewLoadingPage(m.builder, &stack, "Loading organization details...")
-	l.Show()
+	l.Initialize()
 
-	if len(s.Profiles) > 1 {
-		panic("A profile selection screen is not yet implemented")
-	}
+	//if len(s.Profiles) > 1 {
+	//	panic("A profile selection screen is not yet implemented")
+	//}
 	go func() {
 		p := s.Profiles[0]
 		switch p.Flow() {
 		case instance.DirectFlow:
-			fmt.Println("DIRECT FLOW")
+			m.direct(p)
+			s := NewSuccessState(m.builder, &stack)
+			s.Initialize()
 		case instance.OAuthFlow:
 			fmt.Println("OAUTH FLOW")
 		case instance.RedirectFlow:
@@ -223,16 +255,6 @@ func (ui *ui) initWindow() {
 	win.Show()
 }
 
-// Go transitions the UI to a new state
-// In the future we might want to do this with a FSM
-// So for now this is a really dumb setter
-func (ui *ui) Go(state State) {
-	ui.state = state
-	if err := state.Initialize(); err != nil {
-		ui.app.GetActiveWindow().Close()
-	}
-}
-
 func (ui *ui) activate() {
 	// Initialize the builder
 	// The builder essentially just creates the bulk of the UI by loading the XML specification
@@ -242,7 +264,11 @@ func (ui *ui) activate() {
 	ui.initWindow()
 
 	// Go to the main state
-	ui.Go(&mainState{builder: ui.builder})
+	m := &mainState{builder: ui.builder}
+	err := m.Initialize()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (ui *ui) Run() int {
