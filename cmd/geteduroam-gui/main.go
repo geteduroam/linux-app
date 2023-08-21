@@ -80,14 +80,18 @@ func (m *mainState) askCredentials(c network.Credentials, pi network.ProviderInf
 	var stack adw.ViewStack
 	m.builder.GetObject("pageStack").Cast(&stack)
 	login := NewLoginState(m.builder, &stack, c, pi)
-	login.Initialize()
+	err := login.Initialize()
+	// TODO: handle this error properly
+	if err != nil {
+		panic(err)
+	}
 	return login.Get()
 }
 
 func (m *mainState) file(metadata []byte) error {
 	h := handler.Handlers{
 		CredentialsH: m.askCredentials,
-		//CertificateH: askCertficiate,
+		// CertificateH: askCertficiate,
 	}
 	return h.Configure(metadata)
 }
@@ -115,18 +119,26 @@ func (m *mainState) rowActived(tree gtk.TreeView) {
 	var page gtk.Box
 	m.builder.GetObject("searchPage").Cast(&page)
 	l := NewLoadingPage(m.builder, &stack, "Loading organization details...")
-	l.Initialize()
+	err = l.Initialize()
+	// TODO: handle this error properly
+	if err != nil {
+		panic(err)
+	}
 
-	//if len(s.Profiles) > 1 {
-	//	panic("A profile selection screen is not yet implemented")
-	//}
+	if len(s.Profiles) > 1 {
+		panic("A profile selection screen is not yet implemented")
+	}
 	go func() {
 		p := s.Profiles[0]
 		switch p.Flow() {
 		case instance.DirectFlow:
 			m.direct(p)
 			s := NewSuccessState(m.builder, &stack)
-			s.Initialize()
+			err := s.Initialize()
+			// TODO: handle this error properly
+			if err != nil {
+				panic(err)
+			}
 		case instance.OAuthFlow:
 			fmt.Println("OAUTH FLOW")
 		case instance.RedirectFlow:
@@ -177,9 +189,9 @@ func (m *mainState) initSearch() {
 		// TODO len returns length in bytes
 		// utf8.RuneCountInString() counts number of characters (runes)
 		if len(q) > 2 {
-			// update the search with the query
 			go m.fillSearch(c, q)
 		} else {
+			m.scroll.Hide()
 			m.servers.Clear()
 		}
 	})
@@ -201,13 +213,6 @@ func (m *mainState) State() StateType {
 func (m *mainState) fillSearch(cache *discovery.Cache, search string) {
 	m.servers.Lock()
 	defer m.servers.Unlock()
-	if search == "" {
-		uiThread(func() {
-			m.scroll.Hide()
-			m.servers.Clear()
-		})
-		return
-	}
 	inst, err := cache.Instances()
 	if err != nil {
 		panic(err)
@@ -232,7 +237,6 @@ func (m *mainState) fillSearch(cache *discovery.Cache, search string) {
 type ui struct {
 	builder *gtk.Builder
 	app     *adw.Application
-	state   State
 }
 
 func (ui *ui) initBuilder() {
