@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
+	"os"
+	"strings"
+	"sync"
+
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/jwijenbergh/puregotk/v4/adw"
 	"github.com/jwijenbergh/puregotk/v4/gdkpixbuf"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
-	"os"
-	"strings"
-	"sync"
 )
 
 type LoginState struct {
@@ -76,6 +77,29 @@ func (l *LoginState) Submit() {
 	l.wg.Done()
 }
 
+func (l *LoginState) fillLogo(logo *gtk.Image) error {
+	d, err := base64.StdEncoding.DecodeString(l.pi.Logo)
+	if err != nil {
+		return err
+	}
+	// TODO: do this without creating a temp file
+	f, err := os.CreateTemp("/tmp", "geteduroam-linux-instance-logo")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(f.Name())
+	_, err = f.Write(d)
+	if err != nil {
+		return err
+	}
+	pb := gdkpixbuf.NewFromFilePixbuf(f.Name())
+	uiThread(func() {
+		logo.SetFromPixbuf(pb)
+		logo.SetSizeRequest(100, 100)
+	})
+	return nil
+}
+
 func (l *LoginState) Initialize() error {
 	l.wg.Add(1)
 	var page adw.ViewStackPage
@@ -92,25 +116,10 @@ func (l *LoginState) Initialize() error {
 	l.builder.GetObject("instanceLogo").Cast(&logo)
 
 	if l.pi.Logo != "" {
-		d, err := base64.StdEncoding.DecodeString(l.pi.Logo)
+		err := l.fillLogo(&logo)
+		// TODO: do not panic here but just log
 		if err != nil {
 			panic(err)
-		}
-		if err == nil {
-			// TODO: do this without creating a temp file
-			f, err := os.CreateTemp("/tmp", "geteduroam-linux-instance-logo")
-			if err != nil {
-				panic(err)
-			}
-			if err == nil {
-				defer os.Remove(f.Name())
-				f.Write(d)
-				pb := gdkpixbuf.NewFromFilePixbuf(f.Name())
-				uiThread(func() {
-					logo.SetFromPixbuf(pb)
-					logo.SetSizeRequest(100, 100)
-				})
-			}
 		}
 	} else {
 		logo.Hide()
