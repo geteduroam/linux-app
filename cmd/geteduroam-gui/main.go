@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/jwijenbergh/puregotk/v4/adw"
 	"github.com/jwijenbergh/puregotk/v4/gio"
-	"github.com/jwijenbergh/puregotk/v4/gobject"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
 
 	"github.com/geteduroam/linux-app/internal/discovery"
@@ -19,9 +19,9 @@ import (
 
 type serverList struct {
 	sync.Mutex
-	iter      *gtk.TreeIter
-	store     *gtk.ListStore
+	store     *gtk.StringList
 	instances instance.Instances
+	list *SelectList
 }
 
 func (s *serverList) get(idx int) (*instance.Instance, error) {
@@ -31,36 +31,16 @@ func (s *serverList) get(idx int) (*instance.Instance, error) {
 	return &s.instances[idx], nil
 }
 
-func (s *serverList) GetSelected(sel *gtk.TreeSelection) (*instance.Instance, error) {
-	s.Lock()
-	defer s.Unlock()
-	sel.GetSelected(nil, s.iter)
-
-	// get the value index
-	var val gobject.Value
-	s.store.GetValue(s.iter, 1, &val)
-	idx := val.Int()
-	entry, err := s.get(idx)
-	if err != nil {
-		return nil, err
-	}
-	return entry, nil
-}
-
 func (s *serverList) Clear() {
-	s.store.Clear()
+	s.store.Remove(0)
 }
 
-func (s *serverList) Add(idx int, srv instance.Instance) {
-	s.store.Append(s.iter)
-	s.store.Set(s.iter, 0, srv.Name, -1)
-	s.store.Set(s.iter, 1, idx, -1)
-}
-
-func (s *serverList) Model() gtk.TreeModel {
+func (s *serverList) Fill() {
 	s.Lock()
 	defer s.Unlock()
-	return s.store
+	for idx, inst := range s.instances {
+		s.list.Add(idx, inst.Name)
+	}
 }
 
 type mainState struct {
@@ -70,10 +50,8 @@ type mainState struct {
 }
 
 func (m *mainState) initServers() {
-	store := gtk.NewListStore(2, gobject.TypeStringVal, gobject.TypeIntVal)
 	m.servers = &serverList{}
-	m.servers.store = store
-	m.servers.iter = &gtk.TreeIter{}
+	m.servers.store = gtk.NewStringList(0)
 }
 
 func (m *mainState) askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string) {
@@ -109,27 +87,22 @@ func (m *mainState) direct(p instance.Profile) {
 	}
 }
 
-func (m *mainState) rowActived(tree gtk.TreeView) {
-	s, err := m.servers.GetSelected(tree.GetSelection())
-	if err != nil {
-		return
-	}
+func (m *mainState) rowActived(sel instance.Instance) {
 	var stack adw.ViewStack
 	m.builder.GetObject("pageStack").Cast(&stack)
 	var page gtk.Box
 	m.builder.GetObject("searchPage").Cast(&page)
 	l := NewLoadingPage(m.builder, &stack, "Loading organization details...")
-	err = l.Initialize()
+	err := l.Initialize()
 	// TODO: handle this error properly
 	if err != nil {
 		panic(err)
 	}
-
-	if len(s.Profiles) > 1 {
+	if len(sel.Profiles) > 1 {
 		panic("A profile selection screen is not yet implemented")
 	}
 	go func() {
-		p := s.Profiles[0]
+		p := sel.Profiles[0]
 		switch p.Flow() {
 		case instance.DirectFlow:
 			m.direct(p)
@@ -147,53 +120,49 @@ func (m *mainState) rowActived(tree gtk.TreeView) {
 	}()
 }
 
-func (m *mainState) initTree() {
+func (m *mainState) initList() {
 	// style the treeview
-	var tree gtk.TreeView
-	m.builder.GetObject("searchTree").Cast(&tree)
-	styleWidget(&tree, "tree")
-	tree.SetHeadersVisible(false)
-	column := gtk.NewTreeViewColumn()
-	tree.AppendColumn(column)
+	var list gtk.ListView
+	m.builder.GetObject("searchList").Cast(&list)
 
-	renderer := gtk.NewCellRendererText()
-	renderer.Set("ypad", 10)
-	// We never want horizontal scrollbars, but want automatically vertical ones
-	m.scroll.SetPolicy(gtk.PolicyNeverValue, gtk.PolicyAutomaticValue)
-	// TODO: The height here is hacky as it could depend on the system fonts (?)
-	// We have to set a fixed width because we don't want a scrolledwindow scrollbar (see the policy set above)
-	// The height has to always be set because when I pass -1 (automatic), some entries are larger than others
-	renderer.SetFixedSize(400, 50)
-	column.PackStart(renderer, true)
-	column.AddAttribute(renderer, "text", 0)
-	tree.SetActivateOnSingleClick(true)
+	cache := discovery.NewCache()
+	inst, err := cache.Instances()
+	if err != nil {
+		panic(err)
+	}
+	m.servers.instances = *inst
 
-	// when an entry is clicked we want to get the selection
-	// and do the operation
-	tree.ConnectRowActivated(func(gtk.TreeView, uintptr, uintptr) {
-		m.rowActived(tree)
-	})
-
-	tree.SetModel(m.servers.Model())
-}
-
-func (m *mainState) initSearch() {
 	var search gtk.SearchEntry
 	m.builder.GetObject("searchBox").Cast(&search)
-	c := discovery.NewCache()
-	search.ConnectSearchChanged(func(gtk.SearchEntry) {
-		// get the query
-		var val gobject.Value
-		search.GetProperty("text", &val)
-		q := val.String()
-		// TODO len returns length in bytes
-		// utf8.RuneCountInString() counts number of characters (runes)
-		if len(q) > 2 {
-			go m.fillSearch(c, q)
-		} else {
-			m.scroll.Hide()
-			m.servers.Clear()
+
+	activated := func(idx int) {
+		inst, err := m.servers.get(idx)
+		// TODO: handle error
+		if err != nil {
+			panic(err)
 		}
+		m.rowActived(*inst)
+	}
+
+	sorter := strings.Compare
+
+	m.servers.list = NewSelectList(m.scroll, &list, activated, sorter).WithFiltering(func(a string) bool {
+		return instance.FilterSingle(a, search.GetText())
+	})
+
+	// Fill the servers in the select list
+	m.servers.Fill()
+
+	// Further set up the list
+	m.servers.list.Setup()
+
+	// Update the list when searching
+	search.ConnectSearchChanged(func (_ gtk.SearchEntry) {
+		if len(search.GetText()) < 2 {
+			m.servers.list.Hide()
+		}
+		m.servers.list.Changed()
+		m.servers.list.Show()
 	})
 }
 
@@ -201,37 +170,12 @@ func (m *mainState) Initialize() error {
 	m.scroll = &gtk.ScrolledWindow{}
 	m.builder.GetObject("searchScroll").Cast(m.scroll)
 	m.initServers()
-	m.initTree()
-	m.initSearch()
+	m.initList()
 	return nil
 }
 
 func (m *mainState) State() StateType {
 	return MainState
-}
-
-func (m *mainState) fillSearch(cache *discovery.Cache, search string) {
-	m.servers.Lock()
-	defer m.servers.Unlock()
-	inst, err := cache.Instances()
-	if err != nil {
-		panic(err)
-	}
-	m.servers.instances = *inst.Filter(search)
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	// update the list in the gtk thread
-	uiThread(func() {
-		m.servers.Clear()
-		for idx, ins := range m.servers.instances {
-			m.servers.Add(idx, ins)
-		}
-		m.scroll.Show()
-		wg.Done()
-	})
-	wg.Wait()
 }
 
 type ui struct {

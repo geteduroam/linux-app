@@ -34,16 +34,23 @@ func (s ByName) Less(i, j int) bool {
 	return s[i].Name > s[j].Name
 }
 
+func FilterSingle(name string, search string) bool {
+	l1, err1 := utils.RemoveDiacritics(strings.ToLower(name))
+	l2, err2 := utils.RemoveDiacritics(strings.ToLower(search))
+	if err1 != nil || err2 != nil {
+		return false
+	}
+	if !strings.Contains(l1, l2) {
+		return false
+	}
+	return true
+}
+
 // Filter filters a list of instances
 func (i *Instances) Filter(search string) *Instances {
 	x := Instances{}
 	for _, i := range *i {
-		l1, err1 := utils.RemoveDiacritics(strings.ToLower(i.Name))
-		l2, err2 := utils.RemoveDiacritics(strings.ToLower(search))
-		if err1 != nil || err2 != nil {
-			continue
-		}
-		if strings.Contains(l1, l2) {
+		if FilterSingle(i.Name, search) {
 			x = append(x, i)
 		}
 	}
