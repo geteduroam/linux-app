@@ -18,6 +18,8 @@ type SelectList struct {
 }
 
 func stringFromPtr(ptr uintptr) string {
+	// TODO: Remove this once we have proper callback type signatures
+	// The callback should already give a gobject.Binding
 	thisl := gobject.BindingNewFromInternalPtr(ptr)
 	var thisv gobject.Value
 	thisl.GetProperty("string", &thisv)
@@ -97,7 +99,7 @@ func (s *SelectList) setupSorter(base gio.ListModel) gio.ListModel {
 	cs := gtk.NewCustomSorter(func (this uintptr, other uintptr, _ uintptr) int {
 		return s.sorter(stringFromPtr(this), stringFromPtr(other))
 	}, 0, func(uintptr) {
-		// TOD: do something on destroy?
+		// TODO: do something on destroy?
 	})
 	var sort gtk.Sorter
 	cs.Cast(&sort)
