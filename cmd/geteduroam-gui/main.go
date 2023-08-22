@@ -98,26 +98,36 @@ func (m *mainState) rowActived(sel instance.Instance) {
 	if err != nil {
 		panic(err)
 	}
-	if len(sel.Profiles) > 1 {
-		panic("A profile selection screen is not yet implemented")
-	}
-	go func() {
-		p := sel.Profiles[0]
+	chosen := func(p instance.Profile) {
 		switch p.Flow() {
 		case instance.DirectFlow:
 			m.direct(p)
 			s := NewSuccessState(m.builder, &stack)
-			err := s.Initialize()
-			// TODO: handle this error properly
-			if err != nil {
-				panic(err)
-			}
+			uiThread(func() {
+				err := s.Initialize()
+				// TODO: handle this error properly
+				if err != nil {
+					panic(err)
+				}
+			})
 		case instance.OAuthFlow:
 			fmt.Println("OAUTH FLOW")
 		case instance.RedirectFlow:
 			fmt.Println("REDIRECT FLOW")
 		}
-	}()
+	}
+	if len(sel.Profiles) > 1 {
+		profiles := NewProfileState(m.builder, &stack, sel.Profiles, func(p instance.Profile) {
+			go chosen(p)
+		})
+		err := profiles.Initialize()
+		if err != nil {
+			// TODO: handle error
+			panic(err)
+		}
+	} else {
+		go chosen(sel.Profiles[0])
+	}
 }
 
 func (m *mainState) initList() {

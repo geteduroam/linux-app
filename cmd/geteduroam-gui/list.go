@@ -29,6 +29,8 @@ func setupList(item uintptr) {
 	label := gtk.NewLabel("")
 	label.Set("xalign", 0)
 	iteml.SetChild(label)
+	label.SetMarginTop(5)
+	label.SetMarginBottom(5)
 }
 
 func bindList(item uintptr) {
