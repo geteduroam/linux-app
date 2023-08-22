@@ -168,8 +168,11 @@ func (m *mainState) initList() {
 
 	// Update the list when searching
 	search.ConnectSearchChanged(func (_ gtk.SearchEntry) {
-		if len(search.GetText()) < 2 {
+		// TODO len returns length in bytes
+		// utf8.RuneCountInString() counts number of characters (runes)
+		if len(search.GetText()) <= 2 {
 			m.servers.list.Hide()
+			return
 		}
 		m.servers.list.Changed()
 		m.servers.list.Show()
