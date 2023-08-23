@@ -58,8 +58,9 @@ func FilterSingle(name string, search string) bool {
 	return true
 }
 
-// Filter filters a list of instances
-func (i *Instances) Filter(search string) *Instances {
+// FilterSort filters and sorts a list of instances
+// The sorting is done in reverse as this is used in the CLI where the most relevant instances should be shown at the bottom
+func (i *Instances) FilterSort(search string) *Instances {
 	x := ByName {
 		Instances: Instances{},
 		Search: search,
@@ -69,6 +70,6 @@ func (i *Instances) Filter(search string) *Instances {
 			x.Instances = append(x.Instances, i)
 		}
 	}
-	sort.Sort(ByName(x))
+	sort.Sort(sort.Reverse(ByName(x)))
 	return &x.Instances
 }

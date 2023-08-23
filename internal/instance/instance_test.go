@@ -6,7 +6,7 @@ import (
 	"github.com/geteduroam/linux-app/internal/utils"
 )
 
-func Test_Filter(t *testing.T) {
+func Test_FilterSort(t *testing.T) {
 	i := Instances{
 		{
 			Name: "Instance One",
@@ -44,12 +44,12 @@ func Test_Filter(t *testing.T) {
 			// Filter all case-insensitive diacriticless
 			input:  "instance",
 			length: 2,
-			want:   "Instance One",
+			want:   "Instånce Twö",
 		},
 	}
 
 	for _, c := range cases {
-		result := i.Filter(c.input)
+		result := i.FilterSort(c.input)
 		length := len(*result)
 		name := (*result)[0].Name
 		if name != c.want || length != c.length {
