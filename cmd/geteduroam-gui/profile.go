@@ -1,8 +1,6 @@
 package main
 
 import (
-	"strings"
-
 	"github.com/geteduroam/linux-app/internal/instance"
 	"github.com/jwijenbergh/puregotk/v4/adw"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
@@ -36,7 +34,10 @@ func (p *ProfileState) Initialize() error {
 	p.builder.GetObject("profileLabel").Cast(&label)
 	styleWidget(&label, "label")
 
-	sorter := strings.Compare
+	sorter := func(a, b string) int {
+		// Here we have no search query
+		return instance.SortNames(a, b, "")
+	}
 	activated := func(idx int) {
 		p.success(p.profiles[idx])
 	}

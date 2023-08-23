@@ -3,8 +3,8 @@ package main
 
 import (
 	"github.com/jwijenbergh/puregotk/v4/gio"
-	"github.com/jwijenbergh/puregotk/v4/gtk"
 	"github.com/jwijenbergh/puregotk/v4/gobject"
+	"github.com/jwijenbergh/puregotk/v4/gtk"
 )
 
 type SelectList struct {
@@ -15,6 +15,7 @@ type SelectList struct {
 	filter func(a string) bool
 	store *gtk.StringList
 	cf *gtk.CustomFilter
+	cs *gtk.CustomSorter
 }
 
 func stringFromPtr(ptr uintptr) string {
@@ -79,7 +80,10 @@ func (s *SelectList) WithFiltering(filter func(a string) bool) *SelectList {
 }
 
 func (s *SelectList) Changed() {
-	s.cf.Changed(0)
+	s.cs.Changed(0)
+	if s.cf != nil {
+		s.cf.Changed(0)
+	}
 }
 
 func (s *SelectList) setupFactory() *gtk.ListItemFactory {
@@ -96,14 +100,15 @@ func (s *SelectList) setupFactory() *gtk.ListItemFactory {
 }
 
 func (s *SelectList) setupSorter(base gio.ListModel) gio.ListModel {
-	cs := gtk.NewCustomSorter(func (this uintptr, other uintptr, _ uintptr) int {
+	s.cs = gtk.NewCustomSorter(func (this uintptr, other uintptr, _ uintptr) int {
 		return s.sorter(stringFromPtr(this), stringFromPtr(other))
 	}, 0, func(uintptr) {
 		// TODO: do something on destroy?
 	})
 	var sort gtk.Sorter
-	cs.Cast(&sort)
-	return gtk.NewSortListModel(base, &sort)
+	s.cs.Cast(&sort)
+	sm := gtk.NewSortListModel(base, &sort)
+	return sm
 }
 
 func (s *SelectList) setupFilter(base gio.ListModel) gio.ListModel {
@@ -115,7 +120,6 @@ func (s *SelectList) setupFilter(base gio.ListModel) gio.ListModel {
 	var fil gtk.Filter
 	s.cf.Cast(&fil)
 	fl := gtk.NewFilterListModel(base, &fil)
-	fl.SetIncremental(true)
 	return fl
 }
 
