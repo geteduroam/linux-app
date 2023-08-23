@@ -1,6 +1,8 @@
 package instance
 
 import (
+	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -23,30 +25,53 @@ type Instance struct {
 
 type Instances []Instance
 
-type ByName []Instance
+type ByName struct {
+	Instances Instances
+	Search string
+}
 
-func (s ByName) Len() int      { return len(s) }
-func (s ByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s ByName) Len() int      { return len(s.Instances) }
+func (s ByName) Swap(i, j int) { s.Instances[i], s.Instances[j] = s.Instances[j], s.Instances[i] }
 func (s ByName) Less(i, j int) bool {
 	// Do we want to involve Profiles{}.Name in the sort
 	// And if so, how?
 	// For now we sort reverse as an example
-	return s[i].Name > s[j].Name
+	namei := strings.ToLower(s.Instances[i].Name)
+	namej := strings.ToLower(s.Instances[j].Name)
+	match := regexp.MustCompile(fmt.Sprintf("[^\\w]%s[^\\w]", strings.ToLower(s.Search)))
+	mi := match.MatchString(namei)
+	mj := match.MatchString(namej)
+	if mi == mj {
+		return namei < namej
+	} else if mi {
+		return true
+	}
+	return false
+}
+
+func FilterSingle(name string, search string) bool {
+	l1, err1 := utils.RemoveDiacritics(strings.ToLower(name))
+	l2, err2 := utils.RemoveDiacritics(strings.ToLower(search))
+	if err1 != nil || err2 != nil {
+		return false
+	}
+	if !strings.Contains(l1, l2) {
+		return false
+	}
+	return true
 }
 
 // Filter filters a list of instances
 func (i *Instances) Filter(search string) *Instances {
-	x := Instances{}
+	x := ByName {
+		Instances: Instances{},
+		Search: search,
+	}
 	for _, i := range *i {
-		l1, err1 := utils.RemoveDiacritics(strings.ToLower(i.Name))
-		l2, err2 := utils.RemoveDiacritics(strings.ToLower(search))
-		if err1 != nil || err2 != nil {
-			continue
-		}
-		if strings.Contains(l1, l2) {
-			x = append(x, i)
+		if FilterSingle(i.Name, search) {
+			x.Instances = append(x.Instances, i)
 		}
 	}
 	sort.Sort(ByName(x))
-	return &x
+	return &x.Instances
 }
