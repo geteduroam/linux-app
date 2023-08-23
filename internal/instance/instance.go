@@ -25,6 +25,27 @@ type Instance struct {
 
 type Instances []Instance
 
+func SortNames(a string, b string, search string) int {
+	la := strings.ToLower(a)
+	lb := strings.ToLower(b)
+	bd := strings.Compare(la, lb)
+	// compute the base difference which is based on alphabetical order
+	// if no search is defined return the base difference
+	if search == "" {
+		return bd
+	}
+	match := regexp.MustCompile(fmt.Sprintf("(^|[\\P{L}])%s[\\P{L}]", strings.ToLower(search)))
+	mi := match.MatchString(la)
+	mj := match.MatchString(lb)
+	if mi == mj {
+		// tiebreak on alphabetical order
+		return bd
+	} else if mi {
+		return -1
+	}
+	return 1
+}
+
 type ByName struct {
 	Instances Instances
 	Search string
@@ -33,17 +54,9 @@ type ByName struct {
 func (s ByName) Len() int      { return len(s.Instances) }
 func (s ByName) Swap(i, j int) { s.Instances[i], s.Instances[j] = s.Instances[j], s.Instances[i] }
 func (s ByName) Less(i, j int) bool {
-	namei := strings.ToLower(s.Instances[i].Name)
-	namej := strings.ToLower(s.Instances[j].Name)
-	match := regexp.MustCompile(fmt.Sprintf("(^|[\\P{L}])%s[\\P{L}]", strings.ToLower(s.Search)))
-	mi := match.MatchString(namei)
-	mj := match.MatchString(namej)
-	if mi == mj {
-		return namei < namej
-	} else if mi {
-		return true
-	}
-	return false
+	diff := SortNames(s.Instances[i].Name, s.Instances[j].Name, s.Search)
+	// if i is less than j, diff returns less than 0
+	return diff < 0
 }
 
 func FilterSingle(name string, search string) bool {
