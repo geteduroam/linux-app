@@ -33,12 +33,9 @@ type ByName struct {
 func (s ByName) Len() int      { return len(s.Instances) }
 func (s ByName) Swap(i, j int) { s.Instances[i], s.Instances[j] = s.Instances[j], s.Instances[i] }
 func (s ByName) Less(i, j int) bool {
-	// Do we want to involve Profiles{}.Name in the sort
-	// And if so, how?
-	// For now we sort reverse as an example
 	namei := strings.ToLower(s.Instances[i].Name)
 	namej := strings.ToLower(s.Instances[j].Name)
-	match := regexp.MustCompile(fmt.Sprintf("[^\\w]%s[^\\w]", strings.ToLower(s.Search)))
+	match := regexp.MustCompile(fmt.Sprintf("(^|[\\P{L}])%s[\\P{L}]", strings.ToLower(s.Search)))
 	mi := match.MatchString(namei)
 	mj := match.MatchString(namej)
 	if mi == mj {
