@@ -68,7 +68,7 @@ func filteredOrganizations(orgs *instance.Instances, q string) (f *instance.Inst
 			}
 			return true
 		})
-		f = orgs.Filter(x)
+		f = orgs.FilterSort(x)
 		if f != nil && len(*f) > 0 {
 			break
 		}
