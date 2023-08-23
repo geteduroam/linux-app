@@ -44,7 +44,7 @@ func Test_Filter(t *testing.T) {
 			// Filter all case-insensitive diacriticless
 			input:  "instance",
 			length: 2,
-			want:   "Instånce Twö",
+			want:   "Instance One",
 		},
 	}
 
