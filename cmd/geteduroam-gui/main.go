@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/jwijenbergh/puregotk/v4/adw"
@@ -154,7 +153,9 @@ func (m *mainState) initList() {
 		m.rowActived(*inst)
 	}
 
-	sorter := strings.Compare
+	sorter := func(a, b string) int {
+		return instance.SortNames(a, b, search.GetText())
+	}
 
 	m.servers.list = NewSelectList(m.scroll, &list, activated, sorter).WithFiltering(func(a string) bool {
 		return instance.FilterSingle(a, search.GetText())
