@@ -408,11 +408,19 @@ func main() {
 	}
 	logfile, fpath, err := newLogFile()
 	if err == nil {
-		utils.Verbosef("Writing debug logs to %s", fpath)
 		slog.SetDefault(slog.New(slog.NewTextHandler(logfile, opts)))
+		if debug {
+			fmt.Printf("Writing debug logs to %s\n", fpath)
+		} else {
+			utils.Verbosef("Writing logs to %s", fpath)
+		}
 	} else {
-		utils.Verbosef("Writing debug logs to console")
 		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, opts)))
+		if debug {
+			fmt.Println("Writing debug logs to console")
+		} else {
+			utils.Verbosef("Writing logs to console")
+		}
 	}
 	if debug {
 		logLevel.Set(slog.LevelDebug)
