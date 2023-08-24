@@ -1,18 +1,18 @@
 # goreleaser.yml
 
 builds:
-  - main: ./cmd/geteduroam
+  - main: ./cmd/geteduroam-cli
     env:
       - CGO_ENABLED=0
     goos:
       - linux
     goarch:
       - amd64
-    binary: geteduroam
+    binary: geteduroam-cli
 
 nfpms:
   - file_name_template: '{{ .Binary }}_{{ .Os }}_{{ .Arch }}'
-    package_name: geteduroam
+    package_name: geteduroam-cli
     maintainer: Jeroen Wijenbergh
     homepage: https://geteduroam.org/
     formats:
