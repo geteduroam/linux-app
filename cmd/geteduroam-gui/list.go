@@ -8,14 +8,14 @@ import (
 )
 
 type SelectList struct {
-	win *gtk.ScrolledWindow
-	list *gtk.ListView
+	win       *gtk.ScrolledWindow
+	list      *gtk.ListView
 	activated func(int)
-	sorter func(a, b string) int
-	filter func(a string) bool
-	store *gtk.StringList
-	cf *gtk.CustomFilter
-	cs *gtk.CustomSorter
+	sorter    func(a, b string) int
+	filter    func(a string) bool
+	store     *gtk.StringList
+	cf        *gtk.CustomFilter
+	cs        *gtk.CustomSorter
 }
 
 func stringFromPtr(ptr uintptr) string {
@@ -24,12 +24,16 @@ func stringFromPtr(ptr uintptr) string {
 	thisl := gobject.BindingNewFromInternalPtr(ptr)
 	var thisv gobject.Value
 	thisl.GetProperty("string", &thisv)
+	// Purego makes a copy of the string when we call .String()
+	// So we can safely unset after the return
+	defer thisv.Unset()
 	return thisv.String()
 }
 
 func setupList(item uintptr) {
 	iteml := gtk.ListItemNewFromInternalPtr(item)
 	label := gtk.NewLabel("")
+	defer label.Unref()
 	label.Set("xalign", 0)
 	iteml.SetChild(label)
 	label.SetMarginTop(5)
@@ -41,16 +45,19 @@ func bindList(item uintptr) {
 	var label gtk.Label
 	var strobj gtk.StringObject
 	iteml.GetChild().Cast(&label)
+	defer label.Unref()
 	iteml.GetItem().Cast(&strobj)
+	defer strobj.Unref()
 	label.SetText(strobj.GetString())
 }
 
 func NewSelectList(win *gtk.ScrolledWindow, list *gtk.ListView, activated func(int), sorter func(a, b string) int) *SelectList {
 	return &SelectList{
-		win: win,
-		list: list,
-		sorter: sorter,
+		win:       win,
+		list:      list,
+		sorter:    sorter,
 		activated: activated,
+		// TODO: unref this when this select list should be destroyed
 		store: gtk.NewStringList(0),
 	}
 }
@@ -63,6 +70,7 @@ func (s *SelectList) Add(idx int, label string) {
 	// In the beginning it will but after filtering the positions will only show the positions of the current model
 	// Whereas we need the positions/index of the original list
 	s.store.GetObject(uint(idx)).Cast(&strobj)
+	defer strobj.Unref()
 	strobj.SetData("model-index", uintptr(idx))
 }
 
@@ -100,7 +108,7 @@ func (s *SelectList) setupFactory() *gtk.ListItemFactory {
 }
 
 func (s *SelectList) setupSorter(base gio.ListModel) gio.ListModel {
-	s.cs = gtk.NewCustomSorter(func (this uintptr, other uintptr, _ uintptr) int {
+	s.cs = gtk.NewCustomSorter(func(this uintptr, other uintptr, _ uintptr) int {
 		return s.sorter(stringFromPtr(this), stringFromPtr(other))
 	}, 0, func(uintptr) {
 		// TODO: do something on destroy?
@@ -125,6 +133,7 @@ func (s *SelectList) setupFilter(base gio.ListModel) gio.ListModel {
 
 func (s *SelectList) Setup() {
 	factory := s.setupFactory()
+	defer factory.Unref()
 	var model gio.ListModel = s.store
 	if s.filter != nil {
 		model = s.setupFilter(model)
@@ -134,6 +143,7 @@ func (s *SelectList) Setup() {
 
 	// further setup the list by setting the factory and model
 	sel := gtk.NewSingleSelection(s.setupSorter(model))
+	defer sel.Unref()
 	s.list.SetFactory(factory)
 	s.list.SetModel(sel)
 
@@ -144,6 +154,7 @@ func (s *SelectList) Setup() {
 	s.list.ConnectActivate(func(_ gtk.ListView, _ uint) {
 		var strobj gtk.StringObject
 		sel.GetSelectedItem().Cast(&strobj)
+		defer strobj.Unref()
 		index := int(strobj.GetData("model-index"))
 		s.activated(index)
 	})

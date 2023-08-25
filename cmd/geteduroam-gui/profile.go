@@ -25,13 +25,17 @@ func NewProfileState(builder *gtk.Builder, stack *adw.ViewStack, profiles []inst
 func (p *ProfileState) Initialize() error {
 	var page adw.ViewStackPage
 	p.builder.GetObject("profilePage").Cast(&page)
+	defer page.Unref()
 	var scroll gtk.ScrolledWindow
 	p.builder.GetObject("profileScroll").Cast(&scroll)
+	defer scroll.Unref()
 	var list gtk.ListView
 	p.builder.GetObject("profileList").Cast(&list)
+	defer list.Unref()
 
 	var label gtk.Label
 	p.builder.GetObject("profileLabel").Cast(&label)
+	defer label.Unref()
 	styleWidget(&label, "label")
 
 	sorter := func(a, b string) int {

@@ -22,14 +22,17 @@ func NewLoadingPage(builder *gtk.Builder, stack *adw.ViewStack, message string) 
 func (l *LoadingState) Initialize() error {
 	var page adw.ViewStackPage
 	l.builder.GetObject("loadingPage").Cast(&page)
+	defer page.Unref()
 	var label gtk.Label
 	l.builder.GetObject("loadingText").Cast(&label)
+	defer label.Unref()
 	label.SetText(l.Message)
 	styleWidget(&label, "label")
 	l.stack.SetVisibleChild(page.GetChild().GetLayoutManager().GetWidget())
 
 	var spinner gtk.Spinner
 	l.builder.GetObject("loadingSpinner").Cast(&spinner)
+	defer spinner.Unref()
 	spinner.Start()
 	return nil
 }
