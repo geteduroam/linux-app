@@ -287,7 +287,10 @@ func redirect(p *instance.Profile) {
 
 // oauth does the handling for the OAuth flow
 func oauth(p *instance.Profile) {
-	config, err := p.EAPOAuth()
+	config, err := p.EAPOAuth(func(url string) {
+		fmt.Println("Your browser has been opened to authorize the client")
+		fmt.Println("Or copy and paste the following url:", url)
+	})
 	if err != nil {
 		slog.Error("Could not obtain eap config with OAuth", "error", err)
 		os.Exit(1)
