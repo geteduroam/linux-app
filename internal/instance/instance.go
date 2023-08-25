@@ -48,7 +48,7 @@ func SortNames(a string, b string, search string) int {
 
 type ByName struct {
 	Instances Instances
-	Search string
+	Search    string
 }
 
 func (s ByName) Len() int      { return len(s.Instances) }
@@ -74,9 +74,9 @@ func FilterSingle(name string, search string) bool {
 // FilterSort filters and sorts a list of instances
 // The sorting is done in reverse as this is used in the CLI where the most relevant instances should be shown at the bottom
 func (i *Instances) FilterSort(search string) *Instances {
-	x := ByName {
+	x := ByName{
 		Instances: Instances{},
-		Search: search,
+		Search:    search,
 	}
 	for _, i := range *i {
 		if FilterSingle(i.Name, search) {

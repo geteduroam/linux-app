@@ -7,18 +7,18 @@ import (
 )
 
 type ProfileState struct {
-	builder *gtk.Builder
-	stack *adw.ViewStack
+	builder  *gtk.Builder
+	stack    *adw.ViewStack
 	profiles []instance.Profile
-	success func(instance.Profile)
+	success  func(instance.Profile)
 }
 
 func NewProfileState(builder *gtk.Builder, stack *adw.ViewStack, profiles []instance.Profile, success func(instance.Profile)) *ProfileState {
 	return &ProfileState{
-		builder: builder,
-		stack: stack,
+		builder:  builder,
+		stack:    stack,
 		profiles: profiles,
-		success: success,
+		success:  success,
 	}
 }
 
