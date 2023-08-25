@@ -36,6 +36,7 @@ func NewLoginState(builder *gtk.Builder, stack *adw.ViewStack, cred network.Cred
 
 func (l *LoginState) ShowError(msg string) {
 	toast := adw.NewToast(msg)
+	defer toast.Unref()
 	toast.SetTimeout(5)
 	var overlay adw.ToastOverlay
 	l.builder.GetObject("loginToastOverlay").Cast(&overlay)
@@ -43,6 +44,9 @@ func (l *LoginState) ShowError(msg string) {
 }
 
 func (l *LoginState) Get() (string, string) {
+	defer l.user.Unref()
+	defer l.pwd.Unref()
+	defer l.btn.Unref()
 	l.wg.Wait()
 
 	return l.user.GetText(), l.pwd.GetText()
@@ -92,8 +96,12 @@ func (l *LoginState) fillLogo(logo *gtk.Image) error {
 	if err != nil {
 		return err
 	}
-	pb := gdkpixbuf.NewFromFilePixbuf(f.Name())
+	pb, err := gdkpixbuf.NewFromFilePixbuf(f.Name())
+	if err != nil {
+		return err
+	}
 	uiThread(func() {
+		defer logo.Unref()
 		logo.SetFromPixbuf(pb)
 		logo.SetSizeRequest(100, 100)
 	})
@@ -104,16 +112,19 @@ func (l *LoginState) Initialize() error {
 	l.wg.Add(1)
 	var page adw.ViewStackPage
 	l.builder.GetObject("loginPage").Cast(&page)
+	defer page.Unref()
 
 	// set the title
 	var title gtk.Label
 	l.builder.GetObject("instanceTitle").Cast(&title)
+	defer title.Unref()
 	styleWidget(&title, "label")
 	title.SetText(l.pi.Name)
 
 	// set logo
 	var logo gtk.Image
 	l.builder.GetObject("instanceLogo").Cast(&logo)
+	defer logo.Unref()
 
 	if l.pi.Logo != "" {
 		err := l.fillLogo(&logo)
@@ -127,6 +138,7 @@ func (l *LoginState) Initialize() error {
 	// set the contact
 	var email gtk.Label
 	l.builder.GetObject("instanceEmail").Cast(&email)
+	defer email.Unref()
 	if l.pi.Helpdesk.Email != "" {
 		email.SetText(fmt.Sprintf("E-mail: %s", l.pi.Helpdesk.Email))
 	} else {
@@ -134,6 +146,7 @@ func (l *LoginState) Initialize() error {
 	}
 	var tel gtk.Label
 	l.builder.GetObject("instanceTel").Cast(&tel)
+	defer tel.Unref()
 	if l.pi.Helpdesk.Phone != "" {
 		tel.SetText(fmt.Sprintf("Tel.: %s", l.pi.Helpdesk.Phone))
 	} else {
@@ -141,6 +154,7 @@ func (l *LoginState) Initialize() error {
 	}
 	var web gtk.Label
 	l.builder.GetObject("instanceWeb").Cast(&web)
+	defer web.Unref()
 	if l.pi.Helpdesk.Web != "" {
 		web.SetText(fmt.Sprintf("Website: %s", l.pi.Helpdesk.Web))
 	} else {

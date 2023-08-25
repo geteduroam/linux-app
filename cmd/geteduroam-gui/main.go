@@ -20,7 +20,7 @@ type serverList struct {
 	sync.Mutex
 	store     *gtk.StringList
 	instances instance.Instances
-	list *SelectList
+	list      *SelectList
 }
 
 func (s *serverList) get(idx int) (*instance.Instance, error) {
@@ -28,10 +28,6 @@ func (s *serverList) get(idx int) (*instance.Instance, error) {
 		return nil, errors.New("index out of range")
 	}
 	return &s.instances[idx], nil
-}
-
-func (s *serverList) Clear() {
-	s.store.Remove(0)
 }
 
 func (s *serverList) Fill() {
@@ -56,6 +52,7 @@ func (m *mainState) initServers() {
 func (m *mainState) askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string) {
 	var stack adw.ViewStack
 	m.builder.GetObject("pageStack").Cast(&stack)
+	defer stack.Unref()
 	login := NewLoginState(m.builder, &stack, c, pi)
 	err := login.Initialize()
 	// TODO: handle this error properly
@@ -89,8 +86,10 @@ func (m *mainState) direct(p instance.Profile) {
 func (m *mainState) rowActived(sel instance.Instance) {
 	var stack adw.ViewStack
 	m.builder.GetObject("pageStack").Cast(&stack)
+	defer stack.Unref()
 	var page gtk.Box
 	m.builder.GetObject("searchPage").Cast(&page)
+	defer page.Unref()
 	l := NewLoadingPage(m.builder, &stack, "Loading organization details...")
 	err := l.Initialize()
 	// TODO: handle this error properly
@@ -133,6 +132,7 @@ func (m *mainState) initList() {
 	// style the treeview
 	var list gtk.ListView
 	m.builder.GetObject("searchList").Cast(&list)
+	defer list.Unref()
 
 	cache := discovery.NewCache()
 	inst, err := cache.Instances()
@@ -143,6 +143,7 @@ func (m *mainState) initList() {
 
 	var search gtk.SearchEntry
 	m.builder.GetObject("searchBox").Cast(&search)
+	defer search.Unref()
 
 	activated := func(idx int) {
 		inst, err := m.servers.get(idx)
@@ -168,7 +169,7 @@ func (m *mainState) initList() {
 	m.servers.list.Setup()
 
 	// Update the list when searching
-	search.ConnectSearchChanged(func (_ gtk.SearchEntry) {
+	search.ConnectSearchChanged(func(_ gtk.SearchEntry) {
 		// TODO len returns length in bytes
 		// utf8.RuneCountInString() counts number of characters (runes)
 		if len(search.GetText()) <= 2 {
@@ -206,12 +207,15 @@ func (ui *ui) initWindow() {
 	// get the window
 	var win gtk.Window
 	ui.builder.GetObject("mainWindow").Cast(&win)
+	defer win.Unref()
 	win.SetDefaultSize(400, 600)
 
 	// style the window using the css
 	var search adw.ViewStackPage
 	ui.builder.GetObject("searchPage").Cast(&search)
-	widg := search.GetChild().GetLayoutManager().GetWidget()
+	defer search.Unref()
+	widg := search.GetChild()
+	defer widg.Unref()
 	styleWidget(widg, "window")
 	ui.app.AddWindow(&win)
 	win.Show()
