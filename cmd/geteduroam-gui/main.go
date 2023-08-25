@@ -88,7 +88,6 @@ func (m *mainState) oauth(p instance.Profile) {
 	m.builder.GetObject("pageStack").Cast(&stack)
 	config, err := p.EAPOAuth(func(url string) {
 		uiThread(func() {
-
 			l := NewLoadingPage(m.builder, &stack, "Your browser has been opened to authorize the client")
 			err := l.Initialize()
 			// If the browser does not open for some reason the user could grab it with stdout
