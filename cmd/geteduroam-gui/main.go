@@ -83,6 +83,35 @@ func (m *mainState) direct(p instance.Profile) {
 	}
 }
 
+func (m *mainState) oauth(p instance.Profile) {
+	var stack adw.ViewStack
+	m.builder.GetObject("pageStack").Cast(&stack)
+	config, err := p.EAPOAuth(func(url string) {
+		uiThread(func() {
+
+			l := NewLoadingPage(m.builder, &stack, "Your browser has been opened to authorize the client")
+			err := l.Initialize()
+			// If the browser does not open for some reason the user could grab it with stdout
+			// We could also show it in the UI but this might mean too much clutter
+			fmt.Println("Browser has been opened with URL:", url)
+			// TODO: handle and communicate error somehow
+			if err != nil {
+				panic(err)
+			}
+		})
+	})
+	// TODO: handle error
+	if err != nil {
+		panic(err)
+	}
+
+	err = m.file(config)
+	// TODO: handle error
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (m *mainState) rowActived(sel instance.Instance) {
 	var stack adw.ViewStack
 	m.builder.GetObject("pageStack").Cast(&stack)
@@ -100,19 +129,21 @@ func (m *mainState) rowActived(sel instance.Instance) {
 		switch p.Flow() {
 		case instance.DirectFlow:
 			m.direct(p)
-			s := NewSuccessState(m.builder, &stack)
-			uiThread(func() {
-				err := s.Initialize()
-				// TODO: handle this error properly
-				if err != nil {
-					panic(err)
-				}
-			})
 		case instance.OAuthFlow:
-			fmt.Println("OAUTH FLOW")
+			m.oauth(p)
 		case instance.RedirectFlow:
+			// TODO: redirect flow
 			fmt.Println("REDIRECT FLOW")
+			return
 		}
+		s := NewSuccessState(m.builder, &stack)
+		uiThread(func() {
+			err := s.Initialize()
+			// TODO: handle this error properly
+			if err != nil {
+				panic(err)
+			}
+		})
 	}
 	if len(sel.Profiles) > 1 {
 		profiles := NewProfileState(m.builder, &stack, sel.Profiles, func(p instance.Profile) {
