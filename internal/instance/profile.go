@@ -104,7 +104,7 @@ func (p *Profile) EAPDirect() ([]byte, error) {
 }
 
 // EAPOAuth gets the EAP metadata using OAuth
-func (p *Profile) EAPOAuth() ([]byte, error) {
+func (p *Profile) EAPOAuth(auth func(authURL string)) ([]byte, error) {
 	o := eduoauth.OAuth{
 		ClientID:             "app.geteduroam.sh",
 		BaseAuthorizationURL: p.AuthorizationEndpoint,
@@ -116,8 +116,9 @@ func (p *Profile) EAPOAuth() ([]byte, error) {
 		return nil, err
 	}
 
-	// TODO: This UI message should be moved to the CLI
-	fmt.Println("Opening the browser. Please authorize the client...")
+	// Open the authorization screen in a goroutine
+	// TODO: make this return an error and use channels to communicate it?
+	go auth(url)
 	err = exec.Command("xdg-open", url).Start()
 	if err != nil {
 		return nil, err
