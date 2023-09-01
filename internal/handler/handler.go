@@ -3,6 +3,8 @@
 package handler
 
 import (
+	"time"
+
 	"golang.org/x/exp/slog"
 
 	"github.com/geteduroam/linux-app/internal/config"
@@ -43,11 +45,11 @@ func (h Handlers) network(config []byte) (network.Network, error) {
 
 // Configure configures the connection using the parsed configuration
 // It installs it using NetworkManager
-func (h Handlers) Configure(eap []byte) (err error) {
+func (h Handlers) Configure(eap []byte) (*time.Time, error) {
 	// Get the network
 	n, err := h.network(eap)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	var uuid string
 
@@ -57,6 +59,7 @@ func (h Handlers) Configure(eap []byte) (err error) {
 		uuid = c.UUID
 	}
 
+	var valid *time.Time
 	switch t := n.(type) {
 	case *network.NonTLS:
 		username, password := h.CredentialsH(t.Credentials, n.ProviderInfo())
@@ -65,12 +68,14 @@ func (h Handlers) Configure(eap []byte) (err error) {
 		uuid, err = nm.Install(*t, uuid)
 	case *network.TLS:
 		uuid, err = nm.InstallTLS(*t, uuid)
+		v := t.Validity()
+		valid = &v
 	default:
 		panic("unsupported network")
 	}
 	if err != nil {
 		slog.Debug("Error installing network", "error", err)
-		return
+		return nil, err
 	}
 	// save the config with the uuid
 	nc := config.Config{
@@ -79,6 +84,7 @@ func (h Handlers) Configure(eap []byte) (err error) {
 	err = nc.Write()
 	if err != nil {
 		slog.Debug("Error configuring network", "error", err)
+		return nil, err
 	}
-	return
+	return valid, nil
 }

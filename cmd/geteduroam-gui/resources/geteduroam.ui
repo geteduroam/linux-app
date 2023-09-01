@@ -145,6 +145,11 @@
 		    <property name="label">Your eduroam connection has been added</property>
 		  </object>
 		</child>
+		<child>
+		  <object class="GtkLabel" id="expiryText">
+		    <property name="label">Your connection is valid until: </property>
+		  </object>
+		</child>
 	      </object>
 	    </property>
 	  </object>

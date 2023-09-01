@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"time"
 
 	"github.com/youmark/pkcs8"
 	"software.sslmate.com/src/go-pkcs12"
@@ -71,4 +72,8 @@ func (cc *ClientCert) PrivateKeyPEMEnc() (pemb []byte, pwd string, err error) {
 // ToPEM generates the PEM bytes for the client certificate
 func (cc *ClientCert) ToPEM() []byte {
 	return toPEM(cc.cert)
+}
+
+func (cc *ClientCert) Validity() time.Time {
+	return cc.cert.NotAfter
 }

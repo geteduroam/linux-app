@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"golang.org/x/exp/slog"
 	"golang.org/x/term"
@@ -240,7 +241,7 @@ func askCertificate(_ string, _ network.ProviderInfo) string {
 }
 
 // file does the flow when the file has been obtained
-func file(metadata []byte) (err error) {
+func file(metadata []byte) (*time.Time, error) {
 	h := handler.Handlers{
 		CredentialsH: askCredentials,
 		CertificateH: askCertificate,
@@ -260,7 +261,8 @@ func direct(p *instance.Profile) {
 		os.Exit(1)
 	}
 
-	err = file(config)
+	// we can ignore the validity because this does not use a client cert
+	_, err = file(config)
 	if err != nil {
 		slog.Error("Failed to configure the connection using the metadata", "error", err)
 		fmt.Printf("Failed to configure the connection using the metadata %v\n", err)
@@ -286,7 +288,7 @@ func redirect(p *instance.Profile) {
 }
 
 // oauth does the handling for the OAuth flow
-func oauth(p *instance.Profile) {
+func oauth(p *instance.Profile) *time.Time {
 	config, err := p.EAPOAuth(func(url string) {
 		fmt.Println("Your browser has been opened to authorize the client")
 		fmt.Println("Or copy and paste the following url:", url)
@@ -296,30 +298,32 @@ func oauth(p *instance.Profile) {
 		os.Exit(1)
 	}
 
-	err = file(config)
+	v, err := file(config)
 	if err != nil {
 		slog.Error("Failed to configure the connection using the OAuth metadata", "error", err)
 		fmt.Printf("Failed to configure the connection using the OAuth metadata %v\n", err)
 		os.Exit(1)
 	}
+	return v
 }
 
-func doLocal(filename string) {
+func doLocal(filename string) *time.Time {
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		slog.Error("Failed to read local file", "error", err)
 		fmt.Printf("Failed to read local file %v\n", err)
 		os.Exit(1)
 	}
-	err = file(b)
+	v, err := file(b)
 	if err != nil {
 		slog.Error("Failed to configure the connection using the metadata", "error", err)
 		fmt.Printf("Failed to configure the connection using the metadata %v\n", err)
 		os.Exit(1)
 	}
+	return v
 }
 
-func doDiscovery() {
+func doDiscovery() *time.Time {
 	c := discovery.NewCache()
 	i, err := c.Instances()
 	if err != nil {
@@ -338,10 +342,10 @@ func doDiscovery() {
 		direct(p)
 	case instance.RedirectFlow:
 		redirect(p)
-		return
 	case instance.OAuthFlow:
-		oauth(p)
+		return oauth(p)
 	}
+	return nil
 }
 
 // findVersion gets the version in the following order:
@@ -434,10 +438,14 @@ func main() {
 		fmt.Println("Version:", findVersion())
 		return
 	}
+	var v *time.Time
 	if local != "" {
 		doLocal(local)
 	} else {
-		doDiscovery()
+		v = doDiscovery()
 	}
 	fmt.Println("\nYour eduroam connection has been added to NetworkManager with the name eduroam (from Geteduroam)")
+	if v != nil {
+		fmt.Println("Your connection is valid until:", v.Format("2006 Jan 2"))
+	}
 }

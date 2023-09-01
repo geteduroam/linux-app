@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/jwijenbergh/puregotk/v4/adw"
 	"github.com/jwijenbergh/puregotk/v4/gio"
@@ -62,7 +63,7 @@ func (m *mainState) askCredentials(c network.Credentials, pi network.ProviderInf
 	return login.Get()
 }
 
-func (m *mainState) file(metadata []byte) error {
+func (m *mainState) file(metadata []byte) (*time.Time, error) {
 	h := handler.Handlers{
 		CredentialsH: m.askCredentials,
 		// CertificateH: askCertficiate,
@@ -76,14 +77,14 @@ func (m *mainState) direct(p instance.Profile) {
 	if err != nil {
 		panic(err)
 	}
-	err = m.file(config)
+	_, err = m.file(config)
 	// TODO: error screen
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (m *mainState) oauth(p instance.Profile) {
+func (m *mainState) oauth(p instance.Profile) *time.Time {
 	config, err := p.EAPOAuth(func(url string) {
 		uiThread(func() {
 			var stack adw.ViewStack
@@ -105,11 +106,12 @@ func (m *mainState) oauth(p instance.Profile) {
 		panic(err)
 	}
 
-	err = m.file(config)
+	v, err := m.file(config)
 	// TODO: handle error
 	if err != nil {
 		panic(err)
 	}
+	return v
 }
 
 func (m *mainState) rowActived(sel instance.Instance) {
@@ -126,17 +128,18 @@ func (m *mainState) rowActived(sel instance.Instance) {
 		panic(err)
 	}
 	chosen := func(p instance.Profile) {
+		var valid *time.Time
 		switch p.Flow() {
 		case instance.DirectFlow:
 			m.direct(p)
 		case instance.OAuthFlow:
-			m.oauth(p)
+			valid = m.oauth(p)
 		case instance.RedirectFlow:
 			// TODO: redirect flow
 			fmt.Println("REDIRECT FLOW")
 			return
 		}
-		s := NewSuccessState(m.builder, &stack)
+		s := NewSuccessState(m.builder, &stack, valid)
 		uiThread(func() {
 			err := s.Initialize()
 			// TODO: handle this error properly

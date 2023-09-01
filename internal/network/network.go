@@ -1,6 +1,8 @@
 package network
 
 import (
+	"time"
+
 	"github.com/geteduroam/linux-app/internal/network/cert"
 	"github.com/geteduroam/linux-app/internal/network/inner"
 	"github.com/geteduroam/linux-app/internal/network/method"
@@ -105,4 +107,8 @@ func (t *TLS) Method() method.Type {
 
 func (t *TLS) ProviderInfo() ProviderInfo {
 	return t.Base.ProviderInfo
+}
+
+func (t *TLS) Validity() time.Time {
+	return t.ClientCert.Validity()
 }
