@@ -78,6 +78,10 @@ func installBase(n network.Base, specifics map[string]interface{}, pUUID string)
 		return "", err
 	}
 	sCon := map[string]interface{}{
+		// the priority is 1, just above the default 0
+		// such that connections for existing eduroam profiles (and default priority)
+		// will not be used
+		"autoconnect-priority": 1,
 		"permissions": []string{
 			fmt.Sprintf("user:%s", cUser.Username),
 		},
