@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"errors"
 	"time"
 
 	"github.com/youmark/pkcs8"
@@ -30,6 +31,15 @@ func NewClientCert(pkcs12s string, pass string) (*ClientCert, error) {
 	pk, cc, _, err := pkcs12.DecodeChain(rawcc, pass)
 	if err != nil {
 		return nil, err
+	}
+
+	// do some basic checks on the validity bounds
+	curr := time.Now()
+	if curr.Before(cc.NotBefore) {
+		return nil, errors.New("client certificate is used before the 'Not Before' time")
+	}
+	if curr.After(cc.NotAfter) {
+		return nil, errors.New("client certificate is used after the 'Not After' time")
 	}
 	return &ClientCert{
 		cert:       cc,
