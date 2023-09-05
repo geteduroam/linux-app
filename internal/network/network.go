@@ -97,6 +97,9 @@ type TLS struct {
 	// ClientCertificate is the client certificate that is protected by a password in a PKCS12 container
 	ClientCert *cert.ClientCert
 
+	// RawPKCS12 is the raw PKCS12 container
+	RawPKCS12 string
+
 	// Password is the password that encrypts the ClientCertificate
 	Password string
 }
