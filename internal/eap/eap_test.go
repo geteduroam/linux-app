@@ -207,3 +207,78 @@ func TestParse(t *testing.T) {
 		}
 	}
 }
+
+func TestCertFromContainer(t *testing.T) {
+	cases := []struct {
+		// valid data will be generated with test_data/genpkcs12.sh
+		cert       string
+		passphrase string
+		hasErr     bool
+		wantNil    bool
+	}{
+		{
+			// a valid PKCS12 encrypted with "" should have no error
+			cert:       "pkcs12empty",
+			passphrase: "",
+			hasErr:     false,
+			wantNil:    false,
+		},
+		{
+			// a valid PKCS12 encrypted with "" should have an error if we pass passphrase test
+			cert:       "pkcs12empty",
+			passphrase: "test",
+			hasErr:     true,
+			wantNil:    true,
+		},
+		{
+			// a valid PKCS12 encrypted with "test" should have no error if we give passphrase ""
+			// This is because in this case we want to try again. It should however give nil data
+			cert:       "pkcs12test",
+			passphrase: "",
+			hasErr:     false,
+			wantNil:    true,
+		},
+		{
+			// a valid PKCS12 encrypted with "test" should have no error if we give passphrase "test"
+			cert:       "pkcs12test",
+			passphrase: "test",
+			hasErr:     false,
+			wantNil:    false,
+		},
+		{
+			// a valid PKCS12 encrypted with "test" should have an error if we give passphrase "test2"
+			cert:       "pkcs12test",
+			passphrase: "test2",
+			hasErr:     true,
+			wantNil:    true,
+		},
+		// an invalid PKCS12 should always have an error
+		{
+			cert:       "pkcs12invalid",
+			passphrase: "",
+			hasErr:     true,
+			wantNil:    true,
+		},
+		{
+			cert:       "pkcs12invalid",
+			passphrase: "test",
+			hasErr:     true,
+			wantNil:    true,
+		},
+	}
+
+	for idx, c := range cases {
+		cert, err := os.ReadFile(path.Join("test_data", c.cert))
+		if err != nil {
+			t.Fatalf("Failed reading cert file: %v, idx: %v", err, idx)
+		}
+		g, gerr := certFromContainer(string(cert), c.passphrase)
+		if c.hasErr != (gerr != nil) {
+			t.Fatalf("Has error: %v, got error: %v, idx: %v", c.hasErr, gerr, idx)
+		}
+		// test if nil is always returned if we have an error
+		if c.wantNil != (g == nil) {
+			t.Fatalf("Want nil: %v, got result: %v, idx: %v", c.wantNil, g, idx)
+		}
+	}
+}

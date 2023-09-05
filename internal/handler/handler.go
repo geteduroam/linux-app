@@ -76,8 +76,12 @@ func (h Handlers) Configure(eap []byte) (*time.Time, error) {
 	case *network.TLS:
 		// TODO: Loop until the PKCS12 can be decrypted successfully?
 		if t.ClientCert == nil {
-			ccert, password := h.CertificateH(t.RawPKCS12, t.Password, n.ProviderInfo())
-			t.ClientCert, err = cert.NewClientCert(ccert, password)
+			ccert, passphrase, err := h.CertificateH(t.RawPKCS12, t.Password, n.ProviderInfo())
+			if err != nil {
+				return nil, err
+			}
+			// here the data is not base64 encoded
+			t.ClientCert, err = cert.NewClientCert(ccert, passphrase, false)
 			if err != nil {
 				return nil, err
 			}

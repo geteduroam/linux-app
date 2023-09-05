@@ -21,11 +21,15 @@ type ClientCert struct {
 }
 
 // NewClientCert creates a new client certificate using the pkcs12 string 'pkcs12s' and passphrase 'pass'
-// It returns the client certificate object
-func NewClientCert(pkcs12s string, pass string) (*ClientCert, error) {
-	rawcc, err := base64.StdEncoding.DecodeString(pkcs12s)
-	if err != nil {
-		return nil, err
+// It returns the client certificate object and an error itself
+func NewClientCert(pkcs12s string, pass string, b64 bool) (*ClientCert, error) {
+	rawcc := []byte(pkcs12s)
+	if b64 {
+		var err error
+		rawcc, err = base64.StdEncoding.DecodeString(pkcs12s)
+		if err != nil {
+			return nil, err
+		}
 	}
 	// decode the PKCS12 container to get the client certificate
 	pk, cc, _, err := pkcs12.DecodeChain(rawcc, pass)

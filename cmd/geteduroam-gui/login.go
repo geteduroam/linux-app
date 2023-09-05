@@ -2,83 +2,79 @@ package main
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
-	"strings"
 	"sync"
 
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/jwijenbergh/puregotk/v4/adw"
+	"github.com/jwijenbergh/puregotk/v4/gobject"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
+
 )
 
-type LoginState struct {
+type LoginState interface {
+	// Get returns the information needed
+	// In case of credentials: username + password
+	// In case of certificates: pkcs12 + passphrase
+	Get() (string, string)
+
+	// Initialize initializes the builder components
+	Initialize()
+
+	// Validate validates the user input
+	// This is called before pressing the submit button
+	Validate() error
+
+	// Prefix returns the GTK builder prefix that is used to get each item
+	Prefix() string
+
+	// Destroy destroys any resources that should be called when the view is hidden
+	Destroy()
+}
+
+type LoginBase struct {
 	builder *gtk.Builder
 	stack   *adw.ViewStack
-	cred    network.Credentials
+	state   LoginState
 	pi      network.ProviderInfo
 	wg      sync.WaitGroup
 
-	user gtk.Entry
-	pwd  gtk.PasswordEntry
-	btn  gtk.Button
+	btn *gtk.Button
 }
 
-func NewLoginState(builder *gtk.Builder, stack *adw.ViewStack, cred network.Credentials, pi network.ProviderInfo) *LoginState {
-	return &LoginState{
-		builder: builder,
-		stack:   stack,
-		cred:    cred,
-		pi:      pi,
+func (l *LoginBase) GetObject(id string, obj gobject.Ptr) {
+	fID := l.state.Prefix() + id
+	g := l.builder.GetObject(fID)
+	if g == nil {
+		panic("no such object with id: " + fID)
 	}
+	g.Cast(obj)
 }
 
-func (l *LoginState) ShowError(err error) {
+func (l *LoginBase) ShowError(err error) {
 	var overlay adw.ToastOverlay
-	l.builder.GetObject("loginToastOverlay").Cast(&overlay)
+	l.GetObject("ToastOverlay", &overlay)
 	defer overlay.Unref()
 	showErrorToast(overlay, err)
 }
 
-func (l *LoginState) Get() (string, string) {
-	defer l.user.Unref()
-	defer l.pwd.Unref()
+func (l *LoginBase) Get() (string, string) {
+	defer l.state.Destroy()
 	defer l.btn.Unref()
 	l.wg.Wait()
-
-	return l.user.GetText(), l.pwd.GetText()
+	return l.state.Get()
 }
 
-func (l *LoginState) Validate() bool {
-	ut := l.user.GetText()
-	if ut == "" {
-		l.ShowError(errors.New("username cannot be empty"))
-		return false
-	}
-	if !strings.HasPrefix(ut, l.cred.Prefix) {
-		l.ShowError(fmt.Errorf("username must begin with: \"%s\"", l.cred.Prefix))
-		return false
-	}
-	if !strings.HasSuffix(ut, l.cred.Suffix) {
-		l.ShowError(fmt.Errorf("username must end with: \"%s\"", l.cred.Suffix))
-		return false
-	}
-	if l.pwd.GetText() == "" {
-		l.ShowError(errors.New("password cannot be empty"))
-		return false
-	}
-	return true
-}
-
-func (l *LoginState) Submit() {
-	if !l.Validate() {
+func (l *LoginBase) Submit() {
+	if err := l.state.Validate(); err != nil {
+		l.ShowError(err)
 		return
 	}
 	l.btn.SetSensitive(false)
 	l.wg.Done()
 }
 
-func (l *LoginState) fillLogo(logo *gtk.Image) error {
+func (l *LoginBase) fillLogo(logo *gtk.Image) error {
 	d, err := base64.StdEncoding.DecodeString(l.pi.Logo)
 	if err != nil {
 		return err
@@ -94,22 +90,22 @@ func (l *LoginState) fillLogo(logo *gtk.Image) error {
 	return nil
 }
 
-func (l *LoginState) Initialize() {
+func (l *LoginBase) Initialize() {
 	l.wg.Add(1)
 	var page adw.ViewStackPage
-	l.builder.GetObject("loginPage").Cast(&page)
+	l.GetObject("Page", &page)
 	defer page.Unref()
 
 	// set the title
 	var title gtk.Label
-	l.builder.GetObject("instanceTitle").Cast(&title)
+	l.GetObject("InstanceTitle", &title)
 	defer title.Unref()
 	styleWidget(&title, "label")
 	title.SetText(l.pi.Name)
 
 	// set logo
 	var logo gtk.Image
-	l.builder.GetObject("instanceLogo").Cast(&logo)
+	l.GetObject("InstanceLogo", &logo)
 	defer logo.Unref()
 
 	if l.pi.Logo != "" {
@@ -123,7 +119,7 @@ func (l *LoginState) Initialize() {
 	}
 	// set the contact
 	var email gtk.Label
-	l.builder.GetObject("instanceEmail").Cast(&email)
+	l.GetObject("InstanceEmail", &email)
 	defer email.Unref()
 	if l.pi.Helpdesk.Email != "" {
 		email.SetText(fmt.Sprintf("E-mail: %s", l.pi.Helpdesk.Email))
@@ -131,7 +127,7 @@ func (l *LoginState) Initialize() {
 		email.Hide()
 	}
 	var tel gtk.Label
-	l.builder.GetObject("instanceTel").Cast(&tel)
+	l.GetObject("InstanceTel", &tel)
 	defer tel.Unref()
 	if l.pi.Helpdesk.Phone != "" {
 		tel.SetText(fmt.Sprintf("Tel.: %s", l.pi.Helpdesk.Phone))
@@ -139,21 +135,16 @@ func (l *LoginState) Initialize() {
 		tel.Hide()
 	}
 	var web gtk.Label
-	l.builder.GetObject("instanceWeb").Cast(&web)
+	l.GetObject("InstanceWeb", &web)
 	defer web.Unref()
 	if l.pi.Helpdesk.Web != "" {
 		web.SetText(fmt.Sprintf("Website: %s", l.pi.Helpdesk.Web))
 	} else {
 		web.Hide()
 	}
-	// prefill password and username
-	l.builder.GetObject("usernameText").Cast(&l.user)
-	l.user.SetText(l.cred.Prefix + l.cred.Suffix)
-
-	l.builder.GetObject("passwordText").Cast(&l.pwd)
-	l.pwd.SetText(l.cred.Password)
-
-	l.builder.GetObject("submitLogin").Cast(&l.btn)
+	l.state.Initialize()
+	l.btn = &gtk.Button{}
+	l.GetObject("Submit", l.btn)
 	l.btn.SetSensitive(true)
 	l.btn.ConnectClicked(func(_ gtk.Button) {
 		l.Submit()

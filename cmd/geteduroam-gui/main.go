@@ -43,6 +43,7 @@ func (s *serverList) Fill() {
 }
 
 type mainState struct {
+	app     *adw.Application
 	builder *gtk.Builder
 	servers *serverList
 	scroll  *gtk.ScrolledWindow
@@ -67,16 +68,26 @@ func (m *mainState) askCredentials(c network.Credentials, pi network.ProviderInf
 	var stack adw.ViewStack
 	m.builder.GetObject("pageStack").Cast(&stack)
 	defer stack.Unref()
-	login := NewLoginState(m.builder, &stack, c, pi)
+	login := NewCredentialsStateBase(m.builder, &stack, c, pi)
 	login.Initialize()
 	user, pass := login.Get()
 	return user, pass, nil
 }
 
+func (m *mainState) askCertificate(cert string, pwd string, pi network.ProviderInfo) (string, string, error) {
+	var stack adw.ViewStack
+	m.builder.GetObject("pageStack").Cast(&stack)
+	defer stack.Unref()
+	base := NewCertificateStateBase(m.app.GetActiveWindow(), m.builder, &stack, cert, pwd, pi)
+	base.Initialize()
+	cert, pass := base.Get()
+	return cert, pass, nil
+}
+
 func (m *mainState) file(metadata []byte) (*time.Time, error) {
 	h := handler.Handlers{
 		CredentialsH: m.askCredentials,
-		//CertificateH: askCertficiate,
+		CertificateH: m.askCertificate,
 	}
 	return h.Configure(metadata)
 }
@@ -234,7 +245,7 @@ func (m *mainState) initList() {
 	})
 }
 
-func (m *mainState) initBurger(app *adw.Application) {
+func (m *mainState) initBurger() {
 	var gears gtk.MenuButton
 	m.builder.GetObject("gears").Cast(&gears)
 	defer gears.Unref()
@@ -250,7 +261,7 @@ func (m *mainState) initBurger(app *adw.Application) {
 	m.builder.GetObject("pageStack").Cast(&stack)
 	defer stack.Unref()
 	imp.ConnectActivate(func(_ gio.SimpleAction, _ uintptr) {
-		fd, err := NewFileDialog(app.GetActiveWindow(), "Choose an EAP metadata file")
+		fd, err := NewFileDialog(m.app.GetActiveWindow(), "Choose an EAP metadata file")
 		if err != nil {
 			m.ShowError(err)
 			return
@@ -291,20 +302,20 @@ func (m *mainState) initBurger(app *adw.Application) {
 		// SetLicenseType has a scary warning: "comes with absolutely no warranty"
 		// While it is true according to the license, I find it unfriendly
 		awin.SetLicense("This application has a BSD 3 license.")
-		awin.SetTransientFor(app.GetActiveWindow())
+		awin.SetTransientFor(m.app.GetActiveWindow())
 		awin.Show()
 	})
 
-	app.AddAction(imp)
-	app.AddAction(about)
+	m.app.AddAction(imp)
+	m.app.AddAction(about)
 }
 
-func (m *mainState) Initialize(app *adw.Application) {
+func (m *mainState) Initialize() {
 	m.scroll = &gtk.ScrolledWindow{}
 	m.builder.GetObject("searchScroll").Cast(m.scroll)
 	m.initServers()
 	m.initList()
-	m.initBurger(app)
+	m.initBurger()
 }
 
 func (m *mainState) ShowError(err error) {
@@ -350,8 +361,8 @@ func (ui *ui) activate() {
 	ui.initWindow()
 
 	// Go to the main state
-	m := &mainState{builder: ui.builder}
-	m.Initialize(ui.app)
+	m := &mainState{app: ui.app, builder: ui.builder}
+	m.Initialize()
 }
 
 func (ui *ui) Run() int {
