@@ -340,7 +340,6 @@ func (ss *ServerCredentialVariants) CAList() (*cert.Certs, error) {
 // TLSNetwork creates a TLS network using the authentication method.
 // The base that is passed here are settings that are common between TLS and NON-TLS networks
 func (am *AuthenticationMethod) TLSNetwork(base network.Base) (network.Network, error) {
-	// TODO: client certificate should be required right?
 	var ccert string
 	var passphrase string
 	var identity string
@@ -353,16 +352,33 @@ func (am *AuthenticationMethod) TLSNetwork(base network.Base) (network.Network, 
 		identity = csc.OuterIdentity
 	}
 
-	// create the final client certificate structure
-	fcc, err := cert.NewClientCert(ccert, passphrase)
-	if err != nil {
-		return nil, err
+	// there could be multiple things going wrong:
+	// - The pkcs12 is not given and no passphrase is given
+	// - The pkcs12 is not given but a passphrase is given
+	// - The pkcs12 is given but the passphrase is empty
+	// - The pkcs12 is given but the passphrase is wrong
+
+	// the conditions that we will handle as an explicit error is:
+	// - wrong passphrase
+	// - wrong format of the ccert
+	// NewClientCert will then give us an error
+
+	var fcc *cert.ClientCert
+	var err error
+	// If we should not be asking for a certificate we can construct it now and return an explicit error if something went wrong
+	if ccert != "" && passphrase != "" {
+		// create the final client certificate structure
+		fcc, err = cert.NewClientCert(ccert, passphrase)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	base.AnonIdentity = identity
 	return &network.TLS{
 		Base:       base,
 		ClientCert: fcc,
+		RawPKCS12: ccert,
 		Password:   passphrase,
 	}, nil
 }
