@@ -74,6 +74,8 @@ func (cc *ClientCert) ToPEM() []byte {
 	return toPEM(cc.cert)
 }
 
+// Validity returns until when the client certificate is valid
+// Before this time the certificate should thus be renewed by running the client again
 func (cc *ClientCert) Validity() time.Time {
 	return cc.cert.NotAfter
 }
