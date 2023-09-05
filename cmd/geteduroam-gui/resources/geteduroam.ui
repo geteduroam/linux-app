@@ -77,6 +77,73 @@
 	  </object>
 	</child>
 	<child>
+	  <object class="AdwViewStackPage" id="certificatePage">
+	    <property name="child">
+	      <object class="AdwToastOverlay" id="certificateToastOverlay">
+		<property name="child">
+		  <object class="GtkBox">
+		    <property name="halign">center</property>
+		    <property name="orientation">vertical</property>
+		    <property name="valign">center</property>
+		    <property name="spacing">10</property>
+		    <child>
+		      <object class="GtkLabel" id="certificateInstanceTitle"/>
+		    </child>
+		    <child>
+		      <object class="GtkLabel" id="certificateInstanceEmail"/>
+		    </child>
+		    <child>
+		      <object class="GtkLabel" id="certificateInstanceTel"/>
+		    </child>
+		    <child>
+		      <object class="GtkLabel" id="certificateInstanceWeb"/>
+		    </child>
+		    <child>
+		      <object class="GtkImage" id="certificateInstanceLogo"/>
+		    </child>
+		    <child>
+		      <object class="GtkBox">
+			<property name="spacing">5</property>
+			<child>
+			  <object class="GtkButton" id="certificateFileButton">
+			    <property name="label">Choose a certificate...</property>
+			  </object>
+			</child>
+			<child>
+			  <object class="GtkLabel" id="certificateFileText">
+			    <property name="label">No file selected</property>
+			  </object>
+			</child>
+		      </object>
+		    </child>
+		    <child>
+		      <object class="GtkBox">
+			<property name="spacing">5</property>
+			<child>
+			  <object class="GtkLabel">
+			    <property name="label">Passphrase: (if known)</property>
+			  </object>
+			</child>
+			<child>
+			  <object class="GtkPasswordEntry" id="certificatePassphraseText">
+			    <property name="show-peek-icon">True</property>
+			    <property name="hexpand">True</property>
+			  </object>
+			</child>
+			<child>
+			  <object class="GtkButton" id="certificateSubmit">
+			    <property name="label">Submit</property>
+			  </object>
+			</child>
+		      </object>
+		    </child>
+		  </object>
+		</property>
+	      </object>
+	    </property>
+	  </object>
+	</child>
+	<child>
 	  <object class="AdwViewStackPage" id="loginPage">
 	    <property name="child">
 	      <object class="AdwToastOverlay" id="loginToastOverlay">
@@ -87,19 +154,19 @@
 		    <property name="valign">center</property>
 		    <property name="spacing">10</property>
 		    <child>
-		      <object class="GtkLabel" id="instanceTitle"/>
+		      <object class="GtkLabel" id="loginInstanceTitle"/>
 		    </child>
 		    <child>
-		      <object class="GtkLabel" id="instanceEmail"/>
+		      <object class="GtkLabel" id="loginInstanceEmail"/>
 		    </child>
 		    <child>
-		      <object class="GtkLabel" id="instanceTel"/>
+		      <object class="GtkLabel" id="loginInstanceTel"/>
 		    </child>
 		    <child>
-		      <object class="GtkLabel" id="instanceWeb"/>
+		      <object class="GtkLabel" id="loginInstanceWeb"/>
 		    </child>
 		    <child>
-		      <object class="GtkImage" id="instanceLogo"/>
+		      <object class="GtkImage" id="loginInstanceLogo"/>
 		    </child>
 		    <child>
 		      <object class="GtkBox">
@@ -110,7 +177,7 @@
 			  </object>
 			</child>
 			<child>
-			  <object class="GtkEntry" id="usernameText">
+			  <object class="GtkEntry" id="loginUsernameText">
 			    <property name="hexpand">True</property>
 			  </object>
 			</child>
@@ -125,7 +192,7 @@
 			  </object>
 			</child>
 			<child>
-			  <object class="GtkPasswordEntry" id="passwordText">
+			  <object class="GtkPasswordEntry" id="loginPasswordText">
 			    <property name="show-peek-icon">True</property>
 			    <property name="hexpand">True</property>
 			  </object>
@@ -133,7 +200,7 @@
 		      </object>
 		    </child>
 		    <child>
-		      <object class="GtkButton" id="submitLogin">
+		      <object class="GtkButton" id="loginSubmit">
 			<property name="label">Submit</property>
 		      </object>
 		    </child>

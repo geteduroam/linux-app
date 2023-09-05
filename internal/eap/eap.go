@@ -16,6 +16,7 @@ import (
 	"github.com/geteduroam/linux-app/internal/network/cert"
 	"github.com/geteduroam/linux-app/internal/network/inner"
 	"github.com/geteduroam/linux-app/internal/network/method"
+	"software.sslmate.com/src/go-pkcs12"
 )
 
 // VendorSpecificExtension ...
@@ -337,6 +338,28 @@ func (ss *ServerCredentialVariants) CAList() (*cert.Certs, error) {
 	return cert.New(certs)
 }
 
+// certFromContainer creates a clientcert object from the EAP metadata information
+// This is basically a wrapper around cert.NewClientCert but only returns an error if a 'hard error' must be returned
+// Everything is a hard error except when the passphrase is empty and we get a decryption error due to incorrect password/passphrase
+// In that case the UI should assk for a passphrase
+func certFromContainer(ccert string, passphrase string) (*cert.ClientCert, error) {
+	// create the final client certificate structure
+	// we pass true here as the data is base64 encoded
+	fcc, err := cert.NewClientCert(ccert, passphrase, true)
+	if err != nil {
+		// passphrase is not empty
+		// always handle this as an error
+		if passphrase != "" {
+			return nil, err
+		}
+		// password is empty, only return an error if the error is not incorrect password
+		if !errors.Is(pkcs12.ErrIncorrectPassword, err) {
+			return nil, err
+		}
+	}
+	return fcc, nil
+}
+
 // TLSNetwork creates a TLS network using the authentication method.
 // The base that is passed here are settings that are common between TLS and NON-TLS networks
 func (am *AuthenticationMethod) TLSNetwork(base network.Base) (network.Network, error) {
@@ -356,6 +379,8 @@ func (am *AuthenticationMethod) TLSNetwork(base network.Base) (network.Network, 
 	// - The pkcs12 is not given and no passphrase is given
 	// - The pkcs12 is not given but a passphrase is given
 	// - The pkcs12 is given but the passphrase is empty
+	//   - However we can have empty passwords
+	//   - Therefore only ask if a decryption error occurs
 	// - The pkcs12 is given but the passphrase is wrong
 
 	// the conditions that we will handle as an explicit error is:
@@ -366,9 +391,8 @@ func (am *AuthenticationMethod) TLSNetwork(base network.Base) (network.Network, 
 	var fcc *cert.ClientCert
 	var err error
 	// If we should not be asking for a certificate we can construct it now and return an explicit error if something went wrong
-	if ccert != "" && passphrase != "" {
-		// create the final client certificate structure
-		fcc, err = cert.NewClientCert(ccert, passphrase)
+	if ccert != "" {
+		fcc, err = certFromContainer(ccert, passphrase)
 		if err != nil {
 			return nil, err
 		}
@@ -378,7 +402,7 @@ func (am *AuthenticationMethod) TLSNetwork(base network.Base) (network.Network, 
 	return &network.TLS{
 		Base:       base,
 		ClientCert: fcc,
-		RawPKCS12: ccert,
+		RawPKCS12:  ccert,
 		Password:   passphrase,
 	}, nil
 }
