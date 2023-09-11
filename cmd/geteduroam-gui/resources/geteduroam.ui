@@ -20,8 +20,20 @@
 		      <object class="GtkImage"/>
 		    </child>
 		    <child>
-		      <object class="GtkSearchEntry" id="searchBox">
-			<property name="placeholder-text">Search for your organization (e.g. SURF)</property>
+		      <object class="GtkBox">
+			<property name="orientation">horizontal</property>
+			<property name="spacing">5</property>
+			<child>
+			    <object class="GtkSearchEntry" id="searchBox">
+			      <property name="hexpand">True</property>
+			      <property name="placeholder-text">Search for your organization (e.g. SURF)</property>
+			    </object>
+			</child>
+			<child>
+			  <object class="GtkMenuButton" id="gears">
+			    <property name="direction">none</property>
+			  </object>
+			</child>
 		      </object>
 		    </child>
 		    <child>

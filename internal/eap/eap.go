@@ -378,7 +378,7 @@ func (am *AuthenticationMethod) TLSNetwork(base network.Base) (network.Network, 
 	return &network.TLS{
 		Base:       base,
 		ClientCert: fcc,
-		RawPKCS12: ccert,
+		RawPKCS12:  ccert,
 		Password:   passphrase,
 	}, nil
 }

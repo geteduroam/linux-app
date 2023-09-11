@@ -84,6 +84,18 @@ func (m *mainState) direct(p instance.Profile) {
 	}
 }
 
+func (m *mainState) local(path string) (*time.Time, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	v, err := m.file(b)
+	if err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+
 func (m *mainState) oauth(p instance.Profile) *time.Time {
 	config, err := p.EAPOAuth(func(url string) {
 		uiThread(func() {
@@ -215,11 +227,72 @@ func (m *mainState) initList() {
 	})
 }
 
-func (m *mainState) Initialize() error {
+func (m *mainState) initBurger(app *adw.Application) {
+	var gears gtk.MenuButton
+	m.builder.GetObject("gears").Cast(&gears)
+	defer gears.Unref()
+
+	var menu gio.MenuModel
+	builder := gtk.NewFromStringBuilder(MustResource("gears.ui"), -1)
+	defer builder.Unref()
+	builder.GetObject("menu").Cast(&menu)
+	gears.SetMenuModel(&menu)
+
+	imp := gio.NewSimpleAction("import-local", nil)
+	var stack adw.ViewStack
+	m.builder.GetObject("pageStack").Cast(&stack)
+	defer stack.Unref()
+	imp.ConnectActivate(func(_ gio.SimpleAction, _ uintptr) {
+		fd, err := NewFileDialog(app.GetActiveWindow(), "Choose an EAP metadata file")
+		if err != nil {
+			panic(err)
+		}
+		fd.Run(func(path string) {
+			go func() {
+				v, err := m.local(path)
+				if err != nil {
+					panic(err)
+				}
+				s := NewSuccessState(m.builder, &stack, v)
+				uiThread(func() {
+					err := s.Initialize()
+					// TODO: handle this error properly
+					if err != nil {
+						panic(err)
+					}
+				})
+			}()
+		})
+	})
+
+	about := gio.NewSimpleAction("about", nil)
+	about.ConnectActivate(func(_ gio.SimpleAction, _ uintptr) {
+		var awin adw.AboutWindow
+		adw.NewAboutWindow().Cast(&awin)
+		// TODO: Make the version a global var somewhere
+		awin.SetVersion("0.1-dev")
+		awin.SetApplicationName("Geteduroam Linux")
+		awin.SetWebsite("https://github.com/geteduroam/linux-app")
+		// SetLicenseType has a scary warning: "comes with absolutely no warranty"
+		// While it is true according to the license, I find it unfriendly
+		awin.SetLicense("This application has a BSD 3 license.")
+		awin.SetIssueUrl("https://github.com/geteduroam/linux-app/issues/new")
+		awin.SetDevelopers([]string{"Jeroen Wijenbergh", "Martin van Es", "Alexandru Cacean"})
+		awin.SetTransientFor(app.GetActiveWindow())
+		awin.Show()
+	})
+
+	app.AddAction(imp)
+	app.AddAction(about)
+}
+
+func (m *mainState) Initialize(app *adw.Application) error {
 	m.scroll = &gtk.ScrolledWindow{}
 	m.builder.GetObject("searchScroll").Cast(m.scroll)
 	m.initServers()
 	m.initList()
+	m.initBurger(app)
+
 	return nil
 }
 
@@ -243,7 +316,6 @@ func (ui *ui) initWindow() {
 	ui.builder.GetObject("mainWindow").Cast(&win)
 	defer win.Unref()
 	win.SetDefaultSize(400, 600)
-
 	// style the window using the css
 	var search adw.ViewStackPage
 	ui.builder.GetObject("searchPage").Cast(&search)
@@ -265,7 +337,7 @@ func (ui *ui) activate() {
 
 	// Go to the main state
 	m := &mainState{builder: ui.builder}
-	err := m.Initialize()
+	err := m.Initialize(ui.app)
 	if err != nil {
 		panic(err)
 	}
