@@ -2,7 +2,7 @@ package method
 
 import "testing"
 
-func Test_IsValid(t *testing.T) {
+func TestIsValid(t *testing.T) {
 	cases := []struct {
 		input int
 		want  bool

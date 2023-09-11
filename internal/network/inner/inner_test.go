@@ -6,7 +6,7 @@ import (
 	"github.com/geteduroam/linux-app/internal/network/method"
 )
 
-func Test_IsValid(t *testing.T) {
+func TestIsValid(t *testing.T) {
 	cases := []struct {
 		mt    method.Type
 		input int
