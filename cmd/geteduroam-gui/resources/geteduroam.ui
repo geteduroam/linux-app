@@ -159,7 +159,7 @@
 		</child>
 		<child>
 		  <object class="GtkLabel" id="expiryText">
-		    <property name="label">Your connection is valid until: </property>
+		    <property name="label">Your connection is valid for:</property>
 		  </object>
 		</child>
 	      </object>

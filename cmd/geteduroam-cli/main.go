@@ -446,6 +446,6 @@ func main() {
 	}
 	fmt.Println("\nYour eduroam connection has been added to NetworkManager with the name eduroam (from Geteduroam)")
 	if v != nil {
-		fmt.Println("Your connection is valid until:", v.Format("2006 Jan 2"))
+		fmt.Printf("Your connection is valid for: %d days\n", utils.ValidityDays(*v))
 	}
 }

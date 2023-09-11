@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/geteduroam/linux-app/internal/utils"
 	"github.com/jwijenbergh/puregotk/v4/adw"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
 )
@@ -35,7 +37,7 @@ func (s *SuccessState) Initialize() error {
 	s.builder.GetObject("expiryText").Cast(&expiry)
 	defer expiry.Unref()
 	if s.expiry != nil {
-		expiry.SetText(expiry.GetText() + s.expiry.Format("2006 January 02"))
+		expiry.SetMarkup(fmt.Sprintf("%s <b>%d</b> days", expiry.GetText(), utils.ValidityDays(*s.expiry)))
 		expiry.Show()
 	} else {
 		expiry.Hide()

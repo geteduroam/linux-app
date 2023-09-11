@@ -2,7 +2,9 @@ package utils
 
 import (
 	"fmt"
+	"math"
 	"unicode"
+	"time"
 
 	"golang.org/x/exp/slog"
 	"golang.org/x/text/runes"
@@ -48,4 +50,14 @@ func PrintLevels() {
 	slog.Info("Info", "info", msg)
 	slog.Warn("Warn", "warn", msg)
 	slog.Error("Error", "error", msg)
+}
+
+// ValidityDays returns the amount of days left for the validity timestamp
+func ValidityDays(v time.Time) int {
+	now := time.Now()
+	if now.After(v) {
+		return 0
+	}
+	days := v.Sub(now).Hours()/24
+	return int(math.Ceil(days))
 }
