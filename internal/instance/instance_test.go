@@ -6,7 +6,7 @@ import (
 	"github.com/geteduroam/linux-app/internal/utils"
 )
 
-func Test_FilterSort(t *testing.T) {
+func TestFilterSort(t *testing.T) {
 	i := Instances{
 		{
 			Name: "Instance One",
@@ -58,7 +58,7 @@ func Test_FilterSort(t *testing.T) {
 	}
 }
 
-func Test_Flow(t *testing.T) {
+func TestFlow(t *testing.T) {
 	p := Profile{
 		AuthorizationEndpoint: "https://instance1.geteduroam.nl/oauth/authorize/",
 		Default:               true,
@@ -89,7 +89,7 @@ func Test_Flow(t *testing.T) {
 	}
 }
 
-func Test_RedirectURI(t *testing.T) {
+func TestRedirectURI(t *testing.T) {
 	p := Profile{
 		AuthorizationEndpoint: "https://instance1.geteduroam.nl/oauth/authorize/",
 		Default:               true,

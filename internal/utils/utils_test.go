@@ -2,7 +2,7 @@ package utils
 
 import "testing"
 
-func Test_RemoveDiacritics(t *testing.T) {
+func TestRemoveDiacritics(t *testing.T) {
 	cases := []struct {
 		input string
 		want  string
