@@ -31,7 +31,8 @@ nfpms:
      rpm:
       dependencies:
        - NetworkManager
-
+    env:
+      GPG_FINGERPRINT: ${{ secrets.GPG_FINGERPRINT }}  # Here's where you place the GPG fingerprint. It needs to be generated locally on your computer, then added to github settings / secrets and variables / actions. The name of secret should correspond to the variable defined here (GPG_FINGERPRINT).
 
 checksum:
   name_template: "checksums.txt"
