@@ -4,8 +4,8 @@ github.com/jwijenbergh/eduoauth-go v0.0.0-20230524082648-1e5d1c810d35 h1:3hMLNVJ
 github.com/jwijenbergh/eduoauth-go v0.0.0-20230524082648-1e5d1c810d35/go.mod h1:HidfCfBBI7U0edu2f0tNM/4/kkm4pD+nrp6IlANo214=
 github.com/jwijenbergh/purego v0.0.0-20230928085051-57b69bdc2564 h1:RjZ3zeAzTGd14apPGTVyOwF+L5o5eqyxAi+zUTaDh9E=
 github.com/jwijenbergh/purego v0.0.0-20230928085051-57b69bdc2564/go.mod h1:EtQVHFqUYxSUClPLQPCNz/R3m7egkBOxwZzIkufo7EA=
-github.com/jwijenbergh/puregotk v0.0.0-20230928142245-982a22b49213 h1:S5H13A0B7at786IMxSdxn3ScK7DptYGN8p/w/fKFynY=
-github.com/jwijenbergh/puregotk v0.0.0-20230928142245-982a22b49213/go.mod h1:KJRceNJz4n9o2JawE2JB1wFWGlOlZU8Tvte3hWhusgI=
+github.com/jwijenbergh/puregotk v0.0.0-20231002113402-7831fea6a430 h1:fmEGEP9E8s7zYk57MTql8Rw15ZVyMzH5iCTtRi4E1Yo=
+github.com/jwijenbergh/puregotk v0.0.0-20231002113402-7831fea6a430/go.mod h1:KJRceNJz4n9o2JawE2JB1wFWGlOlZU8Tvte3hWhusgI=
 github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a h1:fZHgsYlfvtyqToslyjUt3VOPF4J7aK/3MPcK7xp3PDk=
 github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a/go.mod h1:ul22v+Nro/R083muKhosV54bj5niojjWZvU8xrevuH4=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
