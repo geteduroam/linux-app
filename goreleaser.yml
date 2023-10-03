@@ -2,8 +2,6 @@
 
 builds:
   - main: ./cmd/geteduroam-cli
-    env:
-      - CGO_ENABLED=0
     goos:
       - linux
     goarch:
