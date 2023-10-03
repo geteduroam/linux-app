@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -34,8 +35,8 @@ func NewLoginState(builder *gtk.Builder, stack *adw.ViewStack, cred network.Cred
 	}
 }
 
-func (l *LoginState) ShowError(msg string) {
-	toast := adw.NewToast(msg)
+func (l *LoginState) ShowError(err error) {
+	toast := adw.NewToast(err.Error())
 	toast.SetTimeout(5)
 	var overlay adw.ToastOverlay
 	l.builder.GetObject("loginToastOverlay").Cast(&overlay)
@@ -55,19 +56,19 @@ func (l *LoginState) Get() (string, string) {
 func (l *LoginState) Validate() bool {
 	ut := l.user.GetText()
 	if ut == "" {
-		l.ShowError("Username cannot be empty")
+		l.ShowError(errors.New("username cannot be empty"))
 		return false
 	}
 	if !strings.HasPrefix(ut, l.cred.Prefix) {
-		l.ShowError(fmt.Sprintf("Username must begin with: \"%s\"", l.cred.Prefix))
+		l.ShowError(fmt.Errorf("username must begin with: \"%s\"", l.cred.Prefix))
 		return false
 	}
 	if !strings.HasSuffix(ut, l.cred.Suffix) {
-		l.ShowError(fmt.Sprintf("Username must end with: \"%s\"", l.cred.Suffix))
+		l.ShowError(fmt.Errorf("username must end with: \"%s\"", l.cred.Suffix))
 		return false
 	}
 	if l.pwd.GetText() == "" {
-		l.ShowError("Password cannot be empty")
+		l.ShowError(errors.New("password cannot be empty"))
 		return false
 	}
 	return true
@@ -108,7 +109,7 @@ func (l *LoginState) fillLogo(logo *gtk.Image) error {
 	return nil
 }
 
-func (l *LoginState) Initialize() error {
+func (l *LoginState) Initialize() {
 	l.wg.Add(1)
 	var page adw.ViewStackPage
 	l.builder.GetObject("loginPage").Cast(&page)
@@ -175,5 +176,4 @@ func (l *LoginState) Initialize() error {
 
 	// set the page as current
 	l.stack.SetVisibleChild(page.GetChild())
-	return nil
 }

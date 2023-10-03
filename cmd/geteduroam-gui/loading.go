@@ -8,6 +8,7 @@ import (
 type LoadingState struct {
 	builder *gtk.Builder
 	stack   *adw.ViewStack
+	spinner *gtk.Spinner
 	Message string
 }
 
@@ -19,7 +20,13 @@ func NewLoadingPage(builder *gtk.Builder, stack *adw.ViewStack, message string) 
 	}
 }
 
-func (l *LoadingState) Initialize() error {
+func (l *LoadingState) Hide() {
+	if l.spinner != nil {
+		l.spinner.Stop()
+	}
+}
+
+func (l *LoadingState) Initialize() {
 	var page adw.ViewStackPage
 	l.builder.GetObject("loadingPage").Cast(&page)
 	defer page.Unref()
@@ -33,6 +40,6 @@ func (l *LoadingState) Initialize() error {
 	var spinner gtk.Spinner
 	l.builder.GetObject("loadingSpinner").Cast(&spinner)
 	defer spinner.Unref()
+	l.spinner = &spinner
 	spinner.Start()
-	return nil
 }

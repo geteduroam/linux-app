@@ -50,38 +50,41 @@ func (m *mainState) initServers() {
 	m.servers.store = gtk.NewStringList(0)
 }
 
-func (m *mainState) askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string) {
+func (m *mainState) activate() {
+	var stack adw.ViewStack
+	m.builder.GetObject("pageStack").Cast(&stack)
+	defer stack.Unref()
+	var page adw.ViewStackPage
+	m.builder.GetObject("searchPage").Cast(&page)
+	defer page.Unref()
+	stack.SetVisibleChild(page.GetChild())
+}
+
+func (m *mainState) askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string, error) {
 	var stack adw.ViewStack
 	m.builder.GetObject("pageStack").Cast(&stack)
 	defer stack.Unref()
 	login := NewLoginState(m.builder, &stack, c, pi)
-	err := login.Initialize()
-	// TODO: handle this error properly
-	if err != nil {
-		panic(err)
-	}
-	return login.Get()
+	login.Initialize()
+	user, pass := login.Get()
+	return user, pass, nil
 }
 
 func (m *mainState) file(metadata []byte) (*time.Time, error) {
 	h := handler.Handlers{
 		CredentialsH: m.askCredentials,
-		// CertificateH: askCertficiate,
+		//CertificateH: askCertficiate,
 	}
 	return h.Configure(metadata)
 }
 
-func (m *mainState) direct(p instance.Profile) {
+func (m *mainState) direct(p instance.Profile) error {
 	config, err := p.EAPDirect()
-	// TODO: error screen
 	if err != nil {
-		panic(err)
+		return err
 	}
 	_, err = m.file(config)
-	// TODO: error screen
-	if err != nil {
-		panic(err)
-	}
+	return err
 }
 
 func (m *mainState) local(path string) (*time.Time, error) {
@@ -96,34 +99,24 @@ func (m *mainState) local(path string) (*time.Time, error) {
 	return v, nil
 }
 
-func (m *mainState) oauth(p instance.Profile) *time.Time {
+func (m *mainState) oauth(p instance.Profile) (*time.Time, error) {
 	config, err := p.EAPOAuth(func(url string) {
 		uiThread(func() {
 			var stack adw.ViewStack
 			m.builder.GetObject("pageStack").Cast(&stack)
 			defer stack.Unref()
 			l := NewLoadingPage(m.builder, &stack, "Your browser has been opened to authorize the client")
-			err := l.Initialize()
+			l.Initialize()
 			// If the browser does not open for some reason the user could grab it with stdout
 			// We could also show it in the UI but this might mean too much clutter
 			fmt.Println("Browser has been opened with URL:", url)
-			// TODO: handle and communicate error somehow
-			if err != nil {
-				panic(err)
-			}
 		})
 	})
-	// TODO: handle error
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	v, err := m.file(config)
-	// TODO: handle error
-	if err != nil {
-		panic(err)
-	}
-	return v
+	return m.file(config)
 }
 
 func (m *mainState) rowActived(sel instance.Instance) {
@@ -134,43 +127,42 @@ func (m *mainState) rowActived(sel instance.Instance) {
 	m.builder.GetObject("searchPage").Cast(&page)
 	defer page.Unref()
 	l := NewLoadingPage(m.builder, &stack, "Loading organization details...")
-	err := l.Initialize()
-	// TODO: handle this error properly
-	if err != nil {
-		panic(err)
-	}
-	chosen := func(p instance.Profile) {
+	l.Initialize()
+	chosen := func(p instance.Profile) error {
 		var valid *time.Time
+		var err error
 		switch p.Flow() {
 		case instance.DirectFlow:
-			m.direct(p)
+			err = m.direct(p)
+			if err != nil {
+				return err
+			}
 		case instance.OAuthFlow:
-			valid = m.oauth(p)
+			valid, err = m.oauth(p)
+			if err != nil {
+				return err
+			}
 		case instance.RedirectFlow:
-			// TODO: redirect flow
-			fmt.Println("REDIRECT FLOW")
-			return
+			return errors.New("not implemented yet")
 		}
 		s := NewSuccessState(m.builder, &stack, valid)
 		uiThread(func() {
-			err := s.Initialize()
-			// TODO: handle this error properly
-			if err != nil {
-				panic(err)
-			}
+			s.Initialize()
 		})
+		return nil
 	}
 	if len(sel.Profiles) > 1 {
-		profiles := NewProfileState(m.builder, &stack, sel.Profiles, func(p instance.Profile) {
-			go chosen(p)
-		})
-		err := profiles.Initialize()
-		if err != nil {
-			// TODO: handle error
-			panic(err)
-		}
+		profiles := NewProfileState(m.builder, &stack, sel.Profiles, chosen)
+		profiles.Initialize()
 	} else {
-		go chosen(sel.Profiles[0])
+		go func() {
+			err := chosen(sel.Profiles[0])
+			if err != nil {
+				l.Hide()
+				m.activate()
+				m.ShowError(err)
+			}
+		}()
 	}
 }
 
@@ -183,7 +175,8 @@ func (m *mainState) initList() {
 	cache := discovery.NewCache()
 	inst, err := cache.Instances()
 	if err != nil {
-		panic(err)
+		m.ShowError(err)
+		return
 	}
 	m.servers.instances = *inst
 
@@ -195,7 +188,8 @@ func (m *mainState) initList() {
 		inst, err := m.servers.get(idx)
 		// TODO: handle error
 		if err != nil {
-			panic(err)
+			m.ShowError(err)
+			return
 		}
 		m.rowActived(*inst)
 	}
@@ -245,21 +239,19 @@ func (m *mainState) initBurger(app *adw.Application) {
 	imp.ConnectActivate(func(_ gio.SimpleAction, _ uintptr) {
 		fd, err := NewFileDialog(app.GetActiveWindow(), "Choose an EAP metadata file")
 		if err != nil {
-			panic(err)
+			m.ShowError(err)
+			return
 		}
 		fd.Run(func(path string) {
 			go func() {
 				v, err := m.local(path)
 				if err != nil {
-					panic(err)
+					m.ShowError(err)
+					return
 				}
 				s := NewSuccessState(m.builder, &stack, v)
 				uiThread(func() {
-					err := s.Initialize()
-					// TODO: handle this error properly
-					if err != nil {
-						panic(err)
-					}
+					s.Initialize()
 				})
 			}()
 		})
@@ -286,18 +278,21 @@ func (m *mainState) initBurger(app *adw.Application) {
 	app.AddAction(about)
 }
 
-func (m *mainState) Initialize(app *adw.Application) error {
+func (m *mainState) Initialize(app *adw.Application) {
 	m.scroll = &gtk.ScrolledWindow{}
 	m.builder.GetObject("searchScroll").Cast(m.scroll)
 	m.initServers()
 	m.initList()
 	m.initBurger(app)
-
-	return nil
 }
 
-func (m *mainState) State() StateType {
-	return MainState
+func (m *mainState) ShowError(err error) {
+	toast := adw.NewToast(err.Error())
+	toast.SetTimeout(5)
+	var overlay adw.ToastOverlay
+	m.builder.GetObject("searchToastOverlay").Cast(&overlay)
+	defer overlay.Unref()
+	overlay.AddToast(toast)
 }
 
 type ui struct {
@@ -337,10 +332,7 @@ func (ui *ui) activate() {
 
 	// Go to the main state
 	m := &mainState{builder: ui.builder}
-	err := m.Initialize(ui.app)
-	if err != nil {
-		panic(err)
-	}
+	m.Initialize(ui.app)
 }
 
 func (ui *ui) Run() int {
