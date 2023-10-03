@@ -12,7 +12,7 @@ build-all: ## Build production image using .env versions
 	go build -o geteduroam-cli ./cmd/geteduroam-cli
 
 .build-gui:
-	CGO_ENABLED=0 go build -o geteduroam-gui ./cmd/geteduroam-gui
+	go build -o geteduroam-gui ./cmd/geteduroam-gui
 
 build-cli: .build-cli ## Build CLI version
 	@echo "Done building, run 'make run-cli' to run the CLI"
