@@ -23,7 +23,7 @@ func NewSuccessState(builder *gtk.Builder, stack *adw.ViewStack, expiry *time.Ti
 	}
 }
 
-func (s *SuccessState) Initialize() error {
+func (s *SuccessState) Initialize() {
 	var page adw.ViewStackPage
 	defer page.Unref()
 	s.builder.GetObject("successPage").Cast(&page)
@@ -44,5 +44,4 @@ func (s *SuccessState) Initialize() error {
 	}
 	// set the page as current
 	s.stack.SetVisibleChild(page.GetChild())
-	return nil
 }

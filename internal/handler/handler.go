@@ -20,11 +20,11 @@ type Handlers struct {
 	// c are the credentials which also contains prefixes and suffixes for the username
 	// pi is the provider info
 	// It returns the username and password that were filled in
-	CredentialsH func(c network.Credentials, pi network.ProviderInfo) (string, string)
+	CredentialsH func(c network.Credentials, pi network.ProviderInfo) (string, string, error)
 
 	// CertificateH is the handler for asking for the client certificate from the user
 	// The handler is responsible for decrypting the certificate
-	CertificateH func(cert string, pi network.ProviderInfo) string
+	CertificateH func(cert string, pi network.ProviderInfo) (string, error)
 }
 
 // network gets the network by parsing the connection using the EAP byte array
@@ -62,7 +62,11 @@ func (h Handlers) Configure(eap []byte) (*time.Time, error) {
 	var valid *time.Time
 	switch t := n.(type) {
 	case *network.NonTLS:
-		username, password := h.CredentialsH(t.Credentials, n.ProviderInfo())
+		username, password, cerr := h.CredentialsH(t.Credentials, n.ProviderInfo())
+		if cerr != nil {
+			slog.Debug("Error asking for credentials", "error", err)
+			return nil, cerr
+		}
 		t.Credentials.Username = username
 		t.Credentials.Password = password
 		uuid, err = nm.Install(*t, uuid)

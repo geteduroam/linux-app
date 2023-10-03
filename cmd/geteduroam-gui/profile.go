@@ -10,10 +10,10 @@ type ProfileState struct {
 	builder  *gtk.Builder
 	stack    *adw.ViewStack
 	profiles []instance.Profile
-	success  func(instance.Profile)
+	success  func(instance.Profile) error
 }
 
-func NewProfileState(builder *gtk.Builder, stack *adw.ViewStack, profiles []instance.Profile, success func(instance.Profile)) *ProfileState {
+func NewProfileState(builder *gtk.Builder, stack *adw.ViewStack, profiles []instance.Profile, success func(instance.Profile) error) *ProfileState {
 	return &ProfileState{
 		builder:  builder,
 		stack:    stack,
@@ -22,7 +22,16 @@ func NewProfileState(builder *gtk.Builder, stack *adw.ViewStack, profiles []inst
 	}
 }
 
-func (p *ProfileState) Initialize() error {
+func (p *ProfileState) ShowError(err error) {
+	toast := adw.NewToast(err.Error())
+	toast.SetTimeout(5)
+	var overlay adw.ToastOverlay
+	p.builder.GetObject("profileToastOverlay").Cast(&overlay)
+	defer overlay.Unref()
+	overlay.AddToast(toast)
+}
+
+func (p *ProfileState) Initialize() {
 	var page adw.ViewStackPage
 	p.builder.GetObject("profilePage").Cast(&page)
 	defer page.Unref()
@@ -43,7 +52,14 @@ func (p *ProfileState) Initialize() error {
 		return instance.SortNames(a, b, "")
 	}
 	activated := func(idx int) {
-		p.success(p.profiles[idx])
+		go func() {
+			err := p.success(p.profiles[idx])
+			if err != nil {
+				uiThread(func() {
+					p.ShowError(err)
+				})
+			}
+		}()
 	}
 
 	sl := NewSelectList(&scroll, &list, activated, sorter)
@@ -54,5 +70,4 @@ func (p *ProfileState) Initialize() error {
 
 	sl.Setup()
 	p.stack.SetVisibleChild(page.GetChild())
-	return nil
 }

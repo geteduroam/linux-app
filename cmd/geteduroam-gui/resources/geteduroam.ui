@@ -11,6 +11,8 @@
 	<property name="margin-bottom">5</property>
 	<child>
 	  <object class="AdwViewStackPage" id="searchPage">
+	<property name="child">
+       <object class="AdwToastOverlay" id="searchToastOverlay">
 	    <property name="child">
 	      <object class="AdwClamp">
 		<child>
@@ -52,6 +54,8 @@
 	      </object>
 	    </property>
 	  </object>
+	</property>
+	</object>
 	</child>
 	<child>
 	  <object class="AdwViewStackPage" id="loadingPage">
@@ -169,25 +173,29 @@
 	<child>
 	  <object class="AdwViewStackPage" id="profilePage">
 	    <property name="child">
-	      <object class="GtkBox">
-		<property name="halign">center</property>
-		<property name="orientation">vertical</property>
-		<property name="valign">center</property>
-		<property name="spacing">25</property>
-		<child>
-		  <object class="GtkLabel" id="profileLabel">
-		    <property name="label">Please select a profile: </property>
+	      <object class="AdwToastOverlay" id="profileToastOverlay">
+		<property name="child">
+		  <object class="GtkBox">
+		    <property name="halign">center</property>
+		    <property name="orientation">vertical</property>
+		    <property name="valign">center</property>
+		    <property name="spacing">25</property>
+		    <child>
+		      <object class="GtkLabel" id="profileLabel">
+			<property name="label">Please select a profile: </property>
+		      </object>
+		    </child>
+		    <child>
+		      <object class="GtkScrolledWindow" id="profileScroll">
+			<property name="child">
+			  <object class="GtkListView" id="profileList"/>
+			</property>
+			<property name="propagate-natural-height">True</property>
+			<property name="propagate-natural-width">True</property>
+		      </object>
+		    </child>
 		  </object>
-		</child>
-		<child>
-		  <object class="GtkScrolledWindow" id="profileScroll">
-		    <property name="child">
-		      <object class="GtkListView" id="profileList"/>
-		    </property>
-		    <property name="propagate-natural-height">True</property>
-		    <property name="propagate-natural-width">True</property>
-		  </object>
-		</child>
+		</property>
 	      </object>
 	    </property>
 	  </object>

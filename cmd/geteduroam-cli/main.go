@@ -210,7 +210,7 @@ func askPassword() string {
 
 // askCredentials asks the user for credentials
 // It returns the username and password
-func askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string) {
+func askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string, error) {
 	fmt.Println("\nOrganization info:")
 	fmt.Println(" Title:", pi.Name)
 	fmt.Println(" Description:", pi.Description)
@@ -231,12 +231,12 @@ func askCredentials(c network.Credentials, pi network.ProviderInfo) (string, str
 	if c.Password == "" {
 		password = askPassword()
 	}
-	return username, password
+	return username, password, nil
 }
 
 // askCertificate asks the user for a certificate
 // This is used in the TLS/OAuth flow
-func askCertificate(_ string, _ network.ProviderInfo) string {
+func askCertificate(_ string, _ network.ProviderInfo) (string, error) {
 	panic("todo")
 }
 
