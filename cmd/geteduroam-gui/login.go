@@ -4,13 +4,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/jwijenbergh/puregotk/v4/adw"
-	"github.com/jwijenbergh/puregotk/v4/gdkpixbuf"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
 )
 
@@ -85,25 +83,14 @@ func (l *LoginState) fillLogo(logo *gtk.Image) error {
 	if err != nil {
 		return err
 	}
-	// TODO: do this without creating a temp file
-	f, err := os.CreateTemp("/tmp", "geteduroam-linux-instance-logo")
-	if err != nil {
-		return err
+	pb, err := bytesPixbuf(d)
+	if err == nil {
+		uiThread(func() {
+			defer logo.Unref()
+			logo.SetFromPixbuf(pb)
+			logo.SetSizeRequest(100, 100)
+		})
 	}
-	defer os.Remove(f.Name())
-	_, err = f.Write(d)
-	if err != nil {
-		return err
-	}
-	pb, err := gdkpixbuf.NewFromFilePixbuf(f.Name())
-	if err != nil {
-		return err
-	}
-	uiThread(func() {
-		defer logo.Unref()
-		logo.SetFromPixbuf(pb)
-		logo.SetSizeRequest(100, 100)
-	})
 	return nil
 }
 
