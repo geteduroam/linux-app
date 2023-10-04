@@ -23,12 +23,10 @@ func NewProfileState(builder *gtk.Builder, stack *adw.ViewStack, profiles []inst
 }
 
 func (p *ProfileState) ShowError(err error) {
-	toast := adw.NewToast(err.Error())
-	toast.SetTimeout(5)
 	var overlay adw.ToastOverlay
 	p.builder.GetObject("profileToastOverlay").Cast(&overlay)
 	defer overlay.Unref()
-	overlay.AddToast(toast)
+	showErrorToast(overlay, err)
 }
 
 func (p *ProfileState) Initialize() {

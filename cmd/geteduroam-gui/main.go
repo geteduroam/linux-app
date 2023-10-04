@@ -287,12 +287,10 @@ func (m *mainState) Initialize(app *adw.Application) {
 }
 
 func (m *mainState) ShowError(err error) {
-	toast := adw.NewToast(err.Error())
-	toast.SetTimeout(5)
 	var overlay adw.ToastOverlay
 	m.builder.GetObject("searchToastOverlay").Cast(&overlay)
 	defer overlay.Unref()
-	overlay.AddToast(toast)
+	showErrorToast(overlay, err)
 }
 
 type ui struct {
