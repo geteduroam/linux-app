@@ -2,7 +2,7 @@ package main
 
 import "embed"
 
-//go:embed resources/*.css resources/geteduroam.ui resources/gears.ui
+//go:embed resources/*.css resources/geteduroam.ui resources/gears.ui resources/images/heart.png
 var resources embed.FS
 
 func MustResource(name string) string {

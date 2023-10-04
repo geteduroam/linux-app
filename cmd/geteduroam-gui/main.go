@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/jwijenbergh/puregotk/v4/adw"
+	"github.com/jwijenbergh/puregotk/v4/gdk"
 	"github.com/jwijenbergh/puregotk/v4/gio"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
 
@@ -259,17 +260,25 @@ func (m *mainState) initBurger(app *adw.Application) {
 
 	about := gio.NewSimpleAction("about", nil)
 	about.ConnectActivate(func(_ gio.SimpleAction, _ uintptr) {
-		var awin adw.AboutWindow
-		adw.NewAboutWindow().Cast(&awin)
+		var awin gtk.AboutDialog
+		gtk.NewAboutDialog().Cast(&awin)
+		awin.SetName("geteduroam Linux client")
+		pb, err := bytesPixbuf([]byte(MustResource("images/heart.png")))
+		if err == nil {
+			texture := gdk.NewForPixbufTexture(pb)
+			defer pb.Unref()
+			awin.SetLogo(texture)
+			defer texture.Unref()
+		}
+		awin.SetProgramName("geteduroam GUI")
+		awin.SetComments("Client to easily and securely configure eduroam")
+		awin.SetAuthors([]string{"Jeroen Wijenbergh", "Martin van Es", "Alexandru Cacean"})
 		// TODO: Make the version a global var somewhere
-		awin.SetVersion("0.1-dev")
-		awin.SetApplicationName("Geteduroam Linux")
+		awin.SetVersion("0.1")
 		awin.SetWebsite("https://github.com/geteduroam/linux-app")
 		// SetLicenseType has a scary warning: "comes with absolutely no warranty"
 		// While it is true according to the license, I find it unfriendly
 		awin.SetLicense("This application has a BSD 3 license.")
-		awin.SetIssueUrl("https://github.com/geteduroam/linux-app/issues/new")
-		awin.SetDevelopers([]string{"Jeroen Wijenbergh", "Martin van Es", "Alexandru Cacean"})
 		awin.SetTransientFor(app.GetActiveWindow())
 		awin.Show()
 	})

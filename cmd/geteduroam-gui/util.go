@@ -3,8 +3,10 @@ package main
 import (
 	"github.com/jwijenbergh/puregotk/v4/adw"
 	"github.com/jwijenbergh/puregotk/v4/glib"
+	"github.com/jwijenbergh/puregotk/v4/gdkpixbuf"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
 	"strings"
+	"os"
 )
 
 type StyledWidget interface {
@@ -27,6 +29,24 @@ func showErrorToast(overlay adw.ToastOverlay, err error) {
 	toast := adw.NewToast(glib.MarkupEscapeText(msg, -1))
 	toast.SetTimeout(5)
 	overlay.AddToast(toast)
+}
+
+func bytesPixbuf(b []byte) (*gdkpixbuf.Pixbuf, error) {
+	// TODO: do this without creating a temp file
+	f, err := os.CreateTemp("/tmp", "geteduroam-pixbuf")
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(f.Name())
+	_, err = f.Write(b)
+	if err != nil {
+		return nil, err
+	}
+	pb, err := gdkpixbuf.NewFromFilePixbuf(f.Name())
+	if err != nil {
+		return nil, err
+	}
+	return pb, nil
 }
 
 func uiThread(cb func()) {
