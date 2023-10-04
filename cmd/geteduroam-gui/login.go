@@ -36,12 +36,10 @@ func NewLoginState(builder *gtk.Builder, stack *adw.ViewStack, cred network.Cred
 }
 
 func (l *LoginState) ShowError(err error) {
-	toast := adw.NewToast(err.Error())
-	toast.SetTimeout(5)
 	var overlay adw.ToastOverlay
 	l.builder.GetObject("loginToastOverlay").Cast(&overlay)
 	defer overlay.Unref()
-	overlay.AddToast(toast)
+	showErrorToast(overlay, err)
 }
 
 func (l *LoginState) Get() (string, string) {
