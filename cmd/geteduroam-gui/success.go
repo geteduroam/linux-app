@@ -13,25 +13,34 @@ type SuccessState struct {
 	builder *gtk.Builder
 	stack   *adw.ViewStack
 	expiry  *time.Time
+	isredirect bool
 }
 
-func NewSuccessState(builder *gtk.Builder, stack *adw.ViewStack, expiry *time.Time) *SuccessState {
+func NewSuccessState(builder *gtk.Builder, stack *adw.ViewStack, expiry *time.Time, isredirect bool) *SuccessState {
 	return &SuccessState{
 		builder: builder,
 		stack:   stack,
 		expiry:  expiry,
+		isredirect: isredirect,
 	}
 }
 
 func (s *SuccessState) Initialize() {
 	var page adw.ViewStackPage
-	defer page.Unref()
 	s.builder.GetObject("successPage").Cast(&page)
+	defer page.Unref()
 
 	var title gtk.Label
-	defer title.Unref()
 	s.builder.GetObject("successTitle").Cast(&title)
+	defer title.Unref()
 	styleWidget(&title, "label")
+	if s.isredirect {
+		title.SetText("Follow the instructions at the link opened in your browser")
+	}
+	var sub gtk.Label
+	s.builder.GetObject("successSubTitle").Cast(&sub)
+	defer sub.Unref()
+	sub.SetVisible(!s.isredirect)
 
 	var expiry gtk.Label
 	s.builder.GetObject("expiryText").Cast(&expiry)
