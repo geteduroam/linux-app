@@ -17,6 +17,7 @@ import (
 	"github.com/geteduroam/linux-app/internal/handler"
 	"github.com/geteduroam/linux-app/internal/instance"
 	"github.com/geteduroam/linux-app/internal/network"
+	"github.com/geteduroam/linux-app/internal/version"
 )
 
 type serverList struct {
@@ -285,7 +286,7 @@ func (m *mainState) initBurger(app *adw.Application) {
 		awin.SetComments("Client to easily and securely configure eduroam")
 		awin.SetAuthors([]string{"Jeroen Wijenbergh", "Martin van Es", "Alexandru Cacean"})
 		// TODO: Make the version a global var somewhere
-		awin.SetVersion("0.1")
+		awin.SetVersion(version.Get())
 		awin.SetWebsite("https://github.com/geteduroam/linux-app")
 		// SetLicenseType has a scary warning: "comes with absolutely no warranty"
 		// While it is true according to the license, I find it unfriendly
