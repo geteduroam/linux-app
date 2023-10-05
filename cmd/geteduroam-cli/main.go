@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"syscall"
@@ -21,6 +20,7 @@ import (
 	"github.com/geteduroam/linux-app/internal/instance"
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/geteduroam/linux-app/internal/utils"
+	"github.com/geteduroam/linux-app/internal/version"
 )
 
 // askSecret is a tweak of thee 'ask' function that uses golang.org/x/term to read a secret securely
@@ -348,22 +348,6 @@ func doDiscovery() *time.Time {
 	return nil
 }
 
-// findVersion gets the version in the following order:
-// - Gets a release version if it detects it is a release
-// - Gets the commit using debug info
-// - Returns a default
-func findVersion() string {
-	// TODO: Support a release version too
-	if dbg, ok := debug.ReadBuildInfo(); ok {
-		for _, s := range dbg.Settings {
-			if s.Key == "vcs.revision" {
-				return "Git checkout " + s.Value
-			}
-		}
-	}
-	return "0.0 (unknown)"
-}
-
 func newLogFile() (*os.File, string, error) {
 	logfile := fmt.Sprintf("%s.log", filepath.Base(os.Args[0]))
 	dir, err := config.Directory()
@@ -388,13 +372,13 @@ const usage = `Usage of %s:
 
 func main() {
 	var help bool
-	var version bool
+	var versionf bool
 	var verbose bool
 	var debug bool
 	var local string
 	flag.BoolVar(&help, "help", false, "Show help")
 	flag.BoolVar(&help, "h", false, "Show help")
-	flag.BoolVar(&version, "version", false, "Show version")
+	flag.BoolVar(&versionf, "version", false, "Show version")
 	flag.BoolVar(&verbose, "v", false, "Verbose")
 	flag.BoolVar(&debug, "d", false, "Debug")
 	flag.BoolVar(&debug, "debug", false, "Debug")
@@ -434,8 +418,8 @@ func main() {
 		// TODO Remove when we are done testing levels
 		utils.PrintLevels()
 	}
-	if version {
-		fmt.Println("Version:", findVersion())
+	if versionf {
+		fmt.Println(version.Get())
 		return
 	}
 	var v *time.Time
