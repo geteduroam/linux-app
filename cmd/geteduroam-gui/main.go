@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"sync"
 	"time"
 
@@ -132,6 +133,7 @@ func (m *mainState) rowActived(sel instance.Instance) {
 	chosen := func(p instance.Profile) error {
 		var valid *time.Time
 		var err error
+		var isredirect bool
 		switch p.Flow() {
 		case instance.DirectFlow:
 			err = m.direct(p)
@@ -144,9 +146,18 @@ func (m *mainState) rowActived(sel instance.Instance) {
 				return err
 			}
 		case instance.RedirectFlow:
-			return errors.New("not implemented yet")
+			isredirect = true
+			url, err := p.RedirectURI()
+			if err != nil {
+				return err
+			}
+			err = exec.Command("xdg-open", url).Start()
+			if err != nil {
+				return err
+			}
+			fmt.Println("Browser has been opened with URL:", url)
 		}
-		s := NewSuccessState(m.builder, &stack, valid)
+		s := NewSuccessState(m.builder, &stack, valid, isredirect)
 		uiThread(func() {
 			s.Initialize()
 		})
@@ -250,7 +261,7 @@ func (m *mainState) initBurger(app *adw.Application) {
 					m.ShowError(err)
 					return
 				}
-				s := NewSuccessState(m.builder, &stack, v)
+				s := NewSuccessState(m.builder, &stack, v, false)
 				uiThread(func() {
 					s.Initialize()
 				})
