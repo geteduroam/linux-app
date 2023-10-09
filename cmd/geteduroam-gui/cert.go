@@ -27,6 +27,7 @@ func NewCertificateStateBase(win *gtk.Window, builder *gtk.Builder, stack *adw.V
 }
 
 type CertificateState struct {
+	SignalPool
 	win     *gtk.Window
 	builder *gtk.Builder
 
@@ -38,6 +39,7 @@ type CertificateState struct {
 }
 
 func (l *CertificateState) Destroy() {
+	l.DisconnectSignals()
 	l.upload.Unref()
 	l.pwd.Unref()
 }
@@ -78,7 +80,7 @@ func (l *CertificateState) Initialize() {
 		l.upload.Hide()
 	}
 
-	l.upload.ConnectClicked(func(_ gtk.Button) {
+	l.AddSignal(&l.upload, l.upload.ConnectClicked(func(_ gtk.Button) {
 		// Create a file dialog
 		fd, err := NewFileDialog(l.win, "Choose a PKCS12 client certificate")
 		if err != nil {
@@ -90,7 +92,7 @@ func (l *CertificateState) Initialize() {
 			l.certPath = p
 			label.SetText(l.certPath)
 		})
-	})
+	}))
 
 	l.builder.GetObject("certificatePassphraseText").Cast(&l.pwd)
 	l.pwd.SetText(l.passphrase)
