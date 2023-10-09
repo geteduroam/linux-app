@@ -11,6 +11,7 @@ type ProfileState struct {
 	stack    *adw.ViewStack
 	profiles []instance.Profile
 	success  func(instance.Profile)
+	sl *SelectList
 }
 
 func NewProfileState(builder *gtk.Builder, stack *adw.ViewStack, profiles []instance.Profile, success func(instance.Profile)) *ProfileState {
@@ -20,6 +21,10 @@ func NewProfileState(builder *gtk.Builder, stack *adw.ViewStack, profiles []inst
 		profiles: profiles,
 		success:  success,
 	}
+}
+
+func (p *ProfileState) Destroy() {
+	p.sl.Destroy()
 }
 
 func (p *ProfileState) ShowError(err error) {
@@ -51,14 +56,15 @@ func (p *ProfileState) Initialize() {
 	}
 	activated := func(idx int) {
 		go p.success(p.profiles[idx])
+		p.Destroy()
 	}
 
-	sl := NewSelectList(&scroll, &list, activated, sorter)
+	p.sl = NewSelectList(&scroll, &list, activated, sorter)
 
-	for idx, p := range p.profiles {
-		sl.Add(idx, p.Name)
+	for idx, prof := range p.profiles {
+		p.sl.Add(idx, prof.Name)
 	}
 
-	sl.Setup()
+	p.sl.Setup()
 	p.stack.SetVisibleChild(page.GetChild())
 }
