@@ -8,6 +8,8 @@ github.com/jwijenbergh/puregotk v0.0.0-20231002113402-7831fea6a430 h1:fmEGEP9E8s
 github.com/jwijenbergh/puregotk v0.0.0-20231002113402-7831fea6a430/go.mod h1:KJRceNJz4n9o2JawE2JB1wFWGlOlZU8Tvte3hWhusgI=
 github.com/jwijenbergh/puregotk v0.0.0-20231009100419-9d802131f039 h1:WKTDrv95cnS/FesZv8A1S4FyQg9L/wd5rQopiIr9WKs=
 github.com/jwijenbergh/puregotk v0.0.0-20231009100419-9d802131f039/go.mod h1:KJRceNJz4n9o2JawE2JB1wFWGlOlZU8Tvte3hWhusgI=
+github.com/jwijenbergh/puregotk v0.0.0-20231009153241-4682f322509f h1:780c/GK1yc24ImGL0Zvon/f4eKLkGsd6/CODXAFhsIE=
+github.com/jwijenbergh/puregotk v0.0.0-20231009153241-4682f322509f/go.mod h1:KJRceNJz4n9o2JawE2JB1wFWGlOlZU8Tvte3hWhusgI=
 github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a h1:fZHgsYlfvtyqToslyjUt3VOPF4J7aK/3MPcK7xp3PDk=
 github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a/go.mod h1:ul22v+Nro/R083muKhosV54bj5niojjWZvU8xrevuH4=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
