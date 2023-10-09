@@ -232,6 +232,28 @@ func (m *mainState) initList() {
 	})
 }
 
+func (m *mainState) localMetadata() {
+	fd, err := NewFileDialog(m.app.GetActiveWindow(), "Choose an EAP metadata file")
+	if err != nil {
+		m.ShowError(err)
+		return
+	}
+	fd.Run(func(path string) {
+		go func() {
+			v, err := m.local(path)
+			if err != nil {
+				uiThread(func() {
+					m.activate()
+					m.ShowError(err)
+				})
+				return
+			}
+			s := NewSuccessState(m.builder, m.stack, v, false)
+			s.Initialize()
+		}()
+	})
+}
+
 func (m *mainState) initBurger() {
 	var gears gtk.MenuButton
 	m.builder.GetObject("gears").Cast(&gears)
@@ -245,24 +267,7 @@ func (m *mainState) initBurger() {
 
 	imp := gio.NewSimpleAction("import-local", nil)
 	imp.ConnectActivate(func(_ gio.SimpleAction, _ uintptr) {
-		fd, err := NewFileDialog(m.app.GetActiveWindow(), "Choose an EAP metadata file")
-		if err != nil {
-			m.ShowError(err)
-			return
-		}
-		fd.Run(func(path string) {
-			go func() {
-				v, err := m.local(path)
-				if err != nil {
-					m.ShowError(err)
-					return
-				}
-				s := NewSuccessState(m.builder, &stack, v, false)
-				uiThread(func() {
-					s.Initialize()
-				})
-			}()
-		})
+		m.localMetadata()
 	})
 
 	about := gio.NewSimpleAction("about", nil)
