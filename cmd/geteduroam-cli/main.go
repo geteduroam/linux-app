@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -18,6 +17,7 @@ import (
 	"github.com/geteduroam/linux-app/internal/discovery"
 	"github.com/geteduroam/linux-app/internal/handler"
 	"github.com/geteduroam/linux-app/internal/instance"
+	"github.com/geteduroam/linux-app/internal/log"
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/geteduroam/linux-app/internal/utils"
 	"github.com/geteduroam/linux-app/internal/version"
@@ -383,26 +383,14 @@ func doDiscovery() *time.Time {
 	return nil
 }
 
-func newLogFile() (*os.File, string, error) {
-	logfile := fmt.Sprintf("%s.log", filepath.Base(os.Args[0]))
-	dir, err := config.Directory()
-	if err != nil {
-		return nil, "", err
-	}
-	fpath := filepath.Join(dir, logfile)
-	fp, err := os.OpenFile(fpath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return nil, "", err
-	}
-	return fp, fpath, nil
-}
-
 const usage = `Usage of %s:
   -h, --help			Prints this help information
   --version			Prints version information
   -v				Verbose
   -d, --debug			Debug
   -l <file>, --local=<file>	The path to a local EAP metadata file
+
+  Log file location: %s
 `
 
 func main() {
@@ -411,6 +399,11 @@ func main() {
 	var verbose bool
 	var debug bool
 	var local string
+	program := "geteduroam-cli"
+	cpath, err := config.Directory()
+	if err != nil {
+		cpath = "N/A"
+	}
 	flag.BoolVar(&help, "help", false, "Show help")
 	flag.BoolVar(&help, "h", false, "Show help")
 	flag.BoolVar(&versionf, "version", false, "Show version")
@@ -419,7 +412,7 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "Debug")
 	flag.StringVar(&local, "local", "", "The path to a local EAP metadata file")
 	flag.StringVar(&local, "l", "", "The path to a local EAP metadata file")
-	flag.Usage = func() { fmt.Printf(usage, filepath.Base(os.Args[0])) }
+	flag.Usage = func() { fmt.Printf(usage, program, cpath) }
 	flag.Parse()
 	if help {
 		flag.Usage()
@@ -428,29 +421,7 @@ func main() {
 	if verbose {
 		utils.IsVerbose = true
 	}
-	logLevel := &slog.LevelVar{}
-	opts := &slog.HandlerOptions{
-		Level: logLevel,
-	}
-	logfile, fpath, err := newLogFile()
-	if err == nil {
-		slog.SetDefault(slog.New(slog.NewTextHandler(logfile, opts)))
-		if debug {
-			fmt.Printf("Writing debug logs to %s\n", fpath)
-		} else {
-			utils.Verbosef("Writing logs to %s", fpath)
-		}
-	} else {
-		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, opts)))
-		if debug {
-			fmt.Println("Writing debug logs to console")
-		} else {
-			utils.Verbosef("Writing logs to console")
-		}
-	}
-	if debug {
-		logLevel.Set(slog.LevelDebug)
-	}
+	log.Initialize("geteduroam-cli", debug)
 	if versionf {
 		fmt.Println(version.Get())
 		return
