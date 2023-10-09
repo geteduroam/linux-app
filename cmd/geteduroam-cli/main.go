@@ -450,8 +450,6 @@ func main() {
 	}
 	if debug {
 		logLevel.Set(slog.LevelDebug)
-		// TODO Remove when we are done testing levels
-		utils.PrintLevels()
 	}
 	if versionf {
 		fmt.Println(version.Get())
