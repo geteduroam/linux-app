@@ -34,7 +34,9 @@ func SortNames(a string, b string, search string) int {
 	if search == "" {
 		return bd
 	}
-	match := regexp.MustCompile(fmt.Sprintf("(^|[\\P{L}])%s[\\P{L}]", strings.ToLower(search)))
+	lower := strings.ToLower(search)
+	escaped := regexp.QuoteMeta(lower)
+	match := regexp.MustCompile(fmt.Sprintf("(^|[\\P{L}])%s[\\P{L}]", escaped))
 	mi := match.MatchString(la)
 	mj := match.MatchString(lb)
 	if mi == mj {
