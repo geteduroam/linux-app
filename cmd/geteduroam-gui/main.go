@@ -356,17 +356,53 @@ func (ui *ui) activate() {
 	m.Initialize()
 }
 
-func (ui *ui) Run() int {
+func (ui *ui) Run(args []string) int {
 	const id = "com.geteduroam.linux"
 	ui.app = adw.NewApplication(id, gio.GApplicationFlagsNoneValue)
 	defer ui.app.Unref()
 	ui.app.ConnectActivate(func(o gio.Application) {
 		ui.activate()
 	})
-	return ui.app.Run(len(os.Args), os.Args)
+
+	return ui.app.Run(len(args), args)
 }
 
 func main() {
+	const usage = `Usage of %s:
+  -h, --help			Prints this help information
+  --version			Prints version information
+  -d, --debug			Debug
+  --gtk-args                    Arguments to pass to gtk as a string, e.g. "--help". These flags are splitted on spaces
+`
+
+	var help bool
+	var versionf bool
+	var debug bool
+	var gtkarg string
+	program := "geteduroam-gui"
+	flag.BoolVar(&help, "help", false, "Show help")
+	flag.BoolVar(&help, "h", false, "Show help")
+	flag.BoolVar(&versionf, "version", false, "Show version")
+	flag.BoolVar(&debug, "d", false, "Debug")
+	flag.BoolVar(&debug, "debug", false, "Debug")
+	flag.StringVar(&gtkarg, "gtk-args", "", "Gtk arguments")
+	flag.Usage = func() { fmt.Printf(usage, "geteduroam-gui") }
+	flag.Parse()
+	if help {
+		flag.Usage()
+		return
+	}
+
+	if versionf {
+		fmt.Println(version.Get())
+		return
+	}
+
+	log.Initialize(program, debug)
 	ui := ui{}
-	ui.Run()
+	args := []string{os.Args[0]}
+	if gtkarg != "" {
+		args = append(args, strings.Split(gtkarg, " ")...)
+	}
+	ui.Run(args)
 }
