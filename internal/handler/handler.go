@@ -74,6 +74,8 @@ func (h Handlers) Configure(eap []byte) (*time.Time, error) {
 		}
 		uuid, err = nm.Install(*t, uuid)
 	case *network.TLS:
+		// if a PKCS12 file is uploaded by the user we expect it to be not base64 encoded
+		b64 := t.RawPKCS12 != ""
 		// TODO: Loop until the PKCS12 can be decrypted successfully?
 		if t.ClientCert == nil {
 			ccert, passphrase, err := h.CertificateH(t.RawPKCS12, t.Password, n.ProviderInfo())
@@ -81,14 +83,14 @@ func (h Handlers) Configure(eap []byte) (*time.Time, error) {
 				return nil, err
 			}
 			// here the data is not base64 encoded
-			t.ClientCert, err = cert.NewClientCert(ccert, passphrase, false)
+			t.ClientCert, err = cert.NewClientCert(ccert, passphrase, b64)
 			if err != nil {
 				return nil, err
 			}
 		}
-		uuid, err = nm.InstallTLS(*t, uuid)
 		v := t.Validity()
 		valid = &v
+		uuid, err = nm.InstallTLS(*t, uuid)
 	default:
 		panic("unsupported network")
 	}
