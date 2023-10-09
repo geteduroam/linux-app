@@ -103,6 +103,13 @@ func (l *LoginBase) Initialize() {
 	styleWidget(&title, "label")
 	title.SetText(l.pi.Name)
 
+	if l.pi.Description != "" {
+		var descr gtk.Label
+		l.GetObject("InstanceDescription", &descr)
+		defer descr.Unref()
+		descr.SetText("Description: " + l.pi.Description)
+	}
+
 	// set logo
 	var logo gtk.Image
 	l.GetObject("InstanceLogo", &logo)
