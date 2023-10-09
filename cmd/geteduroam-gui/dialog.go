@@ -7,6 +7,7 @@ import (
 )
 
 type FileDialog struct {
+	SignalPool
 	*gtk.FileChooserDialog
 	win *gtk.Window
 }
@@ -35,14 +36,19 @@ func NewFileDialog(parent *gtk.Window, label string) (*FileDialog, error) {
 	}, nil
 }
 
+func (fd *FileDialog) Destroy() {
+	fd.DisconnectSignals()
+	fd.win.Destroy()
+}
+
 func (fd *FileDialog) Run(cb func(path string)) {
-	fd.ConnectResponse(func(_ gtk.Dialog, res int) {
+	fd.AddSignal(fd, fd.ConnectResponse(func(_ gtk.Dialog, res int) {
 		// TODO: int32 casting is a puregotk bug? gint should be int32 but I think it someties is a normal int
 		if int32(res) == int32(gtk.ResponseAcceptValue) {
 			f := fd.GetFile()
 			cb(f.GetPath())
 		}
-		fd.win.Destroy()
-	})
+		fd.Destroy()
+	}))
 	fd.Present()
 }
