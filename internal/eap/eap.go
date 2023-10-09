@@ -285,21 +285,26 @@ func (p *EAPIdentityProvider) SSIDSettings() (string, string, error) {
 	}
 	for _, i := range p.CredentialApplicability.IEEE80211 {
 		if i == nil {
+			slog.Warn("Credential applicability IEEE80211 is nil")
 			continue
 		}
 
 		// no min rsn proto
+		// debug here as that seems to happen a lot
 		if i.MinRSNProto == "" {
+			slog.Debug("MinRSNProto is empty")
 			continue
 		}
 
 		// no ssid present
 		if i.SSID == "" {
+			slog.Warn("SSID is empty")
 			continue
 		}
 
 		// tkip is too insecure
 		if i.MinRSNProto == "TKIP" {
+			slog.Warn("MinRSNProto is not TKIP", "minRSNProto", i.MinRSNProto)
 			continue
 		}
 
@@ -311,13 +316,16 @@ func (p *EAPIdentityProvider) SSIDSettings() (string, string, error) {
 // isValid returns whether or not a certificate is valid by checking if the encoding is base64 and the format is `format`
 func (ca *CertData) isValid(format string) bool {
 	if ca == nil {
+		slog.Debug("The certdata is nil")
 		return false
 	}
 	if ca.EncodingAttr != "base64" {
+		slog.Debug("The certdata encoding not base64")
 		return false
 	}
 
 	if ca.FormatAttr != format {
+		slog.Debug("The FormatAttr is not equal to the format", "formatattr", ca.FormatAttr, "format", format)
 		return false
 	}
 
@@ -330,6 +338,8 @@ func (ss *ServerCredentialVariants) CAList() (*cert.Certs, error) {
 	for _, c := range ss.CA {
 		if c.isValid("X.509") {
 			certs = append(certs, c.Value)
+		} else {
+			slog.Warn("The certdata is not valid X.509")
 		}
 	}
 	if len(certs) == 0 {
@@ -350,10 +360,12 @@ func certFromContainer(ccert string, passphrase string) (*cert.ClientCert, error
 		// passphrase is not empty
 		// always handle this as an error
 		if passphrase != "" {
+			slog.Debug("The passphrase is non-empty and we got a client certificate error")
 			return nil, err
 		}
 		// password is empty, only return an error if the error is not incorrect password
 		if !errors.Is(pkcs12.ErrIncorrectPassword, err) {
+			slog.Debug("The passphrase is empty and we got a client certificate error that is not incorrect password")
 			return nil, err
 		}
 	}
@@ -371,6 +383,8 @@ func (am *AuthenticationMethod) TLSNetwork(base network.Base) (network.Network, 
 		if cc.isValid("PKCS12") {
 			ccert = cc.Value
 			passphrase = csc.Passphrase
+		} else {
+			slog.Debug("cc is not valid")
 		}
 		identity = csc.OuterIdentity
 	}
@@ -392,6 +406,7 @@ func (am *AuthenticationMethod) TLSNetwork(base network.Base) (network.Network, 
 	var err error
 	// If we should not be asking for a certificate we can construct it now and return an explicit error if something went wrong
 	if ccert != "" {
+		slog.Debug("We found a client certificate")
 		fcc, err = certFromContainer(ccert, passphrase)
 		if err != nil {
 			return nil, err
@@ -553,6 +568,8 @@ func (p *EAPIdentityProvider) PInfo() network.ProviderInfo {
 			help.Email, _ = LocalizedInteractiveValue(desk.EmailAddress)
 			help.Web, _ = LocalizedNonInteractiveValue(desk.WebAddress)
 			help.Phone, _ = LocalizedInteractiveValue(desk.Phone)
+		} else {
+			slog.Debug("Helpdesk is nil")
 		}
 		pinfo.Helpdesk = help
 	}
@@ -565,6 +582,7 @@ func (eap *EAPIdentityProviderList) Network() (network.Network, error) {
 	// Get the provider section
 	p := eap.EAPIdentityProvider
 	if p == nil {
+		slog.Debug("The identity provider section is nil")
 		return nil, errors.New("identity provider section couldn't be found")
 	}
 	methods, err := p.AuthMethods()
