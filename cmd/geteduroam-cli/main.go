@@ -13,7 +13,6 @@ import (
 	"golang.org/x/exp/slog"
 	"golang.org/x/term"
 
-	"github.com/geteduroam/linux-app/internal/config"
 	"github.com/geteduroam/linux-app/internal/discovery"
 	"github.com/geteduroam/linux-app/internal/handler"
 	"github.com/geteduroam/linux-app/internal/instance"
@@ -400,9 +399,9 @@ func main() {
 	var debug bool
 	var local string
 	program := "geteduroam-cli"
-	cpath, err := config.Directory()
+	lpath, err := log.Location(program)
 	if err != nil {
-		cpath = "N/A"
+		lpath = "N/A"
 	}
 	flag.BoolVar(&help, "help", false, "Show help")
 	flag.BoolVar(&help, "h", false, "Show help")
@@ -412,7 +411,7 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "Debug")
 	flag.StringVar(&local, "local", "", "The path to a local EAP metadata file")
 	flag.StringVar(&local, "l", "", "The path to a local EAP metadata file")
-	flag.Usage = func() { fmt.Printf(usage, program, cpath) }
+	flag.Usage = func() { fmt.Printf(usage, program, lpath) }
 	flag.Parse()
 	if help {
 		flag.Usage()
