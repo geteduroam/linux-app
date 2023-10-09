@@ -63,7 +63,9 @@ func (l *CertificateState) Validate() error {
 	if err != nil && l.cert == "" {
 		return err
 	}
-	l.cert = string(f)
+	if f != nil {
+		l.cert = string(f)
+	}
 	return nil
 }
 
