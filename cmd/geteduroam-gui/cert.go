@@ -70,7 +70,7 @@ func (l *CertificateState) Initialize() {
 	var label gtk.Label
 	l.builder.GetObject("certificateFileText").Cast(&label)
 	if l.cert != "" {
-		label.SetText("A certificate is already provided. Enter the passphrase to decrypt")
+		label.SetText("A certificate is already provided.\nEnter the passphrase to decrypt")
 		l.upload.Hide()
 	}
 
