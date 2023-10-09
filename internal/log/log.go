@@ -9,13 +9,20 @@ import (
 	"github.com/geteduroam/linux-app/internal/utils"
 )
 
-func newLogFile(program string) (*os.File, string, error) {
+func Location(program string) (string, error) {
 	logfile := fmt.Sprintf("%s.log", program)
 	dir, err := config.Directory()
 	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, logfile), nil
+}
+
+func newLogFile(program string) (*os.File, string, error) {
+	fpath, err := Location(program)
+	if err != nil {
 		return nil, "", err
 	}
-	fpath := filepath.Join(dir, logfile)
 	fp, err := os.OpenFile(fpath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, "", err
