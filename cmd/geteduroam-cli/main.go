@@ -208,12 +208,12 @@ func askPassword() string {
 	return password1
 }
 
-// askCredentials asks the user for credentials
-// It returns the username and password
-func askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string, error) {
-	fmt.Println("\nOrganization info:")
+func printProviderInfo(pi network.ProviderInfo) {
+	fmt.Println("Organization info:")
 	fmt.Println(" Title:", pi.Name)
-	fmt.Println(" Description:", pi.Description)
+	if pi.Description != "" {
+		fmt.Println(" Description:", pi.Description)
+	}
 	if pi.Helpdesk.Email != "" {
 		fmt.Println(" Helpdesk e-mail:", pi.Helpdesk.Email)
 	}
@@ -223,6 +223,12 @@ func askCredentials(c network.Credentials, pi network.ProviderInfo) (string, str
 	if pi.Helpdesk.Web != "" {
 		fmt.Println(" Helpdesk URL:", pi.Helpdesk.Web)
 	}
+}
+
+// askCredentials asks the user for credentials
+// It returns the username and password
+func askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string, error) {
+	printProviderInfo(pi)
 	username := c.Username
 	password := c.Password
 	if c.Username == "" {
@@ -234,10 +240,39 @@ func askCredentials(c network.Credentials, pi network.ProviderInfo) (string, str
 	return username, password, nil
 }
 
+// askCertificatePath asks the user for a path to a PKCS12 certificate
+func askCertificatePath() string {
+	return ask("Enter the path to a certificate: ", func(input string) bool {
+		_, err := os.Stat(input)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Invalid certificate path with error: %v", err)
+			return false
+		}
+		return true
+	})
+}
+
 // askCertificate asks the user for a certificate
 // This is used in the TLS/OAuth flow
-func askCertificate(_ string, _ string, _ network.ProviderInfo) (string, string, error) {
-	panic("todo")
+func askCertificate(cert string, pass string, pi network.ProviderInfo) (string, string, error) {
+	printProviderInfo(pi)
+	if cert != "" {
+		fmt.Println("Certificate is already given, enter a passphrase to continue")
+	} else {
+		certP := askCertificatePath()
+		b, err := os.ReadFile(certP)
+		if err != nil {
+			return "", "", err
+		}
+		cert = string(b)
+	}
+	if pass == "" {
+		pass = askSecret("Please enter the certificate passphrase (if known): ", func(input string) bool {
+			// any value is ok
+			return true
+		})
+	}
+	return cert, pass, nil
 }
 
 // file does the flow when the file has been obtained
