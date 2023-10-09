@@ -8,6 +8,7 @@ import (
 )
 
 type SelectList struct {
+	SignalPool
 	win       *gtk.ScrolledWindow
 	list      *gtk.ListView
 	activated func(int)
@@ -57,9 +58,13 @@ func NewSelectList(win *gtk.ScrolledWindow, list *gtk.ListView, activated func(i
 		list:      list,
 		sorter:    sorter,
 		activated: activated,
-		// TODO: unref this when this select list should be destroyed
 		store: gtk.NewStringList(0),
 	}
+}
+
+func (s *SelectList) Destroy() {
+	s.DisconnectSignals()
+	s.store.Unref()
 }
 
 func (s *SelectList) Add(idx int, label string) {
@@ -96,10 +101,12 @@ func (s *SelectList) Changed() {
 
 func (s *SelectList) setupFactory() *gtk.ListItemFactory {
 	factory := gtk.NewSignalListItemFactory()
+	// TODO: Add signal for cleanup
 	factory.Connect("signal::setup", gobject.NewCallback(func(_ uintptr, item uintptr) {
 		setupList(item)
 	}), 0)
 
+	// TODO: Add signal for cleanup
 	factory.Connect("signal::bind", gobject.NewCallback(func(_ uintptr, item uintptr) {
 		bindList(item)
 	}), 0)
@@ -151,13 +158,13 @@ func (s *SelectList) Setup() {
 	s.list.SetSingleClickActivate(true)
 
 	// Call the activated callback
-	s.list.ConnectActivate(func(_ gtk.ListView, _ uint) {
+	s.AddSignal(s.list, s.list.ConnectActivate(func(_ gtk.ListView, _ uint) {
 		var strobj gtk.StringObject
 		sel.GetSelectedItem().Cast(&strobj)
 		defer strobj.Unref()
 		index := int(strobj.GetData("model-index"))
 		s.activated(index)
-	})
+	}))
 
 	// style the widget
 	styleWidget(s.list, "list")
