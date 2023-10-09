@@ -33,6 +33,7 @@ type LoginState interface {
 }
 
 type LoginBase struct {
+	SignalPool
 	builder *gtk.Builder
 	stack   *adw.ViewStack
 	state   LoginState
@@ -58,9 +59,14 @@ func (l *LoginBase) ShowError(err error) {
 	showErrorToast(overlay, err)
 }
 
+func (l *LoginBase) Destroy() {
+	l.DisconnectSignals()
+	l.btn.Unref()
+}
+
 func (l *LoginBase) Get() (string, string) {
 	defer l.state.Destroy()
-	defer l.btn.Unref()
+	defer l.Destroy()
 	l.wg.Wait()
 	return l.state.Get()
 }
@@ -70,8 +76,8 @@ func (l *LoginBase) Submit() {
 		l.ShowError(err)
 		return
 	}
+	defer l.wg.Done()
 	l.btn.SetSensitive(false)
-	l.wg.Done()
 }
 
 func (l *LoginBase) fillLogo(logo *gtk.Image) error {
@@ -153,9 +159,9 @@ func (l *LoginBase) Initialize() {
 	l.btn = &gtk.Button{}
 	l.GetObject("Submit", l.btn)
 	l.btn.SetSensitive(true)
-	l.btn.ConnectClicked(func(_ gtk.Button) {
+	l.AddSignal(l.btn, l.btn.ConnectSignal("clicked", func() {
 		l.Submit()
-	})
+	}))
 
 	// set the page as current
 	l.stack.SetVisibleChild(page.GetChild())
