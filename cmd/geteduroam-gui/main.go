@@ -10,9 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/slog"
+
 	"github.com/jwijenbergh/puregotk/v4/adw"
 	"github.com/jwijenbergh/puregotk/v4/gdk"
 	"github.com/jwijenbergh/puregotk/v4/gio"
+	"github.com/jwijenbergh/puregotk/v4/glib"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
 
 	"github.com/geteduroam/linux-app/internal/discovery"
@@ -403,6 +406,35 @@ func main() {
 		fmt.Println(version.Get())
 		return
 	}
+
+	var handler glib.LogFunc = func(pkg string, level glib.LogLevelFlags, msg string, _ uintptr) {
+		switch(level) {
+		case glib.GLogLevelErrorValue:
+			slog.Error(msg, "pkg-name", pkg, "level", level)
+		case glib.GLogLevelCriticalValue: {
+			// Ignore some false positives due to Gtk bug
+			// Happens when pressing "Import Metadata"
+			// see https://discourse.gnome.org/t/menu-button-gives-error-messages-with-latest-gtk4/15689/3 
+			ignore := "_gtk_css_corner_value_get_%s: assertion 'corner->class == &GTK_CSS_VALUE_CORNER' failed"
+			if fmt.Sprintf(ignore, "x") == msg || fmt.Sprintf(ignore, "y") == msg {
+				return
+			}
+			slog.Error("pkg-name", pkg, "level", level)
+		}
+		case glib.GLogLevelWarningValue:
+			slog.Warn(msg, "pkg-name", pkg, "level", level)
+		case glib.GLogLevelMessageValue:
+			slog.Info(msg, "pkg-name", pkg, "level", level)
+		case glib.GLogLevelInfoValue:
+			slog.Info(msg, "pkg-name", pkg, "level", level)
+		case glib.GLogLevelDebugValue:
+			slog.Debug(msg, "pkg-name", pkg, "level", level)
+		case glib.GLogLevelMaskValue:
+			slog.Debug(msg, "pkg-name", pkg, "level", level)
+		}
+	}
+
+	glib.LogSetDefaultHandler(handler, 0)
 
 	log.Initialize(program, debug)
 	ui := ui{}
