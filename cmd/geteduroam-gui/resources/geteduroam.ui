@@ -90,6 +90,9 @@
 		      <object class="GtkLabel" id="certificateInstanceTitle"/>
 		    </child>
 		    <child>
+		      <object class="GtkLabel" id="certificateInstanceDescription"/>
+		    </child>
+		    <child>
 		      <object class="GtkLabel" id="certificateInstanceEmail"/>
 		    </child>
 		    <child>
@@ -158,6 +161,9 @@
 		    <property name="spacing">10</property>
 		    <child>
 		      <object class="GtkLabel" id="loginInstanceTitle"/>
+		    </child>
+		    <child>
+		      <object class="GtkLabel" id="loginInstanceDescription"/>
 		    </child>
 		    <child>
 		      <object class="GtkLabel" id="loginInstanceEmail"/>
