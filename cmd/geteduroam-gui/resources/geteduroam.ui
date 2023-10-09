@@ -130,11 +130,14 @@
 			    <property name="hexpand">True</property>
 			  </object>
 			</child>
-			<child>
-			  <object class="GtkButton" id="certificateSubmit">
-			    <property name="label">Submit</property>
-			  </object>
-			</child>
+		      </object>
+		    </child>
+		    <child>
+		      <object class="GtkButton" id="certificateSubmit">
+			<style>
+			  <class name="accent"/>
+			</style>
+			<property name="label">Add Connection</property>
 		      </object>
 		    </child>
 		  </object>
@@ -201,7 +204,10 @@
 		    </child>
 		    <child>
 		      <object class="GtkButton" id="loginSubmit">
-			<property name="label">Submit</property>
+			<style>
+			  <class name="accent"/>
+			</style>
+			<property name="label">Add Connection</property>
 		      </object>
 		    </child>
 		  </object>
