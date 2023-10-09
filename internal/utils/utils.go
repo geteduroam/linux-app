@@ -6,7 +6,6 @@ import (
 	"unicode"
 	"time"
 
-	"golang.org/x/exp/slog"
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
@@ -40,16 +39,6 @@ func Verbosef(msg string, args ...any) {
 	if IsVerbose {
 		fmt.Printf(msg+"\n", args...)
 	}
-}
-
-// TODO Remove when we are done testing levels
-// Testfunction to test logLevel setting
-func PrintLevels() {
-	msg := "Test"
-	slog.Debug("Debug", "debug", msg)
-	slog.Info("Info", "info", msg)
-	slog.Warn("Warn", "warn", msg)
-	slog.Error("Error", "error", msg)
 }
 
 // ValidityDays returns the amount of days left for the validity timestamp
