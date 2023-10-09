@@ -175,18 +175,19 @@ func (m *mainState) rowActived(sel instance.Instance) {
 		})
 		return nil
 	}
+	cb := func(p instance.Profile) {
+		err := chosen(p)
+		if err != nil {
+			l.Hide()
+			m.activate()
+			m.ShowError(err)
+		}
+	}
 	if len(sel.Profiles) > 1 {
-		profiles := NewProfileState(m.builder, &stack, sel.Profiles, chosen)
+		profiles := NewProfileState(m.builder, m.stack, sel.Profiles, cb)
 		profiles.Initialize()
 	} else {
-		go func() {
-			err := chosen(sel.Profiles[0])
-			if err != nil {
-				l.Hide()
-				m.activate()
-				m.ShowError(err)
-			}
-		}()
+		go cb(sel.Profiles[0])
 	}
 }
 

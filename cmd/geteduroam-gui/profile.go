@@ -10,10 +10,10 @@ type ProfileState struct {
 	builder  *gtk.Builder
 	stack    *adw.ViewStack
 	profiles []instance.Profile
-	success  func(instance.Profile) error
+	success  func(instance.Profile)
 }
 
-func NewProfileState(builder *gtk.Builder, stack *adw.ViewStack, profiles []instance.Profile, success func(instance.Profile) error) *ProfileState {
+func NewProfileState(builder *gtk.Builder, stack *adw.ViewStack, profiles []instance.Profile, success func(instance.Profile)) *ProfileState {
 	return &ProfileState{
 		builder:  builder,
 		stack:    stack,
@@ -50,14 +50,7 @@ func (p *ProfileState) Initialize() {
 		return instance.SortNames(a, b, "")
 	}
 	activated := func(idx int) {
-		go func() {
-			err := p.success(p.profiles[idx])
-			if err != nil {
-				uiThread(func() {
-					p.ShowError(err)
-				})
-			}
-		}()
+		go p.success(p.profiles[idx])
 	}
 
 	sl := NewSelectList(&scroll, &list, activated, sorter)
