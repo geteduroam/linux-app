@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"os"
+	"sync"
 
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/jwijenbergh/puregotk/v4/adw"
@@ -21,6 +22,7 @@ func NewCertificateStateBase(win *gtk.Window, builder *gtk.Builder, stack *adw.V
 		stack:   stack,
 		state:   &state,
 		pi:      pi,
+		wg: &sync.WaitGroup{},
 	}
 }
 

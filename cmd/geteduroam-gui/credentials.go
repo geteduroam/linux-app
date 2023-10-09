@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/jwijenbergh/puregotk/v4/adw"
@@ -20,6 +21,7 @@ func NewCredentialsStateBase(builder *gtk.Builder, stack *adw.ViewStack, cred ne
 		stack:   stack,
 		state:   &state,
 		pi:      pi,
+		wg: &sync.WaitGroup{},
 	}
 }
 
