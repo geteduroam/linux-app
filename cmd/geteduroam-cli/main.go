@@ -390,7 +390,7 @@ func newLogFile() (*os.File, string, error) {
 		return nil, "", err
 	}
 	fpath := filepath.Join(dir, logfile)
-	fp, err := os.Create(fpath)
+	fp, err := os.OpenFile(fpath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, "", err
 	}
