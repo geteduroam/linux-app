@@ -245,6 +245,9 @@
 		    <property name="label">Your connection is valid for:</property>
 		  </object>
 		</child>
+		<child>
+		  <object class="GtkImage" id="successLogo"/>
+		</child>
 	      </object>
 	    </property>
 	  </object>

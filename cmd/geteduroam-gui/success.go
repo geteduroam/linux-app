@@ -33,14 +33,26 @@ func (s *SuccessState) Initialize() {
 	var title gtk.Label
 	s.builder.GetObject("successTitle").Cast(&title)
 	defer title.Unref()
-	styleWidget(&title, "label")
+	styleWidget(&title, "title")
 	if s.isredirect {
 		title.SetText("Follow the instructions at the link opened in your browser")
 	}
+
+	var logo gtk.Image
+	s.builder.GetObject("successLogo").Cast(&logo)
+	defer logo.Unref()
+	res := MustResource("images/success.png")
+	pb, err := bytesPixbuf([]byte(res))
+	if err == nil {
+		logo.SetFromPixbuf(pb)
+		logo.SetSizeRequest(64, 64)
+	}
+
 	var sub gtk.Label
 	s.builder.GetObject("successSubTitle").Cast(&sub)
 	defer sub.Unref()
 	sub.SetVisible(!s.isredirect)
+	styleWidget(&sub, "label")
 
 	var expiry gtk.Label
 	s.builder.GetObject("expiryText").Cast(&expiry)
