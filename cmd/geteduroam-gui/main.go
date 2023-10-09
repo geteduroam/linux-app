@@ -2,10 +2,12 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
 	"sync"
+	"strings"
 	"time"
 
 	"github.com/jwijenbergh/puregotk/v4/adw"
@@ -15,6 +17,7 @@ import (
 
 	"github.com/geteduroam/linux-app/internal/discovery"
 	"github.com/geteduroam/linux-app/internal/handler"
+	"github.com/geteduroam/linux-app/internal/log"
 	"github.com/geteduroam/linux-app/internal/instance"
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/geteduroam/linux-app/internal/version"
@@ -282,10 +285,13 @@ func (m *mainState) initBurger() {
 			awin.SetLogo(texture)
 			defer texture.Unref()
 		}
+		lpath, err := log.Location("geteduroam-gui")
+		if err == nil {
+			awin.SetSystemInformation("Log location: " + lpath)
+		}
 		awin.SetProgramName("geteduroam GUI")
 		awin.SetComments("Client to easily and securely configure eduroam")
 		awin.SetAuthors([]string{"Jeroen Wijenbergh", "Martin van Es", "Alexandru Cacean"})
-		// TODO: Make the version a global var somewhere
 		awin.SetVersion(version.Get())
 		awin.SetWebsite("https://github.com/geteduroam/linux-app")
 		// SetLicenseType has a scary warning: "comes with absolutely no warranty"
