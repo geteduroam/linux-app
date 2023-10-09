@@ -37,7 +37,7 @@ type LoginBase struct {
 	stack   *adw.ViewStack
 	state   LoginState
 	pi      network.ProviderInfo
-	wg      sync.WaitGroup
+	wg      *sync.WaitGroup
 
 	btn *gtk.Button
 }

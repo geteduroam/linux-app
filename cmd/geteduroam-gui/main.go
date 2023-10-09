@@ -47,6 +47,7 @@ type mainState struct {
 	builder *gtk.Builder
 	servers *serverList
 	scroll  *gtk.ScrolledWindow
+	stack   *adw.ViewStack
 }
 
 func (m *mainState) initServers() {
@@ -55,30 +56,21 @@ func (m *mainState) initServers() {
 }
 
 func (m *mainState) activate() {
-	var stack adw.ViewStack
-	m.builder.GetObject("pageStack").Cast(&stack)
-	defer stack.Unref()
 	var page adw.ViewStackPage
 	m.builder.GetObject("searchPage").Cast(&page)
 	defer page.Unref()
-	stack.SetVisibleChild(page.GetChild())
+	m.stack.SetVisibleChild(page.GetChild())
 }
 
 func (m *mainState) askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string, error) {
-	var stack adw.ViewStack
-	m.builder.GetObject("pageStack").Cast(&stack)
-	defer stack.Unref()
-	login := NewCredentialsStateBase(m.builder, &stack, c, pi)
+	login := NewCredentialsStateBase(m.builder, m.stack, c, pi)
 	login.Initialize()
 	user, pass := login.Get()
 	return user, pass, nil
 }
 
 func (m *mainState) askCertificate(cert string, pwd string, pi network.ProviderInfo) (string, string, error) {
-	var stack adw.ViewStack
-	m.builder.GetObject("pageStack").Cast(&stack)
-	defer stack.Unref()
-	base := NewCertificateStateBase(m.app.GetActiveWindow(), m.builder, &stack, cert, pwd, pi)
+	base := NewCertificateStateBase(m.app.GetActiveWindow(), m.builder, m.stack, cert, pwd, pi)
 	base.Initialize()
 	cert, pass := base.Get()
 	return cert, pass, nil
@@ -116,10 +108,7 @@ func (m *mainState) local(path string) (*time.Time, error) {
 func (m *mainState) oauth(p instance.Profile) (*time.Time, error) {
 	config, err := p.EAPOAuth(func(url string) {
 		uiThread(func() {
-			var stack adw.ViewStack
-			m.builder.GetObject("pageStack").Cast(&stack)
-			defer stack.Unref()
-			l := NewLoadingPage(m.builder, &stack, "Your browser has been opened to authorize the client")
+			l := NewLoadingPage(m.builder, m.stack, "Your browser has been opened to authorize the client")
 			l.Initialize()
 			// If the browser does not open for some reason the user could grab it with stdout
 			// We could also show it in the UI but this might mean too much clutter
@@ -134,13 +123,10 @@ func (m *mainState) oauth(p instance.Profile) (*time.Time, error) {
 }
 
 func (m *mainState) rowActived(sel instance.Instance) {
-	var stack adw.ViewStack
-	m.builder.GetObject("pageStack").Cast(&stack)
-	defer stack.Unref()
 	var page gtk.Box
 	m.builder.GetObject("searchPage").Cast(&page)
 	defer page.Unref()
-	l := NewLoadingPage(m.builder, &stack, "Loading organization details...")
+	l := NewLoadingPage(m.builder, m.stack, "Loading organization details...")
 	l.Initialize()
 	chosen := func(p instance.Profile) error {
 		var valid *time.Time
@@ -169,7 +155,7 @@ func (m *mainState) rowActived(sel instance.Instance) {
 			}
 			fmt.Println("Browser has been opened with URL:", url)
 		}
-		s := NewSuccessState(m.builder, &stack, valid, isredirect)
+		s := NewSuccessState(m.builder, m.stack, valid, isredirect)
 		uiThread(func() {
 			s.Initialize()
 		})
@@ -258,9 +244,6 @@ func (m *mainState) initBurger() {
 	gears.SetMenuModel(&menu)
 
 	imp := gio.NewSimpleAction("import-local", nil)
-	var stack adw.ViewStack
-	m.builder.GetObject("pageStack").Cast(&stack)
-	defer stack.Unref()
 	imp.ConnectActivate(func(_ gio.SimpleAction, _ uintptr) {
 		fd, err := NewFileDialog(m.app.GetActiveWindow(), "Choose an EAP metadata file")
 		if err != nil {
@@ -314,6 +297,8 @@ func (m *mainState) initBurger() {
 func (m *mainState) Initialize() {
 	m.scroll = &gtk.ScrolledWindow{}
 	m.builder.GetObject("searchScroll").Cast(m.scroll)
+	m.stack = &adw.ViewStack{}
+	m.builder.GetObject("pageStack").Cast(m.stack)
 	m.initServers()
 	m.initList()
 	m.initBurger()
