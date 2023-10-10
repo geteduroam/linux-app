@@ -283,7 +283,7 @@ func (m *mainState) initBurger() {
 		var awin gtk.AboutDialog
 		gtk.NewAboutDialog().Cast(&awin)
 		awin.SetName("geteduroam Linux client")
-		pb, err := bytesPixbuf([]byte(MustResource("images/heart.png")))
+		pb, err := bytesPixbuf([]byte(MustResource("images/geteduroam.png")))
 		if err == nil {
 			texture := gdk.NewForPixbufTexture(pb)
 			defer pb.Unref()
