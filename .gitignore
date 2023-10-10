@@ -2,3 +2,4 @@
 ./geteduroam-cli
 ./geteduroam-gui
 /internal/eap/test_data/pkcs12/
+/builds/
