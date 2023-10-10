@@ -54,6 +54,11 @@ func (s *SuccessState) Initialize() {
 	sub.SetVisible(!s.isredirect)
 	styleWidget(&sub, "label")
 
+	var name gtk.Label
+	s.builder.GetObject("successConName").Cast(&name)
+	defer name.Unref()
+	name.SetVisible(!s.isredirect)
+
 	var expiry gtk.Label
 	s.builder.GetObject("expiryText").Cast(&expiry)
 	defer expiry.Unref()
