@@ -258,7 +258,7 @@
 		  </object>
 		</child>
 		<child>
-		  <object class="GtkLabel">
+		  <object class="GtkLabel" id="successConName">
 		    <property name="label">Name: "eduroam (from geteduroam)"</property>
 		  </object>
 		</child>
