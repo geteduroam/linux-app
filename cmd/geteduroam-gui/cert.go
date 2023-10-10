@@ -22,7 +22,7 @@ func NewCertificateStateBase(win *gtk.Window, builder *gtk.Builder, stack *adw.V
 		stack:   stack,
 		state:   &state,
 		pi:      pi,
-		wg: &sync.WaitGroup{},
+		wg:      &sync.WaitGroup{},
 	}
 }
 

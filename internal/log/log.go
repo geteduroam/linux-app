@@ -1,12 +1,13 @@
 package log
 
 import (
-	"os"
 	"fmt"
+	"os"
 	"path/filepath"
-	"golang.org/x/exp/slog"
+
 	"github.com/geteduroam/linux-app/internal/config"
 	"github.com/geteduroam/linux-app/internal/utils"
+	"golang.org/x/exp/slog"
 )
 
 func Location(program string) (string, error) {
@@ -23,7 +24,7 @@ func newLogFile(program string) (*os.File, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	fp, err := os.OpenFile(fpath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	fp, err := os.OpenFile(fpath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return nil, "", err
 	}

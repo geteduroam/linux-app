@@ -21,7 +21,7 @@ func NewCredentialsStateBase(builder *gtk.Builder, stack *adw.ViewStack, cred ne
 		stack:   stack,
 		state:   &state,
 		pi:      pi,
-		wg: &sync.WaitGroup{},
+		wg:      &sync.WaitGroup{},
 	}
 }
 

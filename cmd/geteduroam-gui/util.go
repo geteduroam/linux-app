@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/jwijenbergh/puregotk/v4/adw"
-	"github.com/jwijenbergh/puregotk/v4/glib"
-	"github.com/jwijenbergh/puregotk/v4/gdkpixbuf"
-	"github.com/jwijenbergh/puregotk/v4/gtk"
-	"strings"
 	"os"
+	"strings"
+
+	"github.com/jwijenbergh/puregotk/v4/adw"
+	"github.com/jwijenbergh/puregotk/v4/gdkpixbuf"
+	"github.com/jwijenbergh/puregotk/v4/glib"
+	"github.com/jwijenbergh/puregotk/v4/gtk"
 )
 
 type StyledWidget interface {
@@ -21,7 +22,7 @@ func styleWidget(widget StyledWidget, resName string) {
 }
 
 func upper(str string) string {
-	return strings.ToUpper(str[:1])+str[1:]
+	return strings.ToUpper(str[:1]) + str[1:]
 }
 
 func showErrorToast(overlay adw.ToastOverlay, err error) {
