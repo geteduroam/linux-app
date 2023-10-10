@@ -1,0 +1,6 @@
+* {
+    background-position: center, right 80%;
+    background-repeat: no-repeat, no-repeat;
+    /* base64 generated from resources/images/heart.png and resources/images/logo.png */
+    background-image:  url('data:image/svg+xml;base64,$IMG_HEART'), url('data:image/png;base64,$IMG_LOGO');
+    }

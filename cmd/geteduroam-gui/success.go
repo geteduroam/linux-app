@@ -64,5 +64,5 @@ func (s *SuccessState) Initialize() {
 		expiry.Hide()
 	}
 	// set the page as current
-	s.stack.SetVisibleChild(page.GetChild())
+	setPage(s.stack, &page)
 }

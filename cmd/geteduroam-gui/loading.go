@@ -35,8 +35,7 @@ func (l *LoadingState) Initialize() {
 	defer label.Unref()
 	label.SetText(l.Message)
 	styleWidget(&label, "label")
-	l.stack.SetVisibleChild(page.GetChild().GetLayoutManager().GetWidget())
-
+	setPage(l.stack, &page)
 	var spinner gtk.Spinner
 	l.builder.GetObject("loadingSpinner").Cast(&spinner)
 	defer spinner.Unref()

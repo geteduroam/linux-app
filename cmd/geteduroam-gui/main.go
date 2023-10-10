@@ -65,6 +65,8 @@ func (m *mainState) activate() {
 	var page adw.ViewStackPage
 	m.builder.GetObject("searchPage").Cast(&page)
 	defer page.Unref()
+	// we do not use setPage here as the margin is already set in the clamp
+	// This is so that the background is set on the current main page only but it expands to each side fully
 	m.stack.SetVisibleChild(page.GetChild())
 }
 
@@ -316,6 +318,7 @@ func (m *mainState) Initialize() {
 	m.initServers()
 	m.initList()
 	m.initBurger()
+	m.activate()
 }
 
 func (m *mainState) ShowError(err error) {
