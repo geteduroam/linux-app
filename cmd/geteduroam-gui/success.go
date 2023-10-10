@@ -10,17 +10,17 @@ import (
 )
 
 type SuccessState struct {
-	builder *gtk.Builder
-	stack   *adw.ViewStack
-	expiry  *time.Time
+	builder    *gtk.Builder
+	stack      *adw.ViewStack
+	expiry     *time.Time
 	isredirect bool
 }
 
 func NewSuccessState(builder *gtk.Builder, stack *adw.ViewStack, expiry *time.Time, isredirect bool) *SuccessState {
 	return &SuccessState{
-		builder: builder,
-		stack:   stack,
-		expiry:  expiry,
+		builder:    builder,
+		stack:      stack,
+		expiry:     expiry,
 		isredirect: isredirect,
 	}
 }

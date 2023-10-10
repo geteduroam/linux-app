@@ -58,7 +58,7 @@ func NewSelectList(win *gtk.ScrolledWindow, list *gtk.ListView, activated func(i
 		list:      list,
 		sorter:    sorter,
 		activated: activated,
-		store: gtk.NewStringList(0),
+		store:     gtk.NewStringList(0),
 	}
 }
 

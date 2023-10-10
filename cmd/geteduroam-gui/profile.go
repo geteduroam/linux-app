@@ -13,7 +13,7 @@ type ProfileState struct {
 	stack    *adw.ViewStack
 	profiles []instance.Profile
 	success  func(instance.Profile)
-	sl *SelectList
+	sl       *SelectList
 }
 
 func NewProfileState(builder *gtk.Builder, stack *adw.ViewStack, profiles []instance.Profile, success func(instance.Profile)) *ProfileState {

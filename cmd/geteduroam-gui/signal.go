@@ -2,12 +2,13 @@ package main
 
 import (
 	"sync"
+
 	"github.com/jwijenbergh/puregotk/v4/gobject"
 )
 
 // SignalPool is a collection of functions that will be called to cleanup all signals
 type SignalPool struct {
-	mu sync.Mutex
+	mu      sync.Mutex
 	cleanup []func()
 }
 
