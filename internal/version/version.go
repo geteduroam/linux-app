@@ -9,7 +9,7 @@ import (
 const version = "0.1"
 
 // isReleased sets whether or not the current version is released yet
-const isReleased = false
+const isReleased = true
 
 // Get gets the version in the following order:
 // - Gets a release version if it detects it is a release
