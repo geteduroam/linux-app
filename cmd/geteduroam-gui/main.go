@@ -319,6 +319,7 @@ func (m *mainState) Initialize() {
 }
 
 func (m *mainState) ShowError(err error) {
+	slog.Error(err.Error(), "state", "main")
 	var overlay adw.ToastOverlay
 	m.builder.GetObject("searchToastOverlay").Cast(&overlay)
 	defer overlay.Unref()

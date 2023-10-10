@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	"golang.org/x/exp/slog"
+
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/jwijenbergh/puregotk/v4/adw"
 	"github.com/jwijenbergh/puregotk/v4/gobject"
@@ -53,6 +55,7 @@ func (l *LoginBase) GetObject(id string, obj gobject.Ptr) {
 }
 
 func (l *LoginBase) ShowError(err error) {
+	slog.Error(err.Error(), "state", "login")
 	var overlay adw.ToastOverlay
 	l.GetObject("ToastOverlay", &overlay)
 	defer overlay.Unref()
