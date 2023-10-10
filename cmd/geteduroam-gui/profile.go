@@ -1,6 +1,8 @@
 package main
 
 import (
+	"golang.org/x/exp/slog"
+
 	"github.com/geteduroam/linux-app/internal/instance"
 	"github.com/jwijenbergh/puregotk/v4/adw"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
@@ -28,6 +30,7 @@ func (p *ProfileState) Destroy() {
 }
 
 func (p *ProfileState) ShowError(err error) {
+	slog.Error(err.Error(), "state", "profile")
 	var overlay adw.ToastOverlay
 	p.builder.GetObject("profileToastOverlay").Cast(&overlay)
 	defer overlay.Unref()
