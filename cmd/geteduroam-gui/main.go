@@ -416,16 +416,14 @@ func main() {
 		case glib.GLogLevelErrorValue:
 			slog.Error(msg, "pkg-name", pkg, "level", level)
 		case glib.GLogLevelCriticalValue:
-			{
-				// Ignore some false positives due to Gtk bug
-				// Happens when pressing "Import Metadata"
-				// see https://discourse.gnome.org/t/menu-button-gives-error-messages-with-latest-gtk4/15689/3
-				ignore := "_gtk_css_corner_value_get_%s: assertion 'corner->class == &GTK_CSS_VALUE_CORNER' failed"
-				if fmt.Sprintf(ignore, "x") == msg || fmt.Sprintf(ignore, "y") == msg {
-					return
-				}
-				slog.Error("pkg-name", pkg, "level", level)
+			// Ignore some false positives due to Gtk bug
+			// Happens when pressing "Import Metadata"
+			// see https://discourse.gnome.org/t/menu-button-gives-error-messages-with-latest-gtk4/15689/3
+			ignore := "_gtk_css_corner_value_get_%s: assertion 'corner->class == &GTK_CSS_VALUE_CORNER' failed"
+			if fmt.Sprintf(ignore, "x") == msg || fmt.Sprintf(ignore, "y") == msg {
+				return
 			}
+			slog.Error("pkg-name", pkg, "level", level)
 		case glib.GLogLevelWarningValue:
 			slog.Warn(msg, "pkg-name", pkg, "level", level)
 		case glib.GLogLevelMessageValue:
