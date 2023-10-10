@@ -21,6 +21,15 @@ func styleWidget(widget StyledWidget, resName string) {
 	sc.AddProvider(provider, 800)
 }
 
+func setPage(stack *adw.ViewStack, page *adw.ViewStackPage) {
+	child := page.GetChild()
+	child.SetMarginStart(10)
+	child.SetMarginEnd(10)
+	child.SetMarginTop(5)
+	child.SetMarginBottom(5)
+	stack.SetVisibleChild(child)
+}
+
 func upper(str string) string {
 	return strings.ToUpper(str[:1]) + str[1:]
 }

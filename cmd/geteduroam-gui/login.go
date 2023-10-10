@@ -166,5 +166,5 @@ func (l *LoginBase) Initialize() {
 	}))
 
 	// set the page as current
-	l.stack.SetVisibleChild(page.GetChild())
+	setPage(l.stack, &page)
 }

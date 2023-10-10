@@ -5,57 +5,57 @@
   <object class="GtkWindow" id="mainWindow">
     <child>
       <object class="AdwViewStack" id="pageStack">
-	<property name="margin-top">5</property>
-	<property name="margin-start">10</property>
-	<property name="margin-end">10</property>
-	<property name="margin-bottom">5</property>
 	<child>
 	  <object class="AdwViewStackPage" id="searchPage">
-	<property name="child">
-       <object class="AdwToastOverlay" id="searchToastOverlay">
 	    <property name="child">
-	      <object class="AdwClamp">
-		<child>
-		  <object class="GtkBox">
-		    <property name="orientation">vertical</property>
-		    <child>
-		      <object class="GtkImage"/>
-		    </child>
+	      <object class="AdwToastOverlay" id="searchToastOverlay">
+		<property name="child">
+		  <object class="AdwClamp">
+		    <property name="margin-top">5</property>
+		    <property name="margin-start">10</property>
+		    <property name="margin-end">10</property>
+		    <property name="margin-bottom">5</property>
 		    <child>
 		      <object class="GtkBox">
-			<property name="orientation">horizontal</property>
-			<property name="spacing">5</property>
+			<property name="orientation">vertical</property>
 			<child>
-			    <object class="GtkSearchEntry" id="searchBox">
-			      <property name="hexpand">True</property>
-			      <property name="placeholder-text">Search for your organization (e.g. SURF)</property>
-			    </object>
+			  <object class="GtkImage"/>
 			</child>
 			<child>
-			  <object class="GtkMenuButton" id="gears">
-			    <property name="direction">none</property>
+			  <object class="GtkBox">
+			    <property name="orientation">horizontal</property>
+			    <property name="spacing">5</property>
+			    <child>
+			      <object class="GtkSearchEntry" id="searchBox">
+				<property name="hexpand">True</property>
+				<property name="placeholder-text">Search for your organization (e.g. SURF)</property>
+			      </object>
+			    </child>
+			    <child>
+			      <object class="GtkMenuButton" id="gears">
+				<property name="direction">none</property>
+			      </object>
+			    </child>
+			  </object>
+			</child>
+			<child>
+			  <object class="GtkScrolledWindow" id="searchScroll">
+			    <property name="opacity">0.9</property>
+			    <property name="child">
+			      <object class="GtkListView" id="searchList"/>
+			    </property>
+			    <property name="propagate-natural-height">True</property>
+			    <property name="propagate-natural-width">True</property>
+			    <property name="visible">False</property>
 			  </object>
 			</child>
 		      </object>
 		    </child>
-		    <child>
-		      <object class="GtkScrolledWindow" id="searchScroll">
-			<property name="opacity">0.9</property>
-			<property name="child">
-			  <object class="GtkListView" id="searchList"/>
-			</property>
-			<property name="propagate-natural-height">True</property>
-			<property name="propagate-natural-width">True</property>
-			<property name="visible">False</property>
-		      </object>
-		    </child>
 		  </object>
-		</child>
+		</property>
 	      </object>
 	    </property>
 	  </object>
-	</property>
-	</object>
 	</child>
 	<child>
 	  <object class="AdwViewStackPage" id="loadingPage">

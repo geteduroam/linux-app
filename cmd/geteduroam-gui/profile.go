@@ -69,5 +69,5 @@ func (p *ProfileState) Initialize() {
 	}
 
 	p.sl.Setup()
-	p.stack.SetVisibleChild(page.GetChild())
+	setPage(p.stack, &page)
 }
