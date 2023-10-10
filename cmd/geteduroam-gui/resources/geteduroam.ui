@@ -216,6 +216,23 @@
 			<property name="label">Add Connection</property>
 		      </object>
 		    </child>
+		    <child>
+		      <object class="GtkBox">
+			<child>
+			  <object class="GtkImage">
+			    <property name="visible">True</property>
+			    <property name="icon-name">dialog-question</property>
+			    <property name="icon-size">1</property>
+			  </object>
+			</child>
+			<child>
+			  <object class="GtkLabel">
+			    <property name="margin-start">2</property>
+			    <property name="label">These credentials are stored in NetworkManager</property>
+			  </object>
+			</child>
+		      </object>
+		    </child>
 		  </object>
 		</property>
 	      </object>
