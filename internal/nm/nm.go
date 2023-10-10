@@ -72,7 +72,7 @@ func createCon(pUUID string, args connection.SettingsArgs) (*connection.Connecti
 // This contains the shared network settings between TLS and NonTLS
 // The specific 8021x settings are given as an argument `specific`
 func installBase(n network.Base, specifics map[string]interface{}, pUUID string) (string, error) {
-	fID := fmt.Sprintf("%s (from Geteduroam)", n.SSID)
+	fID := fmt.Sprintf("%s (from geteduroam)", n.SSID)
 	cUser, err := user.Current()
 	if err != nil {
 		return "", err
