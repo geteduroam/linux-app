@@ -6,8 +6,6 @@ help:  ## Print this help message
 
 .DEFAULT_GOAL := help
 
-build-all: ## Build production image using .env versions
-
 .build-cli:
 	go build -o geteduroam-cli ./cmd/geteduroam-cli
 
