@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"golang.org/x/exp/slog"
+	"golang.org/x/sys/unix"
 	"golang.org/x/term"
 
 	"github.com/geteduroam/linux-app/internal/discovery"
@@ -21,6 +22,14 @@ import (
 	"github.com/geteduroam/linux-app/internal/utils"
 	"github.com/geteduroam/linux-app/internal/version"
 )
+
+// IsTerminal return true if the file descriptor is terminal.
+// Copied from: https://github.com/mattn/go-isatty/blob/master/isatty_tcgets.go
+func IsTerminal() bool {
+	fd := os.Stdout.Fd()
+	_, err := unix.IoctlGetTermios(int(fd), unix.TCGETS)
+	return err == nil
+}
 
 // askSecret is a tweak of thee 'ask' function that uses golang.org/x/term to read a secret securely
 // The prompt is the text to show e.g. "enter something: "
@@ -61,9 +70,19 @@ func ask(prompt string, validator func(input string) bool) string {
 // filteredOrganizations gets the instances as filtered by the user
 func filteredOrganizations(orgs *instance.Instances, q string) (f *instance.Instances) {
 	for {
+		empty_inputs := 0
 		x := ask(q, func(x string) bool {
 			if len(x) == 0 {
+				// File managers are very insane
+				// They somehow keep entering empty inputs
+				// We already detect file managers by checking if ran in a terminal,
+				// but this fails if you open the file manager using a terminal
+				if empty_inputs == 2 {
+					fmt.Fprintln(os.Stderr, "Exiting CLI after 3 empty inputs, are you running in a file manager?")
+					os.Exit(1)
+				}
 				fmt.Fprintln(os.Stderr, "Your organization cannot be empty")
+				empty_inputs += 1
 				return false
 			}
 			return true
@@ -424,6 +443,12 @@ func main() {
 	if versionf {
 		fmt.Println(version.Get())
 		return
+	}
+	if !IsTerminal() {
+		msg := "Not starting CLI as it is not run in a terminal. You might want to install the GUI: https://github.com/geteduroam/linux-app/releases"
+		slog.Error(msg)
+		_ = exec.Command("notify-send", "geteduroam-cli", msg).Start()
+		os.Exit(1)
 	}
 	var v *time.Time
 	if local != "" {
