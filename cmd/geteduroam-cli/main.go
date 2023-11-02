@@ -445,7 +445,7 @@ func main() {
 		return
 	}
 	if !IsTerminal() {
-		msg := "Not starting CLI as it is not run in a terminal. You might want to install the GUI: https://github.com/geteduroam/linux-app/releases"
+		msg := "Not starting the CLI as it is not run in a terminal. You might want to install the GUI: https://github.com/geteduroam/linux-app/releases"
 		slog.Error(msg)
 		_ = exec.Command("notify-send", "geteduroam-cli", msg).Start()
 		os.Exit(1)
