@@ -82,7 +82,7 @@ func filteredOrganizations(orgs *instance.Instances, q string) (f *instance.Inst
 					os.Exit(1)
 				}
 				fmt.Fprintln(os.Stderr, "Your organization cannot be empty")
-				empties += 1
+				empties++
 				return false
 			}
 			return true
