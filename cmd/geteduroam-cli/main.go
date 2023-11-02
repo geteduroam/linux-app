@@ -70,19 +70,19 @@ func ask(prompt string, validator func(input string) bool) string {
 // filteredOrganizations gets the instances as filtered by the user
 func filteredOrganizations(orgs *instance.Instances, q string) (f *instance.Instances) {
 	for {
-		empty_inputs := 0
+		empties := 0
 		x := ask(q, func(x string) bool {
 			if len(x) == 0 {
 				// File managers are very insane
 				// They somehow keep entering empty inputs
 				// We already detect file managers by checking if ran in a terminal,
 				// but this fails if you open the file manager using a terminal
-				if empty_inputs == 2 {
+				if empties == 2 {
 					fmt.Fprintln(os.Stderr, "Exiting CLI after 3 empty inputs, are you running in a file manager?")
 					os.Exit(1)
 				}
 				fmt.Fprintln(os.Stderr, "Your organization cannot be empty")
-				empty_inputs += 1
+				empties += 1
 				return false
 			}
 			return true
