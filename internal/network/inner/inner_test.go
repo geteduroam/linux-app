@@ -74,7 +74,7 @@ func TestIsValid(t *testing.T) {
 		{
 			mt:    method.PEAP,
 			input: 25,    // 25: EAP_PEAP_MSCHAPV2
-			eap:   false, // EAP not mathcing
+			eap:   false, // EAP not matching
 			want:  false,
 		},
 		{
@@ -86,7 +86,7 @@ func TestIsValid(t *testing.T) {
 		{
 			mt:    method.PEAP,
 			input: 26,    // 26: EAP_MSCHAPV2
-			eap:   false, // EAP not mathcing
+			eap:   false, // EAP not matching
 			want:  false,
 		},
 	}

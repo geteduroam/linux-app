@@ -24,7 +24,7 @@ type Certs struct {
 	Intermediates []*x509.Certificate
 }
 
-// ToPEM convers the certs to PEM by first converting the intermediate certificates
+// ToPEM converts the certs to PEM by first converting the intermediate certificates
 // and then the root certificate
 func (c *Certs) ToPEM() (ret []byte) {
 	// First intermediate certificates

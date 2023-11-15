@@ -385,7 +385,7 @@ func main() {
   -h, --help			Prints this help information
   --version			Prints version information
   -d, --debug			Debug
-  --gtk-args                    Arguments to pass to gtk as a string, e.g. "--help". These flags are splitted on spaces
+  --gtk-args                    Arguments to pass to gtk as a string, e.g. "--help". These flags are split on spaces
 `
 
 	var help bool

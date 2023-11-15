@@ -173,7 +173,7 @@ Example HTTP conversation
 		"expires_in": 3600
 	}
 
-Saving this access token SHOULD be done securely, e.g. in a keyring. This way the client can re-use this access token across restarts.
+Saving this access token SHOULD be done securely, e.g. in a keyring. This way the client can reuse this access token across restarts.
 
 #### Doing the authorized request
 Now that the client has retrieved the access token, it needs to get the EAP metadata using it. To do this, the client MUST send the access token in the authorization header when making a request to `eapconfig_endpoint`:

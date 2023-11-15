@@ -15,7 +15,7 @@ import (
 )
 
 // encodePath encodes a string to a path expected by NetworkManager
-// This path is prefixed with file:// and is expicitly NULL terminated
+// This path is prefixed with file:// and is explicitly NULL terminated
 // It returns this path as a byte array
 func encodePath(p string) []byte {
 	// get the converted path

@@ -270,7 +270,7 @@ func (am *AuthenticationMethod) preferredInnerAuthType() (inner.Type, error) {
 }
 
 // SSIDSettings returns the first valid SSID and the MinRSNProto associated with it
-// It loops trough the credential applicability list and gets the first valid candidate
+// It loops through the credential applicability list and gets the first valid candidate
 // The candidate filtering was based on https://github.com/geteduroam/windows-app/blob/f11f00dee3eb71abd38537e18881463f83b180d3/EduroamConfigure/EapConfig.cs#L84
 // A candidate is valid if:
 //   - MinRSNProto is not empty, TODO: shouldn't we just default to CCMP?
