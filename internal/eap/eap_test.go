@@ -90,7 +90,7 @@ func TestParse(t *testing.T) {
 			filename: "eva-eap.xml",
 			authMethodTests: []authMethodTest{
 				// In this file we expect everything to be valid so errors are nil
-				// The first autentication method, PEAP, only has EapMschapv2 (26) as inner defined
+				// The first authentication method, PEAP, only has EapMschapv2 (26) as inner defined
 				{
 					want: inner.EapMschapv2,
 					err:  "",
@@ -147,12 +147,12 @@ func TestParse(t *testing.T) {
 			// - ssid entry removed
 			filename: "eva-eap-changed.xml",
 			authMethodTests: []authMethodTest{
-				// The first autentication method, PEAP, has no inners defined
+				// The first authentication method, PEAP, has no inners defined
 				{
 					want: inner.None,
 					err:  "the authentication method has no inner authentication methods",
 				},
-				// The second autentication method, also PEAP, has changed inner type to Non EAP
+				// The second authentication method, also PEAP, has changed inner type to Non EAP
 				{
 					want: inner.None,
 					err:  "no viable inner authentication method found",
