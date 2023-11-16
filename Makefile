@@ -12,6 +12,9 @@ help:  ## Print this help message
 .build-gui:
 	go build -o geteduroam-gui ./cmd/geteduroam-gui
 
+lint:
+	golangci-lint run -E stylecheck,revive,gocritic --timeout 5m
+
 build-cli: .build-cli ## Build CLI version
 	@echo "Done building, run 'make run-cli' to run the CLI"
 
