@@ -12,10 +12,10 @@ help:  ## Print this help message
 .build-gui:
 	go build -o geteduroam-gui ./cmd/geteduroam-gui
 
-lint:
+lint:  ## Lint the codebase using Golangci-lint
 	golangci-lint run -E stylecheck,revive,gocritic --timeout 5m
 
-fmt:
+fmt:  ## Format the codebase using Gofumpt
 	gofumpt -w .
 
 build-cli: .build-cli ## Build CLI version
