@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=geteduroam
+Comment=A geteduroam client for Linux. Geteduroam simplifies the process of connecting to eduroam.
+Exec=geteduroam-gui
+Icon=app.geteduroam.Linux
+Terminal=false
