@@ -56,6 +56,10 @@ nfpms:
     release: 1
     description: |-
       Geteduroam GUI client for Linux distributions.
+    contents:
+        - src: cmd/geteduroam-gui/resources/share/
+          dst: /usr/share
+          type: tree
 
     overrides:
      deb:
