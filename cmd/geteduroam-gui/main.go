@@ -370,7 +370,7 @@ func (ui *ui) activate() {
 }
 
 func (ui *ui) Run(args []string) int {
-	const id = "com.geteduroam.linux"
+	const id = "app.geteduroam.Linux"
 	ui.app = adw.NewApplication(id, gio.GApplicationFlagsNoneValue)
 	defer ui.app.Unref()
 	ui.app.ConnectActivate(func(o gio.Application) {
