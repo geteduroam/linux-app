@@ -15,6 +15,9 @@ help:  ## Print this help message
 lint:
 	golangci-lint run -E stylecheck,revive,gocritic --timeout 5m
 
+fmt:
+	gofumpt -w .
+
 build-cli: .build-cli ## Build CLI version
 	@echo "Done building, run 'make run-cli' to run the CLI"
 
