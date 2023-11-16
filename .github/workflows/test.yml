@@ -1,8 +1,28 @@
 name: "Test & check build"
 
-on: [ push, pull_request ]
+on: [push, pull_request]
 
 jobs:
+  fmt-go:
+    name: Check format Go
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ^1.18
+      - uses: actions/checkout@v3
+      - name: Install Gofumpt
+        run: go install mvdan.cc/gofumpt@latest
+      - name: Check fmt using Gofumpt
+        run: |
+             files=$(~/go/bin/gofumpt -l -d .);
+             if [[ -n "$files" ]]; then
+                 printf '%s\nGofumpt would make changes, install Gofumpt and run "make lint"' "$files";
+                 exit 1;
+             fi
+        shell: bash
+
   lint-go:
     name: Lint Go
     runs-on: ubuntu-latest
