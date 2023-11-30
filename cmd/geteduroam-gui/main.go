@@ -341,7 +341,7 @@ func (ui *ui) initBuilder() {
 
 func (ui *ui) initWindow() {
 	// get the window
-	var win gtk.Window
+	var win adw.Window
 	ui.builder.GetObject("mainWindow").Cast(&win)
 	defer win.Unref()
 	win.SetDefaultSize(400, 600)
@@ -352,7 +352,7 @@ func (ui *ui) initWindow() {
 	widg := search.GetChild()
 	defer widg.Unref()
 	styleWidget(widg, "window")
-	ui.app.AddWindow(&win)
+	ui.app.AddWindow(&win.Window)
 	win.Show()
 }
 
