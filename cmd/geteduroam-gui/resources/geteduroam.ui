@@ -2,282 +2,250 @@
 <interface>
   <requires lib="gtk" version="4.06"/>
   <requires lib="libadwaita" version="1.1"/>
-  <object class="GtkWindow" id="mainWindow">
-    <child>
-      <object class="AdwViewStack" id="pageStack">
-	<child>
-	  <object class="AdwViewStackPage" id="searchPage">
-	    <property name="child">
-	      <object class="AdwToastOverlay" id="searchToastOverlay">
+  <object class="AdwWindow" id="mainWindow">
+    <property name="content">
+      <object class="AdwToolbarView">
+	<child type="top">
+	  <object class="AdwHeaderBar"/>
+	</child>
+	<property name="content">
+	  <object class="AdwViewStack" id="pageStack">
+	    <child>
+	      <object class="AdwViewStackPage" id="searchPage">
 		<property name="child">
-		  <object class="AdwClamp">
-		    <property name="margin-top">5</property>
-		    <property name="margin-start">10</property>
-		    <property name="margin-end">10</property>
-		    <property name="margin-bottom">5</property>
-		    <child>
-		      <object class="GtkBox">
-			<property name="orientation">vertical</property>
+		  <object class="AdwToastOverlay" id="searchToastOverlay">
+		    <property name="child">
+		      <object class="AdwClamp">
+			<property name="margin-top">5</property>
+			<property name="margin-start">10</property>
+			<property name="margin-end">10</property>
+			<property name="margin-bottom">5</property>
 			<child>
-			  <object class="GtkImage"/>
+			  <object class="GtkBox">
+			    <property name="orientation">vertical</property>
+			    <child>
+			      <object class="GtkImage"/>
+			    </child>
+			    <child>
+			      <object class="GtkBox">
+				<property name="orientation">horizontal</property>
+				<property name="spacing">5</property>
+				<child>
+				  <object class="GtkSearchEntry" id="searchBox">
+				    <property name="hexpand">True</property>
+				    <property name="placeholder-text">Search for your organization (e.g. SURF)</property>
+				  </object>
+				</child>
+				<child>
+				  <object class="GtkMenuButton" id="gears">
+				    <property name="direction">none</property>
+				  </object>
+				</child>
+			      </object>
+			    </child>
+			    <child>
+			      <object class="GtkScrolledWindow" id="searchScroll">
+				<property name="opacity">0.9</property>
+				<property name="child">
+				  <object class="GtkListView" id="searchList"/>
+				</property>
+				<property name="propagate-natural-height">True</property>
+				<property name="propagate-natural-width">True</property>
+				<property name="visible">False</property>
+			      </object>
+			    </child>
+			  </object>
+			</child>
+		      </object>
+		    </property>
+		  </object>
+		</property>
+	      </object>
+	    </child>
+	    <child>
+	      <object class="AdwViewStackPage" id="loadingPage">
+		<property name="child">
+		  <object class="GtkBox">
+		    <property name="halign">center</property>
+		    <property name="orientation">vertical</property>
+		    <property name="valign">center</property>
+		    <child>
+		      <object class="GtkLabel" id="loadingText"/>
+		    </child>
+		    <child>
+		      <object class="GtkSpinner" id="loadingSpinner">
+			<property name="margin-top">5</property>
+		      </object>
+		    </child>
+		  </object>
+		</property>
+	      </object>
+	    </child>
+	    <child>
+	      <object class="AdwViewStackPage" id="certificatePage">
+		<property name="child">
+		  <object class="AdwToastOverlay" id="certificateToastOverlay">
+		    <property name="child">
+		      <object class="GtkBox">
+			<property name="halign">center</property>
+			<property name="orientation">vertical</property>
+			<property name="valign">center</property>
+			<property name="spacing">10</property>
+			<child>
+			  <object class="GtkLabel" id="certificateInstanceTitle"/>
+			</child>
+			<child>
+			  <object class="GtkLabel" id="certificateInstanceDescription"/>
+			</child>
+			<child>
+			  <object class="GtkLabel" id="certificateInstanceEmail"/>
+			</child>
+			<child>
+			  <object class="GtkLabel" id="certificateInstanceTel"/>
+			</child>
+			<child>
+			  <object class="GtkLabel" id="certificateInstanceWeb"/>
+			</child>
+			<child>
+			  <object class="GtkImage" id="certificateInstanceLogo"/>
 			</child>
 			<child>
 			  <object class="GtkBox">
-			    <property name="orientation">horizontal</property>
 			    <property name="spacing">5</property>
 			    <child>
-			      <object class="GtkSearchEntry" id="searchBox">
-				<property name="hexpand">True</property>
-				<property name="placeholder-text">Search for your organization (e.g. SURF)</property>
+			      <object class="GtkButton" id="certificateFileButton">
+				<property name="label">Choose a certificate...</property>
 			      </object>
 			    </child>
 			    <child>
-			      <object class="GtkMenuButton" id="gears">
-				<property name="direction">none</property>
+			      <object class="GtkLabel" id="certificateFileText">
+				<property name="label">No file selected</property>
 			      </object>
 			    </child>
 			  </object>
 			</child>
 			<child>
-			  <object class="GtkScrolledWindow" id="searchScroll">
-			    <property name="opacity">0.9</property>
-			    <property name="child">
-			      <object class="GtkListView" id="searchList"/>
-			    </property>
-			    <property name="propagate-natural-height">True</property>
-			    <property name="propagate-natural-width">True</property>
-			    <property name="visible">False</property>
+			  <object class="GtkBox">
+			    <property name="spacing">5</property>
+			    <child>
+			      <object class="GtkLabel">
+				<property name="label">Passphrase: (if known)</property>
+			      </object>
+			    </child>
+			    <child>
+			      <object class="GtkPasswordEntry" id="certificatePassphraseText">
+				<property name="show-peek-icon">True</property>
+				<property name="hexpand">True</property>
+			      </object>
+			    </child>
+			  </object>
+			</child>
+			<child>
+			  <object class="GtkButton" id="certificateSubmit">
+			    <style>
+			      <class name="accent"/>
+			    </style>
+			    <property name="label">Add Connection</property>
 			  </object>
 			</child>
 		      </object>
-		    </child>
+		    </property>
 		  </object>
 		</property>
 	      </object>
-	    </property>
-	  </object>
-	</child>
-	<child>
-	  <object class="AdwViewStackPage" id="loadingPage">
-	    <property name="child">
-	      <object class="GtkBox">
-		<property name="halign">center</property>
-		<property name="orientation">vertical</property>
-		<property name="valign">center</property>
-		<child>
-		  <object class="GtkLabel" id="loadingText"/>
-		</child>
-		<child>
-		  <object class="GtkSpinner" id="loadingSpinner">
-		    <property name="margin-top">5</property>
-		  </object>
-		</child>
-	      </object>
-	    </property>
-	  </object>
-	</child>
-	<child>
-	  <object class="AdwViewStackPage" id="certificatePage">
-	    <property name="child">
-	      <object class="AdwToastOverlay" id="certificateToastOverlay">
+	    </child>
+	    <child>
+	      <object class="AdwViewStackPage" id="loginPage">
 		<property name="child">
-		  <object class="GtkBox">
-		    <property name="halign">center</property>
-		    <property name="orientation">vertical</property>
-		    <property name="valign">center</property>
-		    <property name="spacing">10</property>
-		    <child>
-		      <object class="GtkLabel" id="certificateInstanceTitle"/>
-		    </child>
-		    <child>
-		      <object class="GtkLabel" id="certificateInstanceDescription"/>
-		    </child>
-		    <child>
-		      <object class="GtkLabel" id="certificateInstanceEmail"/>
-		    </child>
-		    <child>
-		      <object class="GtkLabel" id="certificateInstanceTel"/>
-		    </child>
-		    <child>
-		      <object class="GtkLabel" id="certificateInstanceWeb"/>
-		    </child>
-		    <child>
-		      <object class="GtkImage" id="certificateInstanceLogo"/>
-		    </child>
-		    <child>
+		  <object class="AdwToastOverlay" id="loginToastOverlay">
+		    <property name="child">
 		      <object class="GtkBox">
-			<property name="spacing">5</property>
+			<property name="halign">center</property>
+			<property name="orientation">vertical</property>
+			<property name="valign">center</property>
+			<property name="spacing">10</property>
 			<child>
-			  <object class="GtkButton" id="certificateFileButton">
-			    <property name="label">Choose a certificate...</property>
+			  <object class="GtkLabel" id="loginInstanceTitle"/>
+			</child>
+			<child>
+			  <object class="GtkLabel" id="loginInstanceDescription"/>
+			</child>
+			<child>
+			  <object class="GtkLabel" id="loginInstanceEmail"/>
+			</child>
+			<child>
+			  <object class="GtkLabel" id="loginInstanceTel"/>
+			</child>
+			<child>
+			  <object class="GtkLabel" id="loginInstanceWeb"/>
+			</child>
+			<child>
+			  <object class="GtkImage" id="loginInstanceLogo"/>
+			</child>
+			<child>
+			  <object class="GtkBox">
+			    <property name="spacing">5</property>
+			    <child>
+			      <object class="GtkLabel">
+				<property name="label">Username:</property>
+			      </object>
+			    </child>
+			    <child>
+			      <object class="GtkEntry" id="loginUsernameText">
+				<property name="hexpand">True</property>
+			      </object>
+			    </child>
 			  </object>
 			</child>
 			<child>
-			  <object class="GtkLabel" id="certificateFileText">
-			    <property name="label">No file selected</property>
+			  <object class="GtkBox">
+			    <property name="spacing">5</property>
+			    <child>
+			      <object class="GtkLabel">
+				<property name="label">Password: </property>
+			      </object>
+			    </child>
+			    <child>
+			      <object class="GtkPasswordEntry" id="loginPasswordText">
+				<property name="show-peek-icon">True</property>
+				<property name="hexpand">True</property>
+			      </object>
+			    </child>
+			  </object>
+			</child>
+			<child>
+			  <object class="GtkButton" id="loginSubmit">
+			    <style>
+			      <class name="accent"/>
+			    </style>
+			    <property name="label">Add Connection</property>
+			  </object>
+			</child>
+			<child>
+			  <object class="GtkBox">
+			    <child>
+			      <object class="GtkImage">
+				<property name="visible">True</property>
+				<property name="icon-name">dialog-question</property>
+				<property name="icon-size">1</property>
+			      </object>
+			    </child>
+			    <child>
+			      <object class="GtkLabel">
+				<property name="margin-start">2</property>
+				<property name="label">These credentials are stored in NetworkManager</property>
+			      </object>
+			    </child>
 			  </object>
 			</child>
 		      </object>
-		    </child>
-		    <child>
-		      <object class="GtkBox">
-			<property name="spacing">5</property>
-			<child>
-			  <object class="GtkLabel">
-			    <property name="label">Passphrase: (if known)</property>
-			  </object>
-			</child>
-			<child>
-			  <object class="GtkPasswordEntry" id="certificatePassphraseText">
-			    <property name="show-peek-icon">True</property>
-			    <property name="hexpand">True</property>
-			  </object>
-			</child>
-		      </object>
-		    </child>
-		    <child>
-		      <object class="GtkButton" id="certificateSubmit">
-			<style>
-			  <class name="accent"/>
-			</style>
-			<property name="label">Add Connection</property>
-		      </object>
-		    </child>
+		    </property>
 		  </object>
 		</property>
 	      </object>
-	    </property>
-	  </object>
-	</child>
-	<child>
-	  <object class="AdwViewStackPage" id="loginPage">
-	    <property name="child">
-	      <object class="AdwToastOverlay" id="loginToastOverlay">
-		<property name="child">
-		  <object class="GtkBox">
-		    <property name="halign">center</property>
-		    <property name="orientation">vertical</property>
-		    <property name="valign">center</property>
-		    <property name="spacing">10</property>
-		    <child>
-		      <object class="GtkLabel" id="loginInstanceTitle"/>
-		    </child>
-		    <child>
-		      <object class="GtkLabel" id="loginInstanceDescription"/>
-		    </child>
-		    <child>
-		      <object class="GtkLabel" id="loginInstanceEmail"/>
-		    </child>
-		    <child>
-		      <object class="GtkLabel" id="loginInstanceTel"/>
-		    </child>
-		    <child>
-		      <object class="GtkLabel" id="loginInstanceWeb"/>
-		    </child>
-		    <child>
-		      <object class="GtkImage" id="loginInstanceLogo"/>
-		    </child>
-		    <child>
-		      <object class="GtkBox">
-			<property name="spacing">5</property>
-			<child>
-			  <object class="GtkLabel">
-			    <property name="label">Username:</property>
-			  </object>
-			</child>
-			<child>
-			  <object class="GtkEntry" id="loginUsernameText">
-			    <property name="hexpand">True</property>
-			  </object>
-			</child>
-		      </object>
-		    </child>
-		    <child>
-		      <object class="GtkBox">
-			<property name="spacing">5</property>
-			<child>
-			  <object class="GtkLabel">
-			    <property name="label">Password: </property>
-			  </object>
-			</child>
-			<child>
-			  <object class="GtkPasswordEntry" id="loginPasswordText">
-			    <property name="show-peek-icon">True</property>
-			    <property name="hexpand">True</property>
-			  </object>
-			</child>
-		      </object>
-		    </child>
-		    <child>
-		      <object class="GtkButton" id="loginSubmit">
-			<style>
-			  <class name="accent"/>
-			</style>
-			<property name="label">Add Connection</property>
-		      </object>
-		    </child>
-		    <child>
-		      <object class="GtkBox">
-			<child>
-			  <object class="GtkImage">
-			    <property name="visible">True</property>
-			    <property name="icon-name">dialog-question</property>
-			    <property name="icon-size">1</property>
-			  </object>
-			</child>
-			<child>
-			  <object class="GtkLabel">
-			    <property name="margin-start">2</property>
-			    <property name="label">These credentials are stored in NetworkManager</property>
-			  </object>
-			</child>
-		      </object>
-		    </child>
-		  </object>
-		</property>
-	      </object>
-	    </property>
-	  </object>
-	</child>
-	<child>
-	  <object class="AdwViewStackPage" id="successPage">
-	    <property name="child">
-	      <object class="GtkBox">
-		<property name="halign">center</property>
-		<property name="orientation">vertical</property>
-		<property name="valign">center</property>
-		<property name="spacing">25</property>
-		<child>
-		  <object class="GtkLabel" id="successTitle">
-		    <property name="label">Success!</property>
-		  </object>
-		</child>
-		<child>
-		  <object class="GtkLabel" id="successSubTitle">
-		    <property name="label">Your eduroam connection has been added</property>
-		  </object>
-		</child>
-		<child>
-		  <object class="GtkLabel" id="successConName">
-		    <property name="label">Name: "eduroam (from geteduroam)"</property>
-		  </object>
-		</child>
-		<child>
-		  <object class="GtkLabel" id="expiryText">
-		    <property name="label">Your connection is valid for:</property>
-		  </object>
-		</child>
-		<child>
-		  <object class="GtkImage" id="successLogo"/>
-		</child>
-	      </object>
-	    </property>
-	  </object>
-	</child>
-	<child>
-	  <object class="AdwViewStackPage" id="profilePage">
-	    <property name="child">
-	      <object class="AdwToastOverlay" id="profileToastOverlay">
+	    </child>
+	    <child>
+	      <object class="AdwViewStackPage" id="successPage">
 		<property name="child">
 		  <object class="GtkBox">
 		    <property name="halign">center</property>
@@ -285,26 +253,65 @@
 		    <property name="valign">center</property>
 		    <property name="spacing">25</property>
 		    <child>
-		      <object class="GtkLabel" id="profileLabel">
-			<property name="label">Please select a profile: </property>
+		      <object class="GtkLabel" id="successTitle">
+			<property name="label">Success!</property>
 		      </object>
 		    </child>
 		    <child>
-		      <object class="GtkScrolledWindow" id="profileScroll">
-			<property name="child">
-			  <object class="GtkListView" id="profileList"/>
-			</property>
-			<property name="propagate-natural-height">True</property>
-			<property name="propagate-natural-width">True</property>
+		      <object class="GtkLabel" id="successSubTitle">
+			<property name="label">Your eduroam connection has been added</property>
 		      </object>
+		    </child>
+		    <child>
+		      <object class="GtkLabel" id="successConName">
+			<property name="label">Name: "eduroam (from geteduroam)"</property>
+		      </object>
+		    </child>
+		    <child>
+		      <object class="GtkLabel" id="expiryText">
+			<property name="label">Your connection is valid for:</property>
+		      </object>
+		    </child>
+		    <child>
+		      <object class="GtkImage" id="successLogo"/>
 		    </child>
 		  </object>
 		</property>
 	      </object>
-	    </property>
+	    </child>
+	    <child>
+	      <object class="AdwViewStackPage" id="profilePage">
+		<property name="child">
+		  <object class="AdwToastOverlay" id="profileToastOverlay">
+		    <property name="child">
+		      <object class="GtkBox">
+			<property name="halign">center</property>
+			<property name="orientation">vertical</property>
+			<property name="valign">center</property>
+			<property name="spacing">25</property>
+			<child>
+			  <object class="GtkLabel" id="profileLabel">
+			    <property name="label">Please select a profile: </property>
+			  </object>
+			</child>
+			<child>
+			  <object class="GtkScrolledWindow" id="profileScroll">
+			    <property name="child">
+			      <object class="GtkListView" id="profileList"/>
+			    </property>
+			    <property name="propagate-natural-height">True</property>
+			    <property name="propagate-natural-width">True</property>
+			  </object>
+			</child>
+		      </object>
+		    </property>
+		  </object>
+		</property>
+	      </object>
+	    </child>
 	  </object>
-	</child>
+	</property>
       </object>
-    </child>
+    </property>
   </object>
 </interface>
