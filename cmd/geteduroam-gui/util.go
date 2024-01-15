@@ -52,7 +52,7 @@ func bytesPixbuf(b []byte) (*gdkpixbuf.Pixbuf, error) {
 	if err != nil {
 		return nil, err
 	}
-	pb, err := gdkpixbuf.NewFromFilePixbuf(f.Name())
+	pb, err := gdkpixbuf.NewPixbufFromFile(f.Name())
 	if err != nil {
 		return nil, err
 	}

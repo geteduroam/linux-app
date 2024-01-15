@@ -268,7 +268,7 @@ func (m *mainState) initBurger() {
 	defer gears.Unref()
 
 	var menu gio.MenuModel
-	builder := gtk.NewFromStringBuilder(MustResource("gears.ui"), -1)
+	builder := gtk.NewBuilderFromString(MustResource("gears.ui"), -1)
 	defer builder.Unref()
 	builder.GetObject("menu").Cast(&menu)
 	gears.SetMenuModel(&menu)
@@ -280,12 +280,11 @@ func (m *mainState) initBurger() {
 
 	about := gio.NewSimpleAction("about", nil)
 	about.ConnectActivate(func(_ gio.SimpleAction, _ uintptr) {
-		var awin gtk.AboutDialog
-		gtk.NewAboutDialog().Cast(&awin)
+		awin := gtk.NewAboutDialog()
 		awin.SetName("geteduroam Linux client")
 		pb, err := bytesPixbuf([]byte(MustResource("images/geteduroam.png")))
 		if err == nil {
-			texture := gdk.NewForPixbufTexture(pb)
+			texture := gdk.NewTextureForPixbuf(pb)
 			defer pb.Unref()
 			awin.SetLogo(texture)
 			defer texture.Unref()
@@ -336,7 +335,7 @@ type ui struct {
 
 func (ui *ui) initBuilder() {
 	// open the builder
-	ui.builder = gtk.NewFromStringBuilder(MustResource("geteduroam.ui"), -1)
+	ui.builder = gtk.NewBuilderFromString(MustResource("geteduroam.ui"), -1)
 }
 
 func (ui *ui) initWindow() {

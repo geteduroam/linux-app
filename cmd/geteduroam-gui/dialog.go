@@ -13,7 +13,7 @@ type FileDialog struct {
 }
 
 func NewFileDialog(parent *gtk.Window, label string) (*FileDialog, error) {
-	fwidg := gtk.NewFileChooserDialog(
+	fc := gtk.NewFileChooserDialog(
 		label,
 		parent,
 		gtk.FileChooserActionOpenValue,
@@ -23,15 +23,13 @@ func NewFileDialog(parent *gtk.Window, label string) (*FileDialog, error) {
 		gtk.ResponseAcceptValue,
 		0,
 	)
-	if fwidg == nil {
+	if fc == nil {
 		return nil, errors.New("file chooser dialog could not be initialized")
 	}
-	var fc gtk.FileChooserDialog
-	fwidg.Cast(&fc)
 	var fwin gtk.Window
-	fwidg.Cast(&fwin)
+	fc.Cast(&fwin)
 	return &FileDialog{
-		FileChooserDialog: &fc,
+		FileChooserDialog: fc,
 		win:               &fwin,
 	}, nil
 }
