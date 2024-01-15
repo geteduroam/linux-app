@@ -25,10 +25,10 @@ func stringFromPtr(ptr uintptr) string {
 	thisl := gobject.BindingNewFromInternalPtr(ptr)
 	var thisv gobject.Value
 	thisl.GetProperty("string", &thisv)
-	// Purego makes a copy of the string when we call .String()
+	// Purego makes a copy of the string when we call .GetString()
 	// So we can safely unset after the return
 	defer thisv.Unset()
-	return thisv.String()
+	return thisv.GetString()
 }
 
 func setupList(item uintptr) {
@@ -36,7 +36,7 @@ func setupList(item uintptr) {
 	label := gtk.NewLabel("")
 	defer label.Unref()
 	label.Set("xalign", 0)
-	iteml.SetChild(label)
+	iteml.SetChild(&label.Widget)
 	label.SetMarginTop(5)
 	label.SetMarginBottom(5)
 }
@@ -99,7 +99,7 @@ func (s *SelectList) Changed() {
 	}
 }
 
-func (s *SelectList) setupFactory() *gtk.ListItemFactory {
+func (s *SelectList) setupFactory() *gtk.SignalListItemFactory {
 	factory := gtk.NewSignalListItemFactory()
 	// TODO: Add signal for cleanup
 	factory.Connect("signal::setup", gobject.NewCallback(func(_ uintptr, item uintptr) {
@@ -151,7 +151,7 @@ func (s *SelectList) Setup() {
 	// further setup the list by setting the factory and model
 	sel := gtk.NewSingleSelection(s.setupSorter(model))
 	defer sel.Unref()
-	s.list.SetFactory(factory)
+	s.list.SetFactory(&factory.ListItemFactory)
 	s.list.SetModel(sel)
 
 	// We want to activate on single click always
