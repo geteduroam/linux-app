@@ -123,7 +123,7 @@ func (p *Profile) EAPOAuth(auth func(authURL string)) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = o.Exchange(context.Background())
+	err = o.Exchange(context.Background(), "")
 	if err != nil {
 		return nil, err
 	}
