@@ -343,6 +343,7 @@ func (ui *ui) initWindow() {
 	var win adw.Window
 	ui.builder.GetObject("mainWindow").Cast(&win)
 	defer win.Unref()
+	win.SetTitle("geteduroam GUI")
 	win.SetDefaultSize(400, 600)
 	// style the window using the css
 	var search adw.ViewStackPage
