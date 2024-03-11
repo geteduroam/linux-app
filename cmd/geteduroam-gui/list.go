@@ -134,7 +134,7 @@ func (s *SelectList) setupSorter(base gio.ListModel) gio.ListModel {
 }
 
 func (s *SelectList) setupFilter(base gio.ListModel) gio.ListModel {
-	cf := (gtk.CustomFilterFunc)(func (item uintptr, _ uintptr) bool {
+	cf := (gtk.CustomFilterFunc)(func(item uintptr, _ uintptr) bool {
 		return s.filter(stringFromPtr(item))
 	})
 	destroycb := (glib.DestroyNotify)(func(uintptr) {

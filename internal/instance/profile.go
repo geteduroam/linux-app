@@ -106,14 +106,14 @@ func (p *Profile) EAPDirect() ([]byte, error) {
 // EAPOAuth gets the EAP metadata using OAuth
 func (p *Profile) EAPOAuth(auth func(authURL string)) ([]byte, error) {
 	o := eduoauth.OAuth{
-		ClientID:             "app.geteduroam.sh",
+		ClientID: "app.geteduroam.sh",
 		EndpointFunc: func(context.Context) (*eduoauth.EndpointResponse, error) {
 			return &eduoauth.EndpointResponse{
 				AuthorizationURL: p.AuthorizationEndpoint,
-				TokenURL: p.TokenEndpoint,
+				TokenURL:         p.TokenEndpoint,
 			}, nil
 		},
-		RedirectPath:         "/",
+		RedirectPath: "/",
 	}
 	url, err := o.AuthURL(context.Background(), "eap-metadata")
 	if err != nil {
