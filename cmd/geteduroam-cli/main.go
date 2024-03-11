@@ -285,7 +285,7 @@ func askCertificate(cert string, pass string, pi network.ProviderInfo) (string, 
 		cert = string(b)
 	}
 	if pass == "" {
-		pass = askSecret("Please enter the certificate passphrase (if known): ", func(input string) bool {
+		pass = askSecret("Please enter the certificate passphrase (if known): ", func(string) bool {
 			// any value is ok
 			return true
 		})
