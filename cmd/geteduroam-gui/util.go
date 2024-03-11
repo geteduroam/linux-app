@@ -63,7 +63,7 @@ func uiThread(cb func()) {
 	var idlecb glib.SourceFunc
 	idlecb = func(uintptr) bool {
 		// unref so this callback does not take up any slots
-		defer glib.UnrefCallback(&idlecb)
+		defer glib.UnrefCallback(&idlecb) //nolint:errcheck
 		cb()
 
 		// return false here means just run it once, not over and over again
