@@ -60,11 +60,15 @@ func bytesPixbuf(b []byte) (*gdkpixbuf.Pixbuf, error) {
 }
 
 func uiThread(cb func()) {
-	glib.IdleAdd(func(uintptr) bool {
+	var idlecb glib.SourceFunc
+	idlecb = func(uintptr) bool {
+		// unref so this callback does not take up any slots
+		defer glib.UnrefCallback(&idlecb) //nolint:errcheck
 		cb()
 
 		// return false here means just run it once, not over and over again
 		// see the docs for glib_idle_add
 		return false
-	}, 0)
+	}
+	glib.IdleAdd(&idlecb, 0)
 }

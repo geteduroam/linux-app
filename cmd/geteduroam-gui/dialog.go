@@ -40,13 +40,14 @@ func (fd *FileDialog) Destroy() {
 }
 
 func (fd *FileDialog) Run(cb func(path string)) {
-	fd.AddSignal(fd, fd.ConnectResponse(func(_ gtk.Dialog, res int) {
+	rcb := func(_ gtk.Dialog, res int) {
 		// TODO: int32 casting is a puregotk bug? gint should be int32 but I think it someties is a normal int
 		if int32(res) == int32(gtk.ResponseAcceptValue) {
 			f := fd.GetFile()
 			cb(f.GetPath())
 		}
 		fd.Destroy()
-	}))
+	}
+	fd.AddSignal(fd, fd.ConnectResponse(&rcb))
 	fd.Present()
 }
