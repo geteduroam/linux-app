@@ -3,6 +3,7 @@ package main
 
 import (
 	"github.com/jwijenbergh/puregotk/v4/gio"
+	"github.com/jwijenbergh/puregotk/v4/glib"
 	"github.com/jwijenbergh/puregotk/v4/gobject"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
 )
@@ -102,24 +103,30 @@ func (s *SelectList) Changed() {
 func (s *SelectList) setupFactory() *gtk.SignalListItemFactory {
 	factory := gtk.NewSignalListItemFactory()
 	// TODO: Add signal for cleanup
-	factory.Connect("signal::setup", gobject.NewCallback(func(_ uintptr, item uintptr) {
+	setupcb := func(_ uintptr, item uintptr) {
 		setupList(item)
-	}), 0)
+	}
+	bindcb := func(_ uintptr, item uintptr) {
+		bindList(item)
+	}
+	factory.Connect("signal::setup", glib.NewCallback(&setupcb), 0)
 
 	// TODO: Add signal for cleanup
-	factory.Connect("signal::bind", gobject.NewCallback(func(_ uintptr, item uintptr) {
-		bindList(item)
-	}), 0)
+	factory.Connect("signal::bind", glib.NewCallback(&bindcb), 0)
 
 	return factory
 }
 
 func (s *SelectList) setupSorter(base gio.ListModel) gio.ListModel {
-	s.cs = gtk.NewCustomSorter(func(this uintptr, other uintptr, _ uintptr) int {
+	sf := (glib.CompareDataFunc)(func(this uintptr, other uintptr, _ uintptr) int {
 		return s.sorter(stringFromPtr(this), stringFromPtr(other))
-	}, 0, func(uintptr) {
-		// TODO: do something on destroy?
 	})
+
+	destroycb := (glib.DestroyNotify)(func(uintptr) {
+		// do nothing
+	})
+
+	s.cs = gtk.NewCustomSorter(&sf, 0, &destroycb)
 	var sort gtk.Sorter
 	s.cs.Cast(&sort)
 	sm := gtk.NewSortListModel(base, &sort)
@@ -127,11 +134,13 @@ func (s *SelectList) setupSorter(base gio.ListModel) gio.ListModel {
 }
 
 func (s *SelectList) setupFilter(base gio.ListModel) gio.ListModel {
-	s.cf = gtk.NewCustomFilter(func(item uintptr, _ uintptr) bool {
+	cf := (gtk.CustomFilterFunc)(func (item uintptr, _ uintptr) bool {
 		return s.filter(stringFromPtr(item))
-	}, 0, func(uintptr) {
-		// TODO: do something on destroy?
 	})
+	destroycb := (glib.DestroyNotify)(func(uintptr) {
+		// do nothing
+	})
+	s.cf = gtk.NewCustomFilter(&cf, 0, &destroycb)
 	var fil gtk.Filter
 	s.cf.Cast(&fil)
 	fl := gtk.NewFilterListModel(base, &fil)
@@ -157,14 +166,16 @@ func (s *SelectList) Setup() {
 	// We want to activate on single click always
 	s.list.SetSingleClickActivate(true)
 
-	// Call the activated callback
-	s.AddSignal(s.list, s.list.ConnectActivate(func(_ gtk.ListView, _ uint) {
+	actcb := func(_ gtk.ListView, _ uint) {
 		var strobj gtk.StringObject
 		sel.GetSelectedItem().Cast(&strobj)
 		defer strobj.Unref()
 		index := int(strobj.GetData("model-index"))
 		s.activated(index)
-	}))
+	}
+
+	// Call the activated callback
+	s.AddSignal(s.list, s.list.ConnectActivate(&actcb))
 
 	// style the widget
 	styleWidget(s.list, "list")

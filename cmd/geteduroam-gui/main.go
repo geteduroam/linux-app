@@ -227,8 +227,7 @@ func (m *mainState) initList() {
 	// Further set up the list
 	m.servers.list.Setup()
 
-	// Update the list when searching
-	search.ConnectSearchChanged(func(_ gtk.SearchEntry) {
+	changedcb := func(_ gtk.SearchEntry) {
 		// TODO len returns length in bytes
 		// utf8.RuneCountInString() counts number of characters (runes)
 		if len(search.GetText()) <= 2 {
@@ -237,7 +236,10 @@ func (m *mainState) initList() {
 		}
 		m.servers.list.Changed()
 		m.servers.list.Show()
-	})
+	}
+
+	// Update the list when searching
+	search.ConnectSearchChanged(&changedcb)
 }
 
 func (m *mainState) localMetadata() {
@@ -274,12 +276,12 @@ func (m *mainState) initBurger() {
 	gears.SetMenuModel(&menu)
 
 	imp := gio.NewSimpleAction("import-local", nil)
-	imp.ConnectActivate(func(_ gio.SimpleAction, _ uintptr) {
+	actcb := func(_ gio.SimpleAction, _ uintptr) {
 		m.localMetadata()
-	})
+	}
+	imp.ConnectActivate(&actcb)
 
-	about := gio.NewSimpleAction("about", nil)
-	about.ConnectActivate(func(_ gio.SimpleAction, _ uintptr) {
+	aboutcb := func(_ gio.SimpleAction, _ uintptr) {
 		awin := gtk.NewAboutDialog()
 		awin.SetName("geteduroam Linux client")
 		pb, err := bytesPixbuf([]byte(MustResource("images/geteduroam.png")))
@@ -303,7 +305,10 @@ func (m *mainState) initBurger() {
 		awin.SetLicense("This application has a BSD 3 license.")
 		awin.SetTransientFor(m.app.GetActiveWindow())
 		awin.Show()
-	})
+	}
+
+	about := gio.NewSimpleAction("about", nil)
+	about.ConnectActivate(&aboutcb)
 
 	m.app.AddAction(imp)
 	m.app.AddAction(about)
@@ -373,9 +378,10 @@ func (ui *ui) Run(args []string) int {
 	const id = "app.geteduroam.Linux"
 	ui.app = adw.NewApplication(id, gio.GApplicationFlagsNoneValue)
 	defer ui.app.Unref()
-	ui.app.ConnectActivate(func(o gio.Application) {
+	actcb := func(_ gio.Application) {
 		ui.activate()
-	})
+	}
+	ui.app.ConnectActivate(&actcb)
 
 	return ui.app.Run(len(args), args)
 }
@@ -437,7 +443,7 @@ func main() {
 		}
 	}
 
-	glib.LogSetDefaultHandler(handler, 0)
+	glib.LogSetDefaultHandler(&handler, 0)
 
 	log.Initialize(program, debug)
 	ui := ui{}

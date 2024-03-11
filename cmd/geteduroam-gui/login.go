@@ -161,9 +161,11 @@ func (l *LoginBase) Initialize() {
 	l.btn = &gtk.Button{}
 	l.GetObject("Submit", l.btn)
 	l.btn.SetSensitive(true)
-	l.AddSignal(l.btn, l.btn.ConnectSignal("clicked", func() {
+
+	submit := func() {
 		l.Submit()
-	}))
+	}
+	l.AddSignal(l.btn, l.btn.ConnectSignal("clicked", &submit))
 
 	// set the page as current
 	setPage(l.stack, &page)
