@@ -10,7 +10,7 @@ type LoadingState struct {
 	stack   *adw.ViewStack
 	spinner *gtk.Spinner
 	Message string
-	Cancel func()
+	Cancel  func()
 }
 
 func NewLoadingPage(builder *gtk.Builder, stack *adw.ViewStack, message string, cancel func()) *LoadingState {
@@ -18,7 +18,7 @@ func NewLoadingPage(builder *gtk.Builder, stack *adw.ViewStack, message string, 
 		builder: builder,
 		stack:   stack,
 		Message: message,
-		Cancel: cancel,
+		Cancel:  cancel,
 	}
 }
 

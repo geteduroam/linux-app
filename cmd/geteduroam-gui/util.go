@@ -79,8 +79,8 @@ func ensureContextError(ctx context.Context, err error) error {
 		return nil
 	}
 
-	select{
-	case <- ctx.Done():
+	select {
+	case <-ctx.Done():
 		return context.Canceled
 	default:
 		return err
