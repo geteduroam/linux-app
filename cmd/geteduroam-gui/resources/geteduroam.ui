@@ -77,6 +77,12 @@
 			<property name="margin-top">5</property>
 		      </object>
 		    </child>
+		    <child>
+		      <object class="GtkButton" id="loadingCancel">
+			<property name="margin-top">5</property>
+			<property name="label">Cancel</property>
+		      </object>
+		    </child>
 		  </object>
 		</property>
 	      </object>

@@ -10,13 +10,15 @@ type LoadingState struct {
 	stack   *adw.ViewStack
 	spinner *gtk.Spinner
 	Message string
+	Cancel func()
 }
 
-func NewLoadingPage(builder *gtk.Builder, stack *adw.ViewStack, message string) *LoadingState {
+func NewLoadingPage(builder *gtk.Builder, stack *adw.ViewStack, message string, cancel func()) *LoadingState {
 	return &LoadingState{
 		builder: builder,
 		stack:   stack,
 		Message: message,
+		Cancel: cancel,
 	}
 }
 
@@ -40,5 +42,19 @@ func (l *LoadingState) Initialize() {
 	l.builder.GetObject("loadingSpinner").Cast(&spinner)
 	defer spinner.Unref()
 	l.spinner = &spinner
+
+	var cancel gtk.Button
+	l.builder.GetObject("loadingCancel").Cast(&cancel)
+	defer cancel.Unref()
+	if l.Cancel != nil {
+		cancel.SetVisible(true)
+		cb := func(_ gtk.Button) {
+			l.Cancel()
+		}
+		cancel.ConnectClicked(&cb)
+	} else {
+		cancel.SetVisible(false)
+	}
+
 	spinner.Start()
 }

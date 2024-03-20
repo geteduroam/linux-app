@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"strings"
 
@@ -71,4 +72,17 @@ func uiThread(cb func()) {
 		return false
 	}
 	glib.IdleAdd(&idlecb, 0)
+}
+
+func ensureContextError(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	select{
+	case <- ctx.Done():
+		return context.Canceled
+	default:
+		return err
+	}
 }
