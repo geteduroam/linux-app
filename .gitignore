@@ -3,3 +3,8 @@
 ./geteduroam-gui
 /internal/eap/test_data/pkcs12/
 /builds/
+/.direnv/
+/.envrc
+/geteduroam-cli
+/geteduroam-gui
+/shell.nix
