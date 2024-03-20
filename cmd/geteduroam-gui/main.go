@@ -135,7 +135,7 @@ func (m *mainState) oauth(ctx context.Context, p instance.Profile) (*time.Time, 
 	return m.file(config)
 }
 
-func (m *mainState) rowActived(sel instance.Instance) {
+func (m *mainState) rowActivated(sel instance.Instance) {
 	var page gtk.Box
 	m.builder.GetObject("searchPage").Cast(&page)
 	defer page.Unref()
@@ -218,7 +218,7 @@ func (m *mainState) initList() {
 			m.ShowError(err)
 			return
 		}
-		m.rowActived(*inst)
+		m.rowActivated(*inst)
 	}
 
 	sorter := func(a, b string) int {
