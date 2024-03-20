@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -342,7 +343,7 @@ func redirect(p *instance.Profile) {
 
 // oauth does the handling for the OAuth flow
 func oauth(p *instance.Profile) *time.Time {
-	config, err := p.EAPOAuth(func(url string) {
+	config, err := p.EAPOAuth(context.Background(), func(url string) {
 		fmt.Println("Your browser has been opened to authorize the client")
 		fmt.Println("Or copy and paste the following url:", url)
 	})

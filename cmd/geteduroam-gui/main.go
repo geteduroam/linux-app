@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -113,10 +114,14 @@ func (m *mainState) local(path string) (*time.Time, error) {
 	return v, nil
 }
 
-func (m *mainState) oauth(p instance.Profile) (*time.Time, error) {
-	config, err := p.EAPOAuth(func(url string) {
+func (m *mainState) oauth(ctx context.Context, p instance.Profile) (*time.Time, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	config, err := p.EAPOAuth(ctx, func(url string) {
 		uiThread(func() {
-			l := NewLoadingPage(m.builder, m.stack, "Your browser has been opened to authorize the client")
+			l := NewLoadingPage(m.builder, m.stack, "Your browser has been opened to authorize the client", func() {
+				cancel()
+			})
 			l.Initialize()
 			// If the browser does not open for some reason the user could grab it with stdout
 			// We could also show it in the UI but this might mean too much clutter
@@ -134,11 +139,14 @@ func (m *mainState) rowActived(sel instance.Instance) {
 	var page gtk.Box
 	m.builder.GetObject("searchPage").Cast(&page)
 	defer page.Unref()
-	l := NewLoadingPage(m.builder, m.stack, "Loading organization details...")
+	l := NewLoadingPage(m.builder, m.stack, "Loading organization details...", nil)
 	l.Initialize()
-	chosen := func(p instance.Profile) error {
+	ctx := context.Background()
+	chosen := func(p instance.Profile) (err error) {
+		defer func() {
+			err = ensureContextError(ctx, err)
+		}()
 		var valid *time.Time
-		var err error
 		var isredirect bool
 		switch p.Flow() {
 		case instance.DirectFlow:
@@ -147,7 +155,7 @@ func (m *mainState) rowActived(sel instance.Instance) {
 				return err
 			}
 		case instance.OAuthFlow:
-			valid, err = m.oauth(p)
+			valid, err = m.oauth(ctx, p)
 			if err != nil {
 				return err
 			}
@@ -326,6 +334,9 @@ func (m *mainState) Initialize() {
 }
 
 func (m *mainState) ShowError(err error) {
+	if errors.Is(err, context.Canceled) {
+		return
+	}
 	slog.Error(err.Error(), "state", "main")
 	var overlay adw.ToastOverlay
 	m.builder.GetObject("searchToastOverlay").Cast(&overlay)
