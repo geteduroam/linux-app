@@ -36,8 +36,8 @@ func encodeFileBytes(name string, contents []byte) ([]byte, error) {
 	return encodePath(p), nil
 }
 
-// previousCon gets a connection object using the previous UUID
-func previousCon(pUUID string) (*connection.Connection, error) {
+// PreviousCon gets a connection object using the previous UUID
+func PreviousCon(pUUID string) (*connection.Connection, error) {
 	if pUUID == "" {
 		return nil, errors.New("UUID is empty")
 	}
@@ -53,7 +53,7 @@ func previousCon(pUUID string) (*connection.Connection, error) {
 // if a previous connection was found with pUUID, it updates that one instead
 // it returns the newly created or updated connection object
 func createCon(pUUID string, args connection.SettingsArgs) (*connection.Connection, error) {
-	prev, err := previousCon(pUUID)
+	prev, err := PreviousCon(pUUID)
 	// previous connection found, update it with the new settings args
 	if err == nil {
 		return prev, prev.Update(args)
