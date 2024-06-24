@@ -100,7 +100,8 @@ func (h Handlers) Configure(eap []byte) (*time.Time, error) {
 	}
 	// save the config with the uuid
 	nc := config.Config{
-		UUID: uuid,
+		UUID:     uuid,
+		Validity: valid,
 	}
 	err = nc.Write()
 	if err != nil {
