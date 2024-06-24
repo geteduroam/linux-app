@@ -1,0 +1,7 @@
+[Unit]
+Description=This service runs a geteduroam command that checks if the eduroam \
+connection is about to expire and if so it shows a notification
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/geteduroam-notifcheck

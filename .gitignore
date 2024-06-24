@@ -7,4 +7,5 @@
 /.envrc
 /geteduroam-cli
 /geteduroam-gui
+/geteduroam-notifcheck
 /shell.nix
