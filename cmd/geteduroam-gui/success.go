@@ -82,7 +82,7 @@ func (s *SuccessState) Initialize() {
 		return
 	}
 
-	dialog := adw.NewMessageDialog(s.parent, "Enable notifications?", fmt.Sprintf("This connection will expire in %d days.\n\nDo you want to enable notifications that warn for imminent expiry using systemd?", utils.ValidityDays(*s.expiry)))
+	dialog := adw.NewMessageDialog(s.parent, "Enable notifications?", fmt.Sprintf("This connection profile will expire in %d days.\n\nDo you want to enable notifications that warn for imminent expiry using systemd?", utils.ValidityDays(*s.expiry)))
 	dialog.AddResponse("disable", "Disable")
 	dialog.AddResponse("enable", "Enable")
 	dialog.SetResponseAppearance("enable", adw.ResponseSuggestedValue)
