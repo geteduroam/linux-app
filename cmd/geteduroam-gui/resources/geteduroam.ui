@@ -151,7 +151,7 @@
 			    <style>
 			      <class name="accent"/>
 			    </style>
-			    <property name="label">Add Connection</property>
+			    <property name="label">Add Profile</property>
 			  </object>
 			</child>
 		      </object>
@@ -224,7 +224,7 @@
 			    <style>
 			      <class name="accent"/>
 			    </style>
-			    <property name="label">Add Connection</property>
+			    <property name="label">Add Profile</property>
 			  </object>
 			</child>
 			<child>
@@ -265,7 +265,7 @@
 		    </child>
 		    <child>
 		      <object class="GtkLabel" id="successSubTitle">
-			<property name="label">Your eduroam connection has been added</property>
+			<property name="label">Your eduroam profile has been added</property>
 		      </object>
 		    </child>
 		    <child>
@@ -275,7 +275,7 @@
 		    </child>
 		    <child>
 		      <object class="GtkLabel" id="expiryText">
-			<property name="label">Your connection is valid for:</property>
+			<property name="label">Your profile is valid for:</property>
 		      </object>
 		    </child>
 		    <child>

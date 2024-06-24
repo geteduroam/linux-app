@@ -16,7 +16,7 @@ import (
 const usage = `Usage of %s:
   -h, --help			Prints this help information
 
-  This CLI binary is needed for periodically checking for validity and giving notifications when the eduroam connection added by geteduroam is about to expire.
+  This CLI binary is needed for periodically checking for validity and giving notifications when the eduroam connection profile added by geteduroam is about to expire.
   It gives a warning 10 days before expiry, and then every day. You can schedule to start this binary daily yourself or rely on the built-in systemd user timer.
   You also need notify-send installed to send the actual notifications.
 
@@ -58,7 +58,7 @@ func main() {
 
 	var text string
 	if days > 10 {
-		slog.Info("the connection is still valid for more than 10 days", "days", days)
+		slog.Info("the profile is still valid for more than 10 days", "days", days)
 		return
 	}
 	if days < 0 {
