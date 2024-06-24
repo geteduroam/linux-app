@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"time"
 
 	"golang.org/x/exp/slog"
 
@@ -13,7 +14,8 @@ import (
 
 // Config is the main structure for the configuration
 type Config struct {
-	UUID string `json:"uuid"`
+	UUID     string     `json:"uuid"`
+	Validity *time.Time `json:"validity,omitempty"`
 }
 
 // Versioned contains the actual config data prefixed with a version field when marshalled as JSON
