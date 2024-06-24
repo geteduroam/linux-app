@@ -599,7 +599,7 @@ func (eap *EAPIdentityProviderList) Network() (network.Network, error) {
 	for _, m := range methods {
 		n, err := m.Network(ssid, minrsn, pinfo)
 		if err != nil {
-			slog.Debug("Error getting ProviderInfo", "error", err)
+			slog.Error("Error getting ProviderInfo", "error", err)
 			continue
 		}
 		return n, nil
