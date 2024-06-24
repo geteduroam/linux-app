@@ -15,15 +15,23 @@ builds:
     goarch:
       - amd64
     binary: geteduroam-gui
+  - main: ./cmd/geteduroam-notifcheck
+    id: geteduroam-notifcheck
+    goos:
+      - linux
+    goarch:
+      - amd64
+    binary: geteduroam-notifcheck
 
 nfpms:
-  - file_name_template: '{{ .Binary }}_{{ .Os }}_{{ .Arch }}'
+  - file_name_template: '{{ .PackageName }}_{{ .Os }}_{{ .Arch }}'
     id: geteduroam-cli
     package_name: geteduroam-cli
     maintainer: Jeroen Wijenbergh
     homepage: https://geteduroam.org/
     builds:
        - geteduroam-cli
+       - geteduroam-notifcheck
     formats:
        - deb
        - rpm
@@ -32,6 +40,10 @@ nfpms:
     release: 1
     description: |-
       Geteduroam CLI client for Linux distributions.
+    contents:
+        - src: systemd/user/
+          dst: /etc/systemd/user/
+          type: tree
 
     overrides:
      deb:
@@ -41,13 +53,14 @@ nfpms:
       dependencies:
        - NetworkManager
 
-  - file_name_template: '{{ .Binary }}_{{ .Os }}_{{ .Arch }}'
+  - file_name_template: '{{ .PackageName }}_{{ .Os }}_{{ .Arch }}'
     id: geteduroam-gui
     package_name: geteduroam-gui
     maintainer: Jeroen Wijenbergh
     homepage: https://geteduroam.org/
     builds:
        - geteduroam-gui
+       - geteduroam-notifcheck
     formats:
        - deb
        - rpm
@@ -59,6 +72,9 @@ nfpms:
     contents:
         - src: cmd/geteduroam-gui/resources/share/
           dst: /usr/share
+          type: tree
+        - src: systemd/user/
+          dst: /etc/systemd/user/
           type: tree
 
     overrides:

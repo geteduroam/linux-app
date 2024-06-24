@@ -171,7 +171,7 @@ func (m *mainState) rowActivated(sel instance.Instance) {
 			}
 			fmt.Println("Browser has been opened with URL:", url)
 		}
-		s := NewSuccessState(m.builder, m.stack, valid, isredirect)
+		s := NewSuccessState(m.builder, m.app.GetActiveWindow(), m.stack, valid, isredirect)
 		uiThread(func() {
 			s.Initialize()
 		})
@@ -266,7 +266,7 @@ func (m *mainState) localMetadata() {
 				})
 				return
 			}
-			s := NewSuccessState(m.builder, m.stack, v, false)
+			s := NewSuccessState(m.builder, m.app.GetActiveWindow(), m.stack, v, false)
 			s.Initialize()
 		}()
 	})
@@ -403,6 +403,10 @@ func main() {
   --version			Prints version information
   -d, --debug			Debug
   --gtk-args                    Arguments to pass to gtk as a string, e.g. "--help". These flags are split on spaces
+
+  This GUI binary is used to add an eduroam connection profile with integration using NetworkManager and Gtk.
+
+  Log file location: %s
 `
 
 	var help bool
@@ -410,13 +414,17 @@ func main() {
 	var debug bool
 	var gtkarg string
 	program := "geteduroam-gui"
+	lpath, err := log.Location(program)
+	if err != nil {
+		lpath = "N/A"
+	}
 	flag.BoolVar(&help, "help", false, "Show help")
 	flag.BoolVar(&help, "h", false, "Show help")
 	flag.BoolVar(&versionf, "version", false, "Show version")
 	flag.BoolVar(&debug, "d", false, "Debug")
 	flag.BoolVar(&debug, "debug", false, "Debug")
 	flag.StringVar(&gtkarg, "gtk-args", "", "Gtk arguments")
-	flag.Usage = func() { fmt.Printf(usage, "geteduroam-gui") }
+	flag.Usage = func() { fmt.Printf(usage, program, lpath) }
 	flag.Parse()
 	if help {
 		flag.Usage()

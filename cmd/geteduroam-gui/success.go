@@ -4,21 +4,25 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/geteduroam/linux-app/internal/notification"
 	"github.com/geteduroam/linux-app/internal/utils"
 	"github.com/jwijenbergh/puregotk/v4/adw"
+	"github.com/jwijenbergh/puregotk/v4/glib"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
 )
 
 type SuccessState struct {
 	builder    *gtk.Builder
+	parent     *gtk.Window
 	stack      *adw.ViewStack
 	expiry     *time.Time
 	isredirect bool
 }
 
-func NewSuccessState(builder *gtk.Builder, stack *adw.ViewStack, expiry *time.Time, isredirect bool) *SuccessState {
+func NewSuccessState(builder *gtk.Builder, parent *gtk.Window, stack *adw.ViewStack, expiry *time.Time, isredirect bool) *SuccessState {
 	return &SuccessState{
 		builder:    builder,
+		parent:     parent,
 		stack:      stack,
 		expiry:     expiry,
 		isredirect: isredirect,
@@ -70,4 +74,26 @@ func (s *SuccessState) Initialize() {
 	}
 	// set the page as current
 	setPage(s.stack, &page)
+
+	if s.expiry == nil {
+		return
+	}
+	if !notification.HasDaemonSupport() {
+		return
+	}
+
+	dialog := adw.NewMessageDialog(s.parent, "Enable notifications?", fmt.Sprintf("This connection will expire in %d days.\n\nDo you want to enable notifications that warn for imminent expiry using systemd?", utils.ValidityDays(*s.expiry)))
+	dialog.AddResponse("disable", "Disable")
+	dialog.AddResponse("enable", "Enable")
+	dialog.SetResponseAppearance("enable", adw.ResponseSuggestedValue)
+	dialog.SetDefaultResponse("disable")
+	dialog.SetCloseResponse("disale")
+
+	var dialogcb func(adw.MessageDialog, string)
+	dialogcb = func(_ adw.MessageDialog, response string) {
+		defer glib.UnrefCallback(&dialogcb) //nolint:errcheck
+		notification.ConfigureDaemon(response == "enable")
+	}
+	dialog.ConnectResponse(&dialogcb)
+	dialog.Present()
 }
