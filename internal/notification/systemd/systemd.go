@@ -1,6 +1,7 @@
 package systemd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -9,9 +10,13 @@ import (
 )
 
 func hasSystemd() bool {
-	if _, err := os.Stat("/run/systemd/system"); !os.IsNotExist(err) {
+	var err error
+	if _, err = os.Stat("/run/systemd/system"); err == nil {
 		return true
+	} else if errors.Is(err, os.ErrNotExist) {
+		return false
 	}
+	slog.Error("failed to determine if system has systemd support", "error", err)
 	return false
 }
 
