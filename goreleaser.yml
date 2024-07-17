@@ -83,11 +83,13 @@ nfpms:
        - network-manager
        - libgtk-4-1
        - libadwaita-1-0
+       - libnotify-bin
      rpm:
       dependencies:
        - NetworkManager
        - gtk4
        - libadwaita
+       - libnotify
 
 checksum:
   name_template: "checksums.txt"
