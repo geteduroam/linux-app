@@ -364,7 +364,7 @@ func certFromContainer(ccert string, passphrase string) (*cert.ClientCert, error
 			return nil, err
 		}
 		// password is empty, only return an error if the error is not incorrect password
-		if !errors.Is(pkcs12.ErrIncorrectPassword, err) {
+		if !errors.Is(err, pkcs12.ErrIncorrectPassword) {
 			slog.Debug("The passphrase is empty and we got a client certificate error that is not incorrect password")
 			return nil, err
 		}
