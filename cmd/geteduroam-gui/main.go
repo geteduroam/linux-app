@@ -21,32 +21,53 @@ import (
 
 	"github.com/geteduroam/linux-app/internal/discovery"
 	"github.com/geteduroam/linux-app/internal/handler"
-	"github.com/geteduroam/linux-app/internal/instance"
 	"github.com/geteduroam/linux-app/internal/log"
 	"github.com/geteduroam/linux-app/internal/network"
+	"github.com/geteduroam/linux-app/internal/provider"
 	"github.com/geteduroam/linux-app/internal/version"
 )
 
 type serverList struct {
 	sync.Mutex
 	store     *gtk.StringList
-	instances instance.Instances
+	providers provider.Providers
 	list      *SelectList
+	custom    bool
 }
 
-func (s *serverList) get(idx int) (*instance.Instance, error) {
-	if idx < 0 || idx > len(s.instances) {
+func (s *serverList) get(idx int, query string) (*provider.Provider, error) {
+	if s.custom && idx == len(s.providers) {
+		// TODO: add context
+		return provider.Custom(context.Background(), query)
+	}
+	if idx < 0 || idx > len(s.providers) {
 		return nil, errors.New("index out of range")
 	}
-	return &s.instances[idx], nil
+	return &s.providers[idx], nil
 }
 
 func (s *serverList) Fill() {
 	s.Lock()
 	defer s.Unlock()
-	for idx, inst := range s.instances {
-		s.list.Add(idx, inst.Name)
+	for idx, inst := range s.providers {
+		s.list.Add(idx, inst.Name.Get())
 	}
+}
+
+func (s *serverList) AddCustom(label string) {
+	if s.custom {
+		s.RemoveCustom()
+	}
+	s.list.Add(len(s.providers), label)
+	s.custom = true
+}
+
+func (s *serverList) RemoveCustom() {
+	if !s.custom {
+		return
+	}
+	s.list.Remove(len(s.providers))
+	s.custom = false
 }
 
 type mainState struct {
@@ -93,7 +114,7 @@ func (m *mainState) file(metadata []byte) (*time.Time, error) {
 	return h.Configure(metadata)
 }
 
-func (m *mainState) direct(p instance.Profile) error {
+func (m *mainState) direct(p provider.Profile) error {
 	config, err := p.EAPDirect()
 	if err != nil {
 		return err
@@ -114,7 +135,7 @@ func (m *mainState) local(path string) (*time.Time, error) {
 	return v, nil
 }
 
-func (m *mainState) oauth(ctx context.Context, p instance.Profile) (*time.Time, error) {
+func (m *mainState) oauth(ctx context.Context, p provider.Profile) (*time.Time, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	config, err := p.EAPOAuth(ctx, func(url string) {
@@ -135,31 +156,31 @@ func (m *mainState) oauth(ctx context.Context, p instance.Profile) (*time.Time, 
 	return m.file(config)
 }
 
-func (m *mainState) rowActivated(sel instance.Instance) {
+func (m *mainState) rowActivated(sel provider.Provider) {
 	var page gtk.Box
 	m.builder.GetObject("searchPage").Cast(&page)
 	defer page.Unref()
 	l := NewLoadingPage(m.builder, m.stack, "Loading organization details...", nil)
 	l.Initialize()
 	ctx := context.Background()
-	chosen := func(p instance.Profile) (err error) {
+	chosen := func(p provider.Profile) (err error) {
 		defer func() {
 			err = ensureContextError(ctx, err)
 		}()
 		var valid *time.Time
 		var isredirect bool
 		switch p.Flow() {
-		case instance.DirectFlow:
+		case provider.DirectFlow:
 			err = m.direct(p)
 			if err != nil {
 				return err
 			}
-		case instance.OAuthFlow:
+		case provider.OAuthFlow:
 			valid, err = m.oauth(ctx, p)
 			if err != nil {
 				return err
 			}
-		case instance.RedirectFlow:
+		case provider.RedirectFlow:
 			isredirect = true
 			url, err := p.RedirectURI()
 			if err != nil {
@@ -177,7 +198,7 @@ func (m *mainState) rowActivated(sel instance.Instance) {
 		})
 		return nil
 	}
-	cb := func(p instance.Profile) {
+	cb := func(p provider.Profile) {
 		err := chosen(p)
 		if err != nil {
 			l.Hide()
@@ -200,33 +221,43 @@ func (m *mainState) initList() {
 	defer list.Unref()
 
 	cache := discovery.NewCache()
-	inst, err := cache.Instances()
+	inst, err := cache.Providers()
 	if err != nil {
 		m.ShowError(err)
 		return
 	}
-	m.servers.instances = *inst
+	m.servers.providers = *inst
 
 	var search gtk.SearchEntry
 	m.builder.GetObject("searchBox").Cast(&search)
 	defer search.Unref()
 
 	activated := func(idx int) {
-		inst, err := m.servers.get(idx)
-		// TODO: handle error
-		if err != nil {
-			m.ShowError(err)
-			return
+		l := NewLoadingPage(m.builder, m.stack, "Loading server details...", nil)
+		l.Initialize()
+		cb := func(inst *provider.Provider, err error) {
+			if err != nil {
+				l.Hide()
+				m.activate()
+				m.ShowError(err)
+				return
+			}
+			m.rowActivated(*inst)
 		}
-		m.rowActivated(*inst)
+		go func() {
+			inst, err := m.servers.get(idx, search.GetText())
+			uiThread(func() {
+				cb(inst, err)
+			})
+		}()
 	}
 
 	sorter := func(a, b string) int {
-		return instance.SortNames(a, b, search.GetText())
+		return provider.SortNames(a, b, search.GetText())
 	}
 
 	m.servers.list = NewSelectList(m.scroll, &list, activated, sorter).WithFiltering(func(a string) bool {
-		return instance.FilterSingle(a, search.GetText())
+		return provider.FilterSingle(a, search.GetText())
 	})
 
 	// Fill the servers in the select list
@@ -238,9 +269,16 @@ func (m *mainState) initList() {
 	changedcb := func(_ gtk.SearchEntry) {
 		// TODO len returns length in bytes
 		// utf8.RuneCountInString() counts number of characters (runes)
-		if len(search.GetText()) <= 2 {
+		query := search.GetText()
+		if len(query) <= 2 {
 			m.servers.list.Hide()
 			return
+		}
+		// url entered
+		if strings.Count(query, ".") >= 2 {
+			m.servers.AddCustom(search.GetText())
+		} else {
+			m.servers.RemoveCustom()
 		}
 		m.servers.list.Changed()
 		m.servers.list.Show()

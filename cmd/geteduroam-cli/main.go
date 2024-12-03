@@ -17,10 +17,10 @@ import (
 
 	"github.com/geteduroam/linux-app/internal/discovery"
 	"github.com/geteduroam/linux-app/internal/handler"
-	"github.com/geteduroam/linux-app/internal/instance"
 	"github.com/geteduroam/linux-app/internal/log"
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/geteduroam/linux-app/internal/notification"
+	"github.com/geteduroam/linux-app/internal/provider"
 	"github.com/geteduroam/linux-app/internal/utils"
 	"github.com/geteduroam/linux-app/internal/version"
 )
@@ -73,8 +73,8 @@ func ask(prompt string, validator func(input string) bool) string {
 	}
 }
 
-// filteredOrganizations gets the instances as filtered by the user
-func filteredOrganizations(orgs *instance.Instances, q string) (f *instance.Instances) {
+// filteredOrganizations gets the providers as filtered by the user
+func filteredOrganizations(orgs *provider.Providers, q string) (f *provider.Providers) {
 	for {
 		empties := 0
 		x := ask(q, func(x string) bool {
@@ -116,8 +116,8 @@ func validateRange(input string, n int) bool {
 	return true
 }
 
-// organization gets an organization/instance from the user
-func organization(orgs *instance.Instances) *instance.Instance {
+// organization gets an organization/provider from the user
+func organization(orgs *provider.Providers) *provider.Provider {
 	_, h, err := term.GetSize(0)
 	if err != nil {
 		slog.Warn("Could not get height")
@@ -128,7 +128,7 @@ func organization(orgs *instance.Instances) *instance.Instance {
 	for {
 		if len(*f) > h-3 {
 			for _, c := range *f {
-				fmt.Printf("%s\n", c.Name)
+				fmt.Printf("%s\n", c.Name.Get())
 			}
 			fmt.Println("\nList is long...")
 			f = filteredOrganizations(f, "Please refine your search: ")
@@ -138,7 +138,7 @@ func organization(orgs *instance.Instances) *instance.Instance {
 	}
 	fmt.Println("\nFound the following matches: ")
 	for n, c := range *f {
-		fmt.Printf("[%d] %s\n", n+1, c.Name)
+		fmt.Printf("[%d] %s\n", n+1, c.Name.Get())
 	}
 	input := ask("\nPlease enter a choice for the organisation: ", func(input string) bool {
 		return validateRange(input, len(*f))
@@ -152,7 +152,7 @@ func organization(orgs *instance.Instances) *instance.Instance {
 }
 
 // profile gets a profile for a list of profiles by asking the user one if there are multiple
-func profile(profiles []instance.Profile) *instance.Profile {
+func profile(profiles []provider.Profile) *provider.Profile {
 	// Only one profile, return it immediately
 	if len(profiles) == 1 {
 		return &profiles[0]
@@ -160,7 +160,7 @@ func profile(profiles []instance.Profile) *instance.Profile {
 	// Multiple profiles found, we need to get the right one
 	fmt.Println("Found the following profiles: ")
 	for n, c := range profiles {
-		fmt.Printf("[%d] %s\n", n+1, c.Name)
+		fmt.Printf("[%d] %s\n", n+1, c.Name.Get())
 	}
 	input := ask("Please enter a choice for the profile: ", func(input string) bool {
 		return validateRange(input, len(profiles))
@@ -312,7 +312,7 @@ func file(metadata []byte) (*time.Time, error) {
 }
 
 // direct does the handling for the direct flow
-func direct(p *instance.Profile) {
+func direct(p *provider.Profile) {
 	config, err := p.EAPDirect()
 	if err != nil {
 		slog.Error("Could not obtain eap config", "error", err)
@@ -330,7 +330,7 @@ func direct(p *instance.Profile) {
 }
 
 // redirect does the handling for the redirect flow
-func redirect(p *instance.Profile) {
+func redirect(p *provider.Profile) {
 	r, err := p.RedirectURI()
 	if err != nil {
 		slog.Error("Failed to complete the flow, no redirect URI is available")
@@ -347,7 +347,7 @@ func redirect(p *instance.Profile) {
 }
 
 // oauth does the handling for the OAuth flow
-func oauth(p *instance.Profile) *time.Time {
+func oauth(p *provider.Profile) *time.Time {
 	config, err := p.EAPOAuth(context.Background(), func(url string) {
 		fmt.Println("Your browser has been opened to authorize the client")
 		fmt.Println("Or copy and paste the following url:", url)
@@ -382,37 +382,53 @@ func doLocal(filename string) *time.Time {
 	return v
 }
 
-func doDiscovery() *time.Time {
-	c := discovery.NewCache()
-	i, err := c.Instances()
-	if err != nil {
-		slog.Error("Failed to get instances from discovery", "error", err)
-		fmt.Printf("Failed to get instances from discovery %v\n", err)
-		os.Exit(1)
-	}
-
-	chosen := organization(i)
+func chosenProvider(chosen *provider.Provider) *time.Time {
 	p := profile(chosen.Profiles)
 
 	// TODO: This switch statement should probably be moved to the profile code
 	// By providing an "EAP" method on profile
 	switch p.Flow() {
-	case instance.DirectFlow:
+	case provider.DirectFlow:
 		direct(p)
-	case instance.RedirectFlow:
+	case provider.RedirectFlow:
 		redirect(p)
-	case instance.OAuthFlow:
+	case provider.OAuthFlow:
 		return oauth(p)
 	}
 	return nil
 }
 
+func doDiscovery() *time.Time {
+	c := discovery.NewCache()
+	prov, err := c.Providers()
+	if err != nil {
+		slog.Error("Failed to get providers from discovery", "error", err)
+		fmt.Printf("Failed to get providers from discovery %v\n", err)
+		os.Exit(1)
+	}
+
+	chosen := organization(prov)
+	return chosenProvider(chosen)
+}
+
+func doURL(url string) *time.Time {
+	prov, err := provider.Custom(context.Background(), url)
+	if err != nil {
+		slog.Error("Failed to get EAP metadata from URL", "error", err)
+		fmt.Printf("Failed to get EAP metadata from URL %v\n", err)
+		os.Exit(1)
+	}
+	return chosenProvider(prov)
+}
+
 const usage = `Usage of %s:
-  -h, --help			Prints this help information
-  --version			Prints version information
-  -v				Verbose
-  -d, --debug			Debug
-  -l <file>, --local=<file>	The path to a local EAP metadata file
+  -h, --help                Prints this help information
+  --version                 Prints version information
+  -v                        Verbose
+  -d, --debug               Debug
+  One of:
+  -l <file>, --local=<file> The path to a local EAP metadata file
+  -u <url>, --url=<url>     The URL where an EAP metadata file or Let's Wifi portal is hosted
 
   This CLI binary is used to add an eduroam connection profile with integration using NetworkManager.
 
@@ -425,6 +441,7 @@ func main() {
 	var verbose bool
 	var debug bool
 	var local string
+	var url string
 	program := "geteduroam-cli"
 	lpath, err := log.Location(program)
 	if err != nil {
@@ -438,6 +455,8 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "Debug")
 	flag.StringVar(&local, "local", "", "The path to a local EAP metadata file")
 	flag.StringVar(&local, "l", "", "The path to a local EAP metadata file")
+	flag.StringVar(&url, "url", "", "Enter a URL to get the EAP metadata from")
+	flag.StringVar(&url, "u", "", "Enter a URL to get the EAP metadata from")
 	flag.Usage = func() { fmt.Printf(usage, program, lpath) }
 	flag.Parse()
 	if help {
@@ -461,10 +480,20 @@ func main() {
 		}
 		os.Exit(1)
 	}
+
+	if local != "" && url != "" {
+		fmt.Fprintln(os.Stderr, "You cannot provide both -l/--local and -u/--url flag")
+		flag.Usage()
+		os.Exit(1)
+	}
+
 	var v *time.Time
-	if local != "" {
+	switch {
+	case local != "":
 		doLocal(local)
-	} else {
+	case url != "":
+		doURL(url)
+	default:
 		v = doDiscovery()
 	}
 	fmt.Println("\nAn eduroam profile has been added to NetworkManager with the name: \"eduroam (from geteduroam)\"")
