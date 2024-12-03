@@ -1,7 +1,8 @@
-package instance
+package provider
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -15,14 +16,14 @@ import (
 
 // Profile is the profile from discovery
 type Profile struct {
-	AuthorizationEndpoint string `json:"authorization_endpoint"`
-	Default               bool   `json:"default"`
-	EapConfigEndpoint     string `json:"eapconfig_endpoint"`
-	ID                    string `json:"id"`
-	Name                  string `json:"name"`
-	OAuth                 bool   `json:"oauth"`
-	TokenEndpoint         string `json:"token_endpoint"`
-	Redirect              string `json:"redirect"`
+	ID                   string           `json:"id"`
+	EapConfigEndpoint    string           `json:"eapconfig_endpoint"`
+	MobileConfigEndpoint string           `json:"mobileconfig_endpoint"`
+	LetsWifiEndpoint     string           `json:"letswifi_endpoint"`
+	WebviewEndpoint      string           `json:"webview_endpoint"`
+	Name                 LocalizedStrings `json:"name"`
+	Type                 string           `json:"type"`
+	CachedResponse       []byte           `json:"-"`
 }
 
 // FlowCode is the type of flow that we will use to get the EAP config
@@ -40,17 +41,14 @@ const (
 // Flow gets the flow we need to go through to get the EAP config
 // See: https://github.com/geteduroam/cattenbak/blob/481e243f22b40e1d8d48ecac2b85705b8cb48494/cattenbak.py#L68
 func (p *Profile) Flow() FlowCode {
-	// A Redirect entry is present
-	// This means that we need to follow the URI in the redirect flow
-	if p.Redirect != "" {
+	switch p.Type {
+	case "webview":
 		return RedirectFlow
-	}
-	// OAuth is present, we need to get the EAP through some OAuth flow
-	if p.OAuth {
+	case "eap-config":
+		return DirectFlow
+	default:
 		return OAuthFlow
 	}
-	// Get the config directly
-	return DirectFlow
 }
 
 // RedirectURI gets the redirect URI from the profile
@@ -58,10 +56,10 @@ func (p *Profile) Flow() FlowCode {
 // - Checking if the redirect URI is a URL
 // - Setting the scheme to HTTPS
 func (p *Profile) RedirectURI() (string, error) {
-	if p.Redirect == "" {
+	if p.WebviewEndpoint == "" {
 		return "", errors.New("no redirect found")
 	}
-	u, err := url.Parse(p.Redirect)
+	u, err := url.Parse(p.WebviewEndpoint)
 	if err != nil {
 		return "", err
 	}
@@ -89,6 +87,9 @@ func readResponse(res *http.Response) ([]byte, error) {
 // EAPDirect Gets an EAP config using the direct flow
 // It returns the byte array of the EAP config and an error if there is one
 func (p *Profile) EAPDirect() ([]byte, error) {
+	if p.CachedResponse != nil {
+		return p.CachedResponse, nil
+	}
 	// Do request
 	req, err := http.NewRequest("GET", p.EapConfigEndpoint, nil)
 	if err != nil {
@@ -103,14 +104,59 @@ func (p *Profile) EAPDirect() ([]byte, error) {
 	return readResponse(res)
 }
 
+type letsWifiEndpoints struct {
+	Href string `json:"href"`
+	API  struct {
+		AuthorizationEndpoint string `json:"authorization_endpoint"`
+		TokenEndpoint         string `json:"token_endpoint"`
+		EapConfigEndpoint     string `json:"eapconfig_endpoint"`
+		MobileConfigEndpoint  string `json:"mobileconfig_endpoint"`
+	} `json:"http://letswifi.app/api#v2"`
+}
+
+func (p *Profile) getLetsWifiEndpoints() ([]byte, error) {
+	client := http.Client{Timeout: 10 * time.Second}
+	if p.LetsWifiEndpoint == "" {
+		return nil, errors.New("no Let's Wifi endpoint found")
+	}
+	req, err := http.NewRequest("GET", p.LetsWifiEndpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/json")
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	b, err := readResponse(res)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
 // EAPOAuth gets the EAP metadata using OAuth
 func (p *Profile) EAPOAuth(ctx context.Context, auth func(authURL string)) ([]byte, error) {
+	var err error
+	b := p.CachedResponse
+	if b == nil {
+		b, err = p.getLetsWifiEndpoints()
+		if err != nil {
+			return nil, err
+		}
+	}
+	var ep letsWifiEndpoints
+	err = json.Unmarshal(b, &ep)
+	if err != nil {
+		return nil, err
+	}
+
 	o := eduoauth.OAuth{
 		ClientID: "app.geteduroam.sh",
 		EndpointFunc: func(context.Context) (*eduoauth.EndpointResponse, error) {
 			return &eduoauth.EndpointResponse{
-				AuthorizationURL: p.AuthorizationEndpoint,
-				TokenURL:         p.TokenEndpoint,
+				AuthorizationURL: ep.API.AuthorizationEndpoint,
+				TokenURL:         ep.API.TokenEndpoint,
 			}, nil
 		},
 		RedirectPath: "/",
@@ -133,7 +179,7 @@ func (p *Profile) EAPOAuth(ctx context.Context, auth func(authURL string)) ([]by
 	}
 
 	c := o.NewHTTPClient()
-	req, err := http.NewRequestWithContext(ctx, "POST", p.EapConfigEndpoint, nil)
+	req, err := http.NewRequestWithContext(ctx, "POST", ep.API.EapConfigEndpoint, nil)
 	if err != nil {
 		return nil, err
 	}

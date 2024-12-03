@@ -80,6 +80,10 @@ func (s *SelectList) Add(idx int, label string) {
 	strobj.SetData("model-index", uintptr(idx))
 }
 
+func (s *SelectList) Remove(idx int) {
+	s.store.Remove(uint(idx))
+}
+
 func (s *SelectList) Show() {
 	s.win.Show()
 }

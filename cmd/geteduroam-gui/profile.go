@@ -3,7 +3,7 @@ package main
 import (
 	"golang.org/x/exp/slog"
 
-	"github.com/geteduroam/linux-app/internal/instance"
+	"github.com/geteduroam/linux-app/internal/provider"
 	"github.com/jwijenbergh/puregotk/v4/adw"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
 )
@@ -11,12 +11,12 @@ import (
 type ProfileState struct {
 	builder  *gtk.Builder
 	stack    *adw.ViewStack
-	profiles []instance.Profile
-	success  func(instance.Profile)
+	profiles []provider.Profile
+	success  func(provider.Profile)
 	sl       *SelectList
 }
 
-func NewProfileState(builder *gtk.Builder, stack *adw.ViewStack, profiles []instance.Profile, success func(instance.Profile)) *ProfileState {
+func NewProfileState(builder *gtk.Builder, stack *adw.ViewStack, profiles []provider.Profile, success func(provider.Profile)) *ProfileState {
 	return &ProfileState{
 		builder:  builder,
 		stack:    stack,
@@ -55,7 +55,7 @@ func (p *ProfileState) Initialize() {
 
 	sorter := func(a, b string) int {
 		// Here we have no search query
-		return instance.SortNames(a, b, "")
+		return provider.SortNames(a, b, "")
 	}
 	activated := func(idx int) {
 		go p.success(p.profiles[idx])
@@ -65,7 +65,7 @@ func (p *ProfileState) Initialize() {
 	p.sl = NewSelectList(&scroll, &list, activated, sorter)
 
 	for idx, prof := range p.profiles {
-		p.sl.Add(idx, prof.Name)
+		p.sl.Add(idx, prof.Name.Get())
 	}
 
 	p.sl.Setup()

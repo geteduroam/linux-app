@@ -1,4 +1,4 @@
-// package discovery contains methods to parse the discovery format from https://discovery.eduroam.app/v1/discovery.json into instances
+// package discovery contains methods to parse the discovery format from https://discovery.eduroam.app/v3/discovery.json into providers
 package discovery
 
 import (
@@ -10,15 +10,18 @@ import (
 
 	"golang.org/x/exp/slog"
 
-	"github.com/geteduroam/linux-app/internal/instance"
+	"github.com/geteduroam/linux-app/internal/provider"
 )
 
 // Discovery is the main structure that is used for unmarshalling the JSON
 type Discovery struct {
-	Instances instance.Instances `json:"instances"`
+	Value Value `json:"http://letswifi.app/discovery#v3"`
+}
+
+type Value struct {
+	Providers provider.Providers `json:"providers"`
 	// See: https://github.com/geteduroam/windows-app/blob/22cd90f36031907c7174fbdc678edafaa627ce49/CHANGELOG.md#changed
-	Seq     int `json:"seq"`
-	Version int `json:"version"`
+	Seq int `json:"seq"`
 }
 
 // Cache is the cached discovery list
@@ -46,15 +49,15 @@ func (c *Cache) ToUpdate() bool {
 	return n.After(u)
 }
 
-// Instances gets the instances either from the cache or from scratch
-func (c *Cache) Instances() (*instance.Instances, error) {
+// Providers gets the providers either from the cache or from scratch
+func (c *Cache) Providers() (*provider.Providers, error) {
 	if !c.ToUpdate() {
-		return &c.Cached.Instances, nil
+		return &c.Cached.Value.Providers, nil
 	}
 
-	req, err := http.NewRequest("GET", "https://discovery.eduroam.app/v1/discovery.json", nil)
+	req, err := http.NewRequest("GET", "https://discovery.eduroam.app/v3/discovery.json", nil)
 	if err != nil {
-		return &c.Cached.Instances, err
+		return &c.Cached.Value.Providers, err
 	}
 
 	// Do request
@@ -62,46 +65,33 @@ func (c *Cache) Instances() (*instance.Instances, error) {
 	res, err := client.Do(req)
 	if err != nil {
 		slog.Debug("Error requesting discovery.json", "error", err)
-		return &c.Cached.Instances, err
+		return &c.Cached.Value.Providers, err
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		slog.Debug("Error reading discovery.json response", "error", err)
-		return &c.Cached.Instances, err
+		return &c.Cached.Value.Providers, err
 	}
 	if res.StatusCode < 200 || res.StatusCode > 299 {
-		return &c.Cached.Instances, fmt.Errorf("status code is not 2xx for discovery. Status code: %v, body: %v", res.StatusCode, string(body))
+		return &c.Cached.Value.Providers, fmt.Errorf("status code is not 2xx for discovery. Status code: %v, body: %v", res.StatusCode, string(body))
 	}
 
 	var d *Discovery
 	err = json.Unmarshal(body, &d)
 	if err != nil {
 		slog.Debug("Error loading discovery.json", "error", err)
-		return &c.Cached.Instances, err
+		return &c.Cached.Value.Providers, err
 	}
-
-	d.Instances = append(d.Instances, instance.Instance{
-		Name: "LetsWifi development banaan",
-		Profiles: []instance.Profile{
-			{
-				AuthorizationEndpoint: "http://0.0.0.0:8080/oauth/authorize/",
-				Default:               true,
-				EapConfigEndpoint:     "http://0.0.0.0:8080/api/eap-config/",
-				OAuth:                 true,
-				TokenEndpoint:         "http://0.0.0.0:8080/oauth/token/",
-			},
-		},
-	})
 
 	// Do not accept older versions
 	// This happens if the cached version is higher
-	if c.Cached.Seq > d.Seq {
-		return &c.Cached.Instances, fmt.Errorf("cached seq is higher")
+	if c.Cached.Value.Seq > d.Value.Seq {
+		return &c.Cached.Value.Providers, fmt.Errorf("cached seq is higher")
 	}
 
 	c.Cached = *d
 	c.LastUpdate = time.Now()
-	return &d.Instances, nil
+	return &d.Value.Providers, nil
 }
