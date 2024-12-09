@@ -46,6 +46,16 @@ func (s *serverList) get(idx int, query string) (*provider.Provider, error) {
 	return &s.providers[idx], nil
 }
 
+func (s *serverList) getNames(idx int, query string) (*provider.LocalizedStrings, error) {
+	if s.custom && idx == len(s.providers) {
+		return &provider.LocalizedStrings{{Display: query}}, nil
+	}
+	if idx < 0 || idx > len(s.providers) {
+		return nil, errors.New("index out of range")
+	}
+	return &s.providers[idx].Name, nil
+}
+
 func (s *serverList) Fill() {
 	s.Lock()
 	defer s.Unlock()
@@ -252,12 +262,26 @@ func (m *mainState) initList() {
 		}()
 	}
 
-	sorter := func(a, b string) int {
-		return provider.SortNames(a, b, search.GetText())
+	sorter := func(a, b int) int {
+		query := search.GetText()
+		n1, err := m.servers.getNames(a, query)
+		if err != nil {
+			return -1
+		}
+		n2, err := m.servers.getNames(b, query)
+		if err != nil {
+			return -1
+		}
+		return provider.SortNames(*n1, *n2, query)
 	}
 
-	m.servers.list = NewSelectList(m.scroll, &list, activated, sorter).WithFiltering(func(a string) bool {
-		return provider.FilterSingle(a, search.GetText())
+	m.servers.list = NewSelectList(m.scroll, &list, activated, sorter).WithFiltering(func(idx int) bool {
+		query := search.GetText()
+		n, err := m.servers.getNames(idx, query)
+		if err != nil {
+			return false
+		}
+		return provider.FilterSingle(*n, query)
 	})
 
 	// Fill the servers in the select list
