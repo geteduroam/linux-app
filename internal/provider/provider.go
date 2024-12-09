@@ -22,6 +22,14 @@ type LocalizedString struct {
 
 type LocalizedStrings []LocalizedString
 
+func (ls LocalizedStrings) Corpus() string {
+	var corpus strings.Builder
+	for _, v := range ls {
+		corpus.WriteString(v.Display)
+	}
+	return corpus.String()
+}
+
 var systemLanguage = language.English
 
 func setSystemLanguage() {
@@ -78,9 +86,9 @@ type Provider struct {
 
 type Providers []Provider
 
-func SortNames(a string, b string, search string) int {
-	la := strings.ToLower(a)
-	lb := strings.ToLower(b)
+func SortNames(a LocalizedStrings, b LocalizedStrings, search string) int {
+	la := strings.ToLower(a.Corpus())
+	lb := strings.ToLower(b.Corpus())
 	bd := strings.Compare(la, lb)
 	// compute the base difference which is based on alphabetical order
 	// if no search is defined return the base difference
@@ -109,13 +117,13 @@ type ByName struct {
 func (s ByName) Len() int      { return len(s.Providers) }
 func (s ByName) Swap(i, j int) { s.Providers[i], s.Providers[j] = s.Providers[j], s.Providers[i] }
 func (s ByName) Less(i, j int) bool {
-	diff := SortNames(s.Providers[i].Name.Get(), s.Providers[j].Name.Get(), s.Search)
+	diff := SortNames(s.Providers[i].Name, s.Providers[j].Name, s.Search)
 	// if i is less than j, diff returns less than 0
 	return diff < 0
 }
 
-func FilterSingle(name string, search string) bool {
-	l1, err1 := utils.RemoveDiacritics(strings.ToLower(name))
+func FilterSingle(name LocalizedStrings, search string) bool {
+	l1, err1 := utils.RemoveDiacritics(strings.ToLower(name.Corpus()))
 	l2, err2 := utils.RemoveDiacritics(strings.ToLower(search))
 	if err1 != nil || err2 != nil {
 		return false
@@ -134,7 +142,7 @@ func (i *Providers) FilterSort(search string) *Providers {
 		Search:    search,
 	}
 	for _, i := range *i {
-		if FilterSingle(i.Name.Get(), search) {
+		if FilterSingle(i.Name, search) {
 			x.Providers = append(x.Providers, i)
 		}
 	}

@@ -13,23 +13,18 @@ type SelectList struct {
 	win       *gtk.ScrolledWindow
 	list      *gtk.ListView
 	activated func(int)
-	sorter    func(a, b string) int
-	filter    func(a string) bool
+	sorter    func(a, b int) int
+	filter    func(idx int) bool
 	store     *gtk.StringList
 	cf        *gtk.CustomFilter
 	cs        *gtk.CustomSorter
 }
 
-func stringFromPtr(ptr uintptr) string {
+func indexFromPtr(ptr uintptr) int {
 	// TODO: Remove this once we have proper callback type signatures
 	// The callback should already give a gobject.Binding
 	thisl := gobject.BindingNewFromInternalPtr(ptr)
-	var thisv gobject.Value
-	thisl.GetProperty("string", &thisv)
-	// Purego makes a copy of the string when we call .GetString()
-	// So we can safely unset after the return
-	defer thisv.Unset()
-	return thisv.GetString()
+	return int(thisl.GetData("model-index"))
 }
 
 func setupList(item uintptr) {
@@ -53,7 +48,7 @@ func bindList(item uintptr) {
 	label.SetText(strobj.GetString())
 }
 
-func NewSelectList(win *gtk.ScrolledWindow, list *gtk.ListView, activated func(int), sorter func(a, b string) int) *SelectList {
+func NewSelectList(win *gtk.ScrolledWindow, list *gtk.ListView, activated func(int), sorter func(a, b int) int) *SelectList {
 	return &SelectList{
 		win:       win,
 		list:      list,
@@ -92,7 +87,7 @@ func (s *SelectList) Hide() {
 	s.win.Hide()
 }
 
-func (s *SelectList) WithFiltering(filter func(a string) bool) *SelectList {
+func (s *SelectList) WithFiltering(filter func(idx int) bool) *SelectList {
 	s.filter = filter
 	return s
 }
@@ -123,7 +118,7 @@ func (s *SelectList) setupFactory() *gtk.SignalListItemFactory {
 
 func (s *SelectList) setupSorter(base gio.ListModel) gio.ListModel {
 	sf := (glib.CompareDataFunc)(func(this uintptr, other uintptr, _ uintptr) int {
-		return s.sorter(stringFromPtr(this), stringFromPtr(other))
+		return s.sorter(indexFromPtr(this), indexFromPtr(other))
 	})
 
 	destroycb := (glib.DestroyNotify)(func(uintptr) {
@@ -139,7 +134,7 @@ func (s *SelectList) setupSorter(base gio.ListModel) gio.ListModel {
 
 func (s *SelectList) setupFilter(base gio.ListModel) gio.ListModel {
 	cf := (gtk.CustomFilterFunc)(func(item uintptr, _ uintptr) bool {
-		return s.filter(stringFromPtr(item))
+		return s.filter(indexFromPtr(item))
 	})
 	destroycb := (glib.DestroyNotify)(func(uintptr) {
 		// do nothing

@@ -53,9 +53,9 @@ func (p *ProfileState) Initialize() {
 	defer label.Unref()
 	styleWidget(&label, "label")
 
-	sorter := func(a, b string) int {
+	sorter := func(a, b int) int {
 		// Here we have no search query
-		return provider.SortNames(a, b, "")
+		return provider.SortNames(p.profiles[a].Name, p.profiles[b].Name, "")
 	}
 	activated := func(idx int) {
 		go p.success(p.profiles[idx])
