@@ -19,48 +19,67 @@ func isRoot(cert *x509.Certificate) bool {
 	return bytes.Equal(cert.RawIssuer, cert.RawSubject) && cert.IsCA
 }
 
-type Certs struct {
-	Root          *x509.Certificate
+type Chain struct {
+	Roots         []*x509.Certificate
 	Intermediates []*x509.Certificate
+}
+
+type Certs struct {
+	chains map[string]*Chain
 }
 
 // ToPEM converts the certs to PEM by first converting the intermediate certificates
 // and then the root certificate
 func (c *Certs) ToPEM() (ret []byte) {
-	// First intermediate certificates
-	for _, ic := range c.Intermediates {
-		ret = append(ret, toPEM(ic)...)
+	// do all the chains one by one
+	for _, chain := range c.chains {
+		// First intermediate certificates
+		for _, ic := range chain.Intermediates {
+			ret = append(ret, toPEM(ic)...)
+		}
+		// Then the root certificates
+		for _, root := range chain.Roots {
+			ret = append(ret, toPEM(root)...)
+		}
 	}
-	// Then the root certificate
-	ret = append(ret, toPEM(c.Root)...)
 	return ret
 }
 
 // New creates a Certs struct by decoding the data in base64
 // Note that Certs is guaranteed to be non-nil when there is no error
 func New(data []string) (*Certs, error) {
-	var root *x509.Certificate
-	var inter []*x509.Certificate
-	for _, d := range data {
-		b, err := base64.StdEncoding.DecodeString(d)
-		if err != nil {
-			continue
-		}
-		cert, err := x509.ParseCertificate(b)
-		if err != nil {
-			continue
-		}
-		if isRoot(cert) {
-			root = cert
-		} else {
-			inter = append(inter, cert)
+	chains := make(map[string]*Chain)
+	loopChains := func(wantRoot bool) {
+		for _, d := range data {
+			b, err := base64.StdEncoding.DecodeString(d)
+			if err != nil {
+				continue
+			}
+			cert, err := x509.ParseCertificate(b)
+			if err != nil {
+				continue
+			}
+			isRoot := isRoot(cert)
+			v, ok := chains[cert.Issuer.String()]
+			if wantRoot && isRoot {
+				if ok {
+					v.Roots = append(v.Roots, cert)
+				} else {
+					chains[cert.Issuer.String()] = &Chain{Roots: []*x509.Certificate{cert}}
+				}
+			} else if !wantRoot && !isRoot && ok {
+				v.Intermediates = append(v.Intermediates, cert)
+			}
 		}
 	}
-	if root == nil {
+	// go through all root CAs
+	loopChains(true)
+	if len(chains) == 0 {
 		return nil, errors.New("no root CA found")
 	}
+	// then get the intermediate CAs
+	loopChains(false)
 	return &Certs{
-		Root:          root,
-		Intermediates: inter,
+		chains: chains,
 	}, nil
 }
