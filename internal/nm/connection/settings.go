@@ -34,6 +34,22 @@ func (s SettingsArgs) UUID() (string, error) {
 	return uuidS, nil
 }
 
+func (s SettingsArgs) SSID() (string, error) {
+	c, ok := s["802-11-wireless"]
+	if !ok {
+		return "", errors.New("no 802-11-wireless value in connection settings map")
+	}
+	ssid, ok := c["ssid"]
+	if !ok {
+		return "", errors.New("no SSID 802-11-wireless map")
+	}
+	ssidS, ok := ssid.([]byte)
+	if !ok {
+		return "", fmt.Errorf("SSID is not a []byte: %T", ssid)
+	}
+	return string(ssidS), nil
+}
+
 type Settings struct {
 	base.Base
 }
