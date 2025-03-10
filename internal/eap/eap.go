@@ -269,20 +269,21 @@ func (am *AuthenticationMethod) preferredInnerAuthType() (inner.Type, error) {
 	return inner.None, errors.New("no viable inner authentication method found")
 }
 
-// SSIDSettings returns the first valid SSID and the MinRSNProto associated with it
-// It loops through the credential applicability list and gets the first valid candidate
+// SSIDSettings returns the all valid SSIDs and the MinRSNProto associated with it
+// It loops through the credential applicability list and gets all valid candidate
 // The candidate filtering was based on https://github.com/geteduroam/windows-app/blob/f11f00dee3eb71abd38537e18881463f83b180d3/EduroamConfigure/EapConfig.cs#L84
 // A candidate is valid if:
 //   - MinRSNProto is not empty, TODO: shouldn't we just default to CCMP?
 //   - The SSID is not empty
 //   - The MinRSNProto is NOT TKIP as that is insecure
-func (p *EAPIdentityProvider) SSIDSettings() (string, string, error) {
+func (p *EAPIdentityProvider) SSIDSettings() ([]network.SSID, error) {
 	if p.CredentialApplicability == nil {
-		return "", "", errors.New("no Credential Applicability found")
+		return nil, errors.New("no Credential Applicability found")
 	}
 	if len(p.CredentialApplicability.IEEE80211) < 1 {
-		return "", "", errors.New("no IEE80211 section found")
+		return nil, errors.New("no IEE80211 section found")
 	}
+	var ssids []network.SSID
 	for _, i := range p.CredentialApplicability.IEEE80211 {
 		if i == nil {
 			slog.Warn("Credential applicability IEEE80211 is nil")
@@ -307,10 +308,15 @@ func (p *EAPIdentityProvider) SSIDSettings() (string, string, error) {
 			slog.Warn("MinRSNProto is not TKIP", "minRSNProto", i.MinRSNProto)
 			continue
 		}
-
-		return i.SSID, i.MinRSNProto, nil
+		ssids = append(ssids, network.SSID{
+			Value:  i.SSID,
+			MinRSN: i.MinRSNProto,
+		})
 	}
-	return "", "", errors.New("no viable SSID entry found")
+	if len(ssids) == 0 {
+		return nil, errors.New("no viable SSID entries found")
+	}
+	return ssids, nil
 }
 
 // isValid returns whether or not a certificate is valid by checking if the encoding is base64 and the format is `format`
@@ -466,7 +472,7 @@ func (am *AuthenticationMethod) NonTLSNetwork(base network.Base) (network.Networ
 }
 
 // Network gets a network for an authentication method, the SSID and MinRSN are strings that are based to the network
-func (am *AuthenticationMethod) Network(ssid string, minrsn string, pinfo network.ProviderInfo) (network.Network, error) {
+func (am *AuthenticationMethod) Network(ssids []network.SSID, pinfo network.ProviderInfo) (network.Network, error) {
 	// We check if the eap method is valid
 	if am.EAPMethod == nil || !method.IsValid(am.EAPMethod.Type) {
 		return nil, errors.New("no EAP method")
@@ -490,8 +496,7 @@ func (am *AuthenticationMethod) Network(ssid string, minrsn string, pinfo networ
 	base := network.Base{
 		Certs:        *CA,
 		ProviderInfo: pinfo,
-		SSID:         ssid,
-		MinRSN:       minrsn,
+		SSIDs:        ssids,
 		ServerIDs:    sid,
 	}
 
@@ -590,14 +595,14 @@ func (eap *EAPIdentityProviderList) Network() (network.Network, error) {
 		slog.Debug("Error getting AuthMethods", "error", err)
 		return nil, err
 	}
-	ssid, minrsn, err := p.SSIDSettings()
+	ssids, err := p.SSIDSettings()
 	if err != nil {
 		slog.Debug("Error getting SSIDSettings", "error", err)
 		return nil, err
 	}
 	pinfo := p.PInfo()
 	for _, m := range methods {
-		n, err := m.Network(ssid, minrsn, pinfo)
+		n, err := m.Network(ssids, pinfo)
 		if err != nil {
 			slog.Error("Error getting ProviderInfo", "error", err)
 			continue

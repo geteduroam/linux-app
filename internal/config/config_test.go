@@ -23,7 +23,7 @@ func TestWrite(t *testing.T) {
 	dir := t.TempDir()
 	mockDir(t, dir)
 	c := &Config{
-		UUID: "test",
+		UUIDs: []string{"test"},
 	}
 	err := c.Write()
 	if err != nil {
@@ -39,7 +39,7 @@ func TestWrite(t *testing.T) {
 		t.Fatalf("failed when reading config file: %v", err)
 	}
 	got := string(r)
-	want := `{"v1":{"uuid":"test"}}`
+	want := `{"v2":{"uuids":["test"]}}`
 	if got != want {
 		t.Fatalf("config not as expected, got: %v, want: %v", got, want)
 	}
@@ -58,9 +58,16 @@ func TestLoad(t *testing.T) {
 			wanterr:  "json: cannot unmarshal string into Go value of type config.Versioned",
 		},
 		{
+			filename: "old.json",
+			wantc: &Config{
+				UUIDs: []string{"test"},
+			},
+			wanterr: "",
+		},
+		{
 			filename: "valid.json",
 			wantc: &Config{
-				UUID: "test",
+				UUIDs: []string{"test"},
 			},
 			wanterr: "",
 		},
@@ -70,12 +77,12 @@ func TestLoad(t *testing.T) {
 		// mock the config name
 		configName = curr.filename
 		gotc, goterr := Load()
+		if utils.ErrorString(goterr) != curr.wanterr {
+			t.Fatalf("expected config error not equal to want, got: %v, want: %v", goterr, curr.wanterr)
+		}
 		// to compare structs we can use deepequal
 		if !reflect.DeepEqual(gotc, curr.wantc) {
 			t.Fatalf("expected config not equal to want, got: %v, want: %v", gotc, curr.wantc)
-		}
-		if utils.ErrorString(goterr) != curr.wanterr {
-			t.Fatalf("expected config error not equal to want, got: %v, want: %v", goterr, curr.wanterr)
 		}
 	}
 }

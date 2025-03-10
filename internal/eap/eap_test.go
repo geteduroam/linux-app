@@ -44,18 +44,14 @@ func testProviderInfo(t *testing.T, eip *EAPIdentityProvider, pi network.Provide
 }
 
 type ssidSettingsTest struct {
-	SSID   string
-	MinRSN string
-	err    string
+	SSIDs []network.SSID
+	err   string
 }
 
 func testSSIDSettings(t *testing.T, eip *EAPIdentityProvider, settings ssidSettingsTest) {
-	gotSSID, gotRSN, gotErr := eip.SSIDSettings()
-	if gotSSID != settings.SSID {
-		t.Fatalf("SSID is not equal, got: %v, want: %v", gotSSID, settings.SSID)
-	}
-	if gotRSN != settings.MinRSN {
-		t.Fatalf("Min RSN is not equal, got: %v, want: %v", gotRSN, settings.MinRSN)
+	gotSSIDs, gotErr := eip.SSIDSettings()
+	if !reflect.DeepEqual(gotSSIDs, settings.SSIDs) {
+		t.Fatalf("SSIDs is not equal, got: %v, want: %v", gotSSIDs, settings.SSIDs)
 	}
 	gotErrS := utils.ErrorString(gotErr)
 	if gotErrS != settings.err {
@@ -111,9 +107,11 @@ func TestParse(t *testing.T) {
 				Description: "eVA",
 			},
 			ssidTest: ssidSettingsTest{
-				SSID:   "eduroam",
-				MinRSN: "CCMP",
-				err:    "",
+				SSIDs: []network.SSID{{
+					Value:  "eduroam",
+					MinRSN: "CCMP",
+				}},
+				err: "",
 			},
 			netTest: networkTest{
 				n: &network.NonTLS{
@@ -121,8 +119,10 @@ func TestParse(t *testing.T) {
 						AnonIdentity: "anonymous@edu.nl",
 						Certs: mustParseCert(t,
 							"MIIDtzCCAp+gAwIBAgIUCVQbKTO9PsqghECzGPqq6Fiy8REwDQYJKoZIhvcNAQELBQAwazELMAkGA1UEBhMCTkwxEzARBgNVBAgMClNvbWUtU3RhdGUxEjAQBgNVBAcMCUFtc3RlcmRhbTEQMA4GA1UECgwHVGVzdGluZzENMAsGA1UECwwEVGVzdDESMBAGA1UEAwwJVGVzdCB0ZXN0MB4XDTIzMDUyNDEzNTUxMFoXDTMzMDUyMTEzNTUxMFowazELMAkGA1UEBhMCTkwxEzARBgNVBAgMClNvbWUtU3RhdGUxEjAQBgNVBAcMCUFtc3RlcmRhbTEQMA4GA1UECgwHVGVzdGluZzENMAsGA1UECwwEVGVzdDESMBAGA1UEAwwJVGVzdCB0ZXN0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyLqG9yuMhbVC5y9zofPDLeCDIUVjgPbxXHtM6uveBUtqG4PxDkTczOlYN1IsYRh2iLNRYY4cqYZ1qtW+1CZaFVowhUMbTR7Y8Ik10CrCJQqoGq1CIICBd50wTFBLU2MZU3LQTwKYb5VQgbCMvRVHWdQOYg5GSlgdJRtIbzV1d+Q7+N5jiEBsT6psSu2gBduF1ueGICKe6Fk+ckOHDpwjVGeNIxnN2hJ5ft3WReDJ7fcHLMx7lNS+ZeY35LtpYiT6I8RGlMh2bu9hMTY1jXNbEqqZ2/5TmjVygS7BEMrVage9K2I5eM8++yX27OV3Di/SM3q/RVIcu1lNKaSj0IxXhwIDAQABo1MwUTAdBgNVHQ4EFgQU0M2QAnLWEDSFdFLCm5OxvVA9D1swHwYDVR0jBBgwFoAU0M2QAnLWEDSFdFLCm5OxvVA9D1swDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAHHdxGNUmyZa4ER9oqSalwVy9W5y1cNr4VpxBbxJe/fBPp+xdtnYRbz1/93LwcA+bTJlvT8ez2ijOJj5QODrgeVy5r4p5/1cABnJhsszk6ffJy/n5vIqo9jp8+7ZTFGxm1QQAOoZfJM+3ft8ZFf5e8Vjh090QV2OZvV69sey+TvfAlNMVotf/CaA2zA/j4z2bmWdrLAc5VVrb1Mil4z7LHhL62oOwXrS85zuoVBQVMbh5tnYgzMnbuy0hmMDg3ClkmSQTqzPyEi0SjhqKjgLgyVa47myhxvr1y77k0rZBRzkSEMsopu+ANYoVKRpw7gmjgMmXWzvdNlbD6RgpGlR4iA=="),
-						SSID:   "eduroam",
-						MinRSN: "CCMP",
+						SSIDs: []network.SSID{{
+							Value:  "eduroam",
+							MinRSN: "CCMP",
+						}},
 						ServerIDs: []string{
 							"edu.nl",
 						},
@@ -165,13 +165,11 @@ func TestParse(t *testing.T) {
 			},
 			providerInfoTest: network.ProviderInfo{},
 			ssidTest: ssidSettingsTest{
-				SSID:   "",
-				MinRSN: "",
-				err:    "no viable SSID entry found",
+				err: "no viable SSID entries found",
 			},
 			netTest: networkTest{
 				n:   nil,
-				err: "no viable SSID entry found",
+				err: "no viable SSID entries found",
 			},
 		},
 	}
