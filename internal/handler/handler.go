@@ -52,12 +52,12 @@ func (h Handlers) Configure(eap []byte) (*time.Time, error) {
 	if err != nil {
 		return nil, err
 	}
-	var uuid string
+	var uuids []string
 
 	// get the previous UUID if the config can be loaded
 	c, err := config.Load()
 	if err == nil {
-		uuid = c.UUID
+		uuids = c.UUIDs
 	}
 
 	var valid *time.Time
@@ -72,7 +72,7 @@ func (h Handlers) Configure(eap []byte) (*time.Time, error) {
 			t.Credentials.Username = username
 			t.Credentials.Password = password
 		}
-		uuid, err = nm.Install(*t, uuid)
+		uuids, err = nm.Install(*t, uuids)
 	case *network.TLS:
 		// if a PKCS12 file is uploaded by the user we expect it to be not base64 encoded
 		b64 := t.RawPKCS12 != ""
@@ -90,17 +90,20 @@ func (h Handlers) Configure(eap []byte) (*time.Time, error) {
 		}
 		v := t.Validity()
 		valid = &v
-		uuid, err = nm.InstallTLS(*t, uuid)
+		uuids, err = nm.InstallTLS(*t, uuids)
 	default:
 		panic("unsupported network")
 	}
 	if err != nil {
-		slog.Debug("Error installing network", "error", err)
-		return nil, err
+		if len(uuids) == 0 {
+			slog.Error("Error installing network", "error", err)
+			return nil, err
+		}
+		slog.Info("One of the networks failed to install", "error", err)
 	}
 	// save the config with the uuid
 	nc := config.Config{
-		UUID:     uuid,
+		UUIDs:    uuids,
 		Validity: valid,
 	}
 	err = nc.Write()

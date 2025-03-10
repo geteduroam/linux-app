@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os/user"
+	"slices"
 	"strings"
 
 	"golang.org/x/exp/slog"
@@ -71,8 +72,8 @@ func createCon(pUUID string, args connection.SettingsArgs) (*connection.Connecti
 // installBase contains the code for creating a network with NetworkManager
 // This contains the shared network settings between TLS and NonTLS
 // The specific 8021x settings are given as an argument `specific`
-func installBase(n network.Base, specifics map[string]interface{}, pUUID string) (string, error) {
-	fID := fmt.Sprintf("%s (from geteduroam)", n.SSID)
+func installBaseSSID(n network.Base, ssid network.SSID, specifics map[string]interface{}, pUUID string) (string, error) {
+	fID := fmt.Sprintf("%s (from geteduroam)", ssid.Value)
 	cUser, err := user.Current()
 	if err != nil {
 		return "", err
@@ -89,14 +90,14 @@ func installBase(n network.Base, specifics map[string]interface{}, pUUID string)
 		"id":   fID,
 	}
 	sWifi := map[string]interface{}{
-		"ssid":     []byte(n.SSID),
+		"ssid":     []byte(ssid.Value),
 		"security": "802-11-wireless-security",
 	}
 	sWsec := map[string]interface{}{
 		"key-mgmt": "wpa-eap",
 		"proto":    []string{"rsn"},
-		"pairwise": []string{strings.ToLower(n.MinRSN)},
-		"group":    []string{strings.ToLower(n.MinRSN)},
+		"pairwise": []string{strings.ToLower(ssid.MinRSN)},
+		"group":    []string{strings.ToLower(ssid.MinRSN)},
 	}
 	sIP4 := map[string]interface{}{
 		"method": "auto",
@@ -147,10 +148,72 @@ func installBase(n network.Base, specifics map[string]interface{}, pUUID string)
 	return uuid, nil
 }
 
+// installBase contains the code for creating a network with NetworkManager
+// This contains the shared network settings between TLS and NonTLS
+// The specific 8021x settings are given as an argument `specific`
+// It loops through all SSIDs and creates different networks for each
+func installBase(n network.Base, specifics map[string]interface{}, pUUIDs []string) ([]string, error) {
+	// get  a mapping from ssids to the accompanying uuid
+	ssidMap := make(map[string]string)
+	for _, puuid := range pUUIDs {
+		con, err := PreviousCon(puuid)
+		if err != nil {
+			slog.Debug("failed getting previous con for UUID map", "error", err)
+			continue
+		}
+		settings, err := con.GetSettings()
+		if err != nil {
+			slog.Debug("failed getting settings con for UUID map", "error", err)
+			continue
+		}
+		ssid, err := settings.SSID()
+		if err != nil {
+			slog.Debug("failed getting ssid from settings con for UUID map", "error", err)
+			continue
+		}
+		if ssid != "" {
+			ssidMap[ssid] = puuid
+		}
+	}
+
+	var added []string
+
+	// remove connections no longer needed
+	defer func() {
+		for ssid, puuid := range ssidMap {
+			if slices.Contains(added, puuid) {
+				continue
+			}
+			slog.Debug("connection does not contain previous UUID, removing the connection", "ssid", ssid, "uuid", puuid, "added", added)
+			con, err := PreviousCon(puuid)
+			if err == nil {
+				err := con.Delete()
+				if err != nil {
+					slog.Debug("failed to delete connection", "error", err)
+				}
+			} else {
+				slog.Debug("previous connection does not exist, not removing", "error", err)
+			}
+		}
+	}()
+
+	// add new connections
+	for _, ssid := range n.SSIDs {
+		uuid := ssidMap[ssid.Value]
+		guuid, err := installBaseSSID(n, ssid, specifics, uuid)
+		if err != nil {
+			return added, err
+		}
+		added = append(added, guuid)
+	}
+
+	return added, nil
+}
+
 // Install installs a non TLS network and returns an error if it cannot configure it
 // Right now it adds a new profile that is not automatically added
 // It returns the uuid if the connection was added successfully
-func Install(n network.NonTLS, pUUID string) (string, error) {
+func Install(n network.NonTLS, pUUIDs []string) ([]string, error) {
 	s8021x := map[string]interface{}{
 		"eap": []string{
 			n.Method().String(),
@@ -165,24 +228,24 @@ func Install(n network.NonTLS, pUUID string) (string, error) {
 	} else {
 		s8021x["phase2-auth"] = n.InnerAuth.String()
 	}
-	return installBase(n.Base, s8021x, pUUID)
+	return installBase(n.Base, s8021x, pUUIDs)
 }
 
 // InstallTLS installs a TLS network and returns an error if it cannot configure it
 // Right now it adds a new profile that is not automatically added
 // It returns the uuid if the connection was added successfully
-func InstallTLS(n network.TLS, pUUID string) (string, error) {
+func InstallTLS(n network.TLS, pUUIDs []string) ([]string, error) {
 	ccFile, err := encodeFileBytes("client-cert.pem", n.ClientCert.ToPEM())
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	pkp, pwd, err := n.ClientCert.PrivateKeyPEMEnc()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	pkFile, err := encodeFileBytes("private-key.pem", pkp)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	s8021x := map[string]interface{}{
 		"eap": []string{
@@ -194,5 +257,5 @@ func InstallTLS(n network.TLS, pUUID string) (string, error) {
 		"private-key-password":       pwd,
 		"private-key-password-flags": 0,
 	}
-	return installBase(n.Base, s8021x, pUUID)
+	return installBase(n.Base, s8021x, pUUIDs)
 }

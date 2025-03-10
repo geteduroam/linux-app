@@ -14,6 +14,12 @@ import (
 
 // Config is the main structure for the configuration
 type Config struct {
+	UUIDs    []string   `json:"uuids"`
+	Validity *time.Time `json:"validity,omitempty"`
+}
+
+// V1 is the main structure for the old configuration where we only supported one SSID and profile
+type V1 struct {
 	UUID     string     `json:"uuid"`
 	Validity *time.Time `json:"validity,omitempty"`
 }
@@ -22,7 +28,8 @@ type Config struct {
 type Versioned struct {
 	// Config is the versioned configuration
 	// It is versioned so that we can change the version and migrate older configs in the future
-	Config Config `json:"v1"`
+	ConfigV1 *V1     `json:"v1,omitempty"`
+	Config   *Config `json:"v2,omitempty"`
 }
 
 // Directory returns the directory where the config files are stored
@@ -83,7 +90,16 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 	utils.Verbosef("Reading config file %s", p)
-	return &v.Config, nil
+	// If a v1 config is found, migrate it to a v2 one if that is empty
+	hasV1 := v.ConfigV1 != nil && v.ConfigV1.UUID != ""
+	hasV2 := v.Config != nil && len(v.Config.UUIDs) > 0
+	if hasV1 && !hasV2 {
+		return &Config{
+			UUIDs:    []string{v.ConfigV1.UUID},
+			Validity: v.ConfigV1.Validity,
+		}, nil
+	}
+	return v.Config, nil
 }
 
 // Write writes the configuration to the state
@@ -92,7 +108,7 @@ func (c Config) Write() (err error) {
 	// This is so that we can in the future migrate configs if we drastically change the format
 	// marshal the config
 	v := &Versioned{
-		Config: c,
+		Config: &c,
 	}
 	b, err := json.Marshal(&v)
 	if err != nil {

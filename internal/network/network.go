@@ -40,14 +40,20 @@ type ProviderInfo struct {
 	Terms string
 }
 
+// SSID is the pair of value and min RSN proto
+type SSID struct {
+	// Value is the SSID
+	Value string
+	// MinRSN is the minimum RSN proto
+	MinRSN string
+}
+
 // Base is the definition that each network always has
 type Base struct {
 	// Certs is the list of CA certificates that are used
 	Certs cert.Certs
-	// SSID is the name of the network
-	SSID string
-	// MinRSN is the minimum RSN proto
-	MinRSN string
+	// SSIDs are the list of SSIDs
+	SSIDs []SSID
 	// ServerIDs is the list of server names
 	ServerIDs []string
 	// ProviderInfo is the ProviderInfo info
