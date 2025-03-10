@@ -9,6 +9,7 @@ import (
 
 const (
 	Interface   = SettingsInterface + ".Connection"
+	Delete      = Interface + ".Delete"
 	Update      = Interface + ".Update"
 	GetSettings = Interface + ".GetSettings"
 )
@@ -29,6 +30,10 @@ func New(path dbus.ObjectPath) (*Connection, error) {
 
 func (c *Connection) Update(settings SettingsArgs) error {
 	return c.Call(Update, settings)
+}
+
+func (c *Connection) Delete() error {
+	return c.Call(Delete)
 }
 
 func (c *Connection) GetSettings() (SettingsArgs, error) {
