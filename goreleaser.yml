@@ -8,7 +8,7 @@ builds:
       - linux
     goarch:
       - amd64
-      - arch64
+      - arm64
     binary: geteduroam-cli
   - main: ./cmd/geteduroam-gui
     id: geteduroam-gui
@@ -16,7 +16,7 @@ builds:
       - linux
     goarch:
       - amd64
-      - arch64
+      - arm64
     binary: geteduroam-gui
   - main: ./cmd/geteduroam-notifcheck
     id: geteduroam-notifcheck
@@ -24,7 +24,7 @@ builds:
       - linux
     goarch:
       - amd64
-      - arch64
+      - arm64
     binary: geteduroam-notifcheck
   - main: ./cmd/geteduroam-cli
     id: getgovroam-cli
@@ -34,7 +34,7 @@ builds:
       - linux
     goarch:
       - amd64
-      - arch64
+      - arm64
     binary: getgovroam-cli
   - main: ./cmd/geteduroam-gui
     id: getgovroam-gui
@@ -44,7 +44,7 @@ builds:
       - linux
     goarch:
       - amd64
-      - arch64
+      - arm64
     binary: getgovroam-gui
   - main: ./cmd/geteduroam-notifcheck
     id: getgovroam-notifcheck
@@ -54,7 +54,7 @@ builds:
       - linux
     goarch:
       - amd64
-      - arch64
+      - arm64
     binary: getgovroam-notifcheck
 
 nfpms:
