@@ -75,7 +75,7 @@ nfpms:
     description: |-
       Geteduroam CLI client for Linux distributions.
     contents:
-        - src: systemd/user/
+        - src: systemd/user/geteduroam/
           dst: /etc/systemd/user/
           type: tree
 
@@ -107,7 +107,7 @@ nfpms:
         - src: cmd/geteduroam-gui/resources/share/
           dst: /usr/share
           type: tree
-        - src: systemd/user/
+        - src: systemd/user/geteduroam/
           dst: /etc/systemd/user/
           type: tree
 
@@ -142,7 +142,7 @@ nfpms:
     description: |-
       getgovroam CLI client for Linux distributions.
     contents:
-        - src: systemd/user/
+        - src: systemd/user/getgovroam/
           dst: /etc/systemd/user/
           type: tree
 
@@ -174,7 +174,7 @@ nfpms:
         - src: cmd/geteduroam-gui/resources/share_getgovroam/
           dst: /usr/share
           type: tree
-        - src: systemd/user/
+        - src: systemd/user/getgovroam/
           dst: /etc/systemd/user/
           type: tree
 
