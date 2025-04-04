@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/geteduroam/linux-app/internal/variant"
 	"golang.org/x/exp/slog"
 )
 
@@ -25,11 +26,12 @@ func hasUnit(unit string) bool {
 	return err == nil
 }
 
-const timerName string = "geteduroam-notifs.timer"
+const timerName string = variant.DisplayName + "-notifs.timer"
 
 func hasUnitFiles() bool {
-	if !hasUnit("geteduroam-notifs.service") {
-		slog.Error("geteduroam-notifs.service is not installed anywhere")
+	sn := variant.DisplayName + "-notifs.service"
+	if !hasUnit(sn) {
+		slog.Error(fmt.Sprintf("%s is not installed anywhere", sn))
 		return false
 	}
 	if !hasUnit(timerName) {

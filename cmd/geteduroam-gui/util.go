@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -9,6 +10,8 @@ import (
 	"github.com/jwijenbergh/puregotk/v4/gdkpixbuf"
 	"github.com/jwijenbergh/puregotk/v4/glib"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
+
+	"github.com/geteduroam/linux-app/internal/variant"
 )
 
 type StyledWidget interface {
@@ -44,7 +47,7 @@ func showErrorToast(overlay adw.ToastOverlay, err error) {
 
 func bytesPixbuf(b []byte) (*gdkpixbuf.Pixbuf, error) {
 	// TODO: do this without creating a temp file
-	f, err := os.CreateTemp("/tmp", "geteduroam-pixbuf")
+	f, err := os.CreateTemp("/tmp", fmt.Sprintf("%s-pixbuf", variant.DisplayName))
 	if err != nil {
 		return nil, err
 	}

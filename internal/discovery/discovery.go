@@ -11,6 +11,7 @@ import (
 	"golang.org/x/exp/slog"
 
 	"github.com/geteduroam/linux-app/internal/provider"
+	"github.com/geteduroam/linux-app/internal/variant"
 )
 
 // Discovery is the main structure that is used for unmarshalling the JSON
@@ -55,7 +56,7 @@ func (c *Cache) Providers() (*provider.Providers, error) {
 		return &c.Cached.Value.Providers, nil
 	}
 
-	req, err := http.NewRequest("GET", "https://discovery.eduroam.app/v3/discovery.json", nil)
+	req, err := http.NewRequest("GET", variant.DiscoveryURL, nil)
 	if err != nil {
 		return &c.Cached.Value.Providers, err
 	}

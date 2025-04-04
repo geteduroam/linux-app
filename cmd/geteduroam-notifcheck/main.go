@@ -11,12 +11,13 @@ import (
 	"github.com/geteduroam/linux-app/internal/log"
 	"github.com/geteduroam/linux-app/internal/nm"
 	"github.com/geteduroam/linux-app/internal/notification"
+	"github.com/geteduroam/linux-app/internal/variant"
 )
 
 const usage = `Usage of %s:
   -h, --help			Prints this help information
 
-  This CLI binary is needed for periodically checking for validity and giving notifications when the eduroam connection profile added by geteduroam is about to expire.
+  This CLI binary is needed for periodically checking for validity and giving notifications when the eduroam connection profile added by %s is about to expire.
   It gives a warning 10 days before expiry, and then every day. You can schedule to start this binary daily yourself or rely on the built-in systemd user timer.
   You also need notify-send installed to send the actual notifications.
 
@@ -40,14 +41,14 @@ func hasValidProfile(uuids []string) bool {
 }
 
 func main() {
-	program := "geteduroam-notifcheck"
+	program := fmt.Sprintf("%s-notifcheck", variant.DisplayName)
 	lpath, err := log.Location(program)
 	if err != nil {
 		lpath = "N/A"
 	}
-	flag.Usage = func() { fmt.Printf(usage, program, lpath) }
+	flag.Usage = func() { fmt.Printf(usage, program, variant.DisplayName, lpath) }
 	flag.Parse()
-	log.Initialize("geteduroam-notifcheck", false)
+	log.Initialize(fmt.Sprintf("%s-notifcheck", variant.DisplayName), false)
 	cfg, err := config.Load()
 	if err != nil {
 		slog.Error("no previous state", "error", err)
@@ -82,7 +83,7 @@ func main() {
 	if days > 0 {
 		text = fmt.Sprintf("profile expires in %d days", days)
 	}
-	msg := fmt.Sprintf("Your eduroam %s. Re-run geteduroam to renew the profile", text)
+	msg := fmt.Sprintf("Your eduroam %s. Re-run %s to renew the profile", text, variant.DisplayName)
 	err = notification.Send(msg)
 	if err != nil {
 		slog.Error("failed to send notification", "error", err)

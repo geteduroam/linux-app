@@ -13,6 +13,7 @@ import (
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/geteduroam/linux-app/internal/network/method"
 	"github.com/geteduroam/linux-app/internal/nm/connection"
+	"github.com/geteduroam/linux-app/internal/variant"
 )
 
 // encodePath encodes a string to a path expected by NetworkManager
@@ -73,7 +74,7 @@ func createCon(pUUID string, args connection.SettingsArgs) (*connection.Connecti
 // This contains the shared network settings between TLS and NonTLS
 // The specific 8021x settings are given as an argument `specific`
 func installBaseSSID(n network.Base, ssid network.SSID, specifics map[string]interface{}, pUUID string) (string, error) {
-	fID := fmt.Sprintf("%s (from geteduroam)", ssid.Value)
+	fID := fmt.Sprintf("%s (from %s)", ssid.Value, variant.DisplayName)
 	cUser, err := user.Current()
 	if err != nil {
 		return "", err

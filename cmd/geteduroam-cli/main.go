@@ -22,6 +22,7 @@ import (
 	"github.com/geteduroam/linux-app/internal/notification"
 	"github.com/geteduroam/linux-app/internal/provider"
 	"github.com/geteduroam/linux-app/internal/utils"
+	"github.com/geteduroam/linux-app/internal/variant"
 	"github.com/geteduroam/linux-app/internal/version"
 )
 
@@ -442,7 +443,7 @@ func main() {
 	var debug bool
 	var local string
 	var url string
-	program := "geteduroam-cli"
+	program := fmt.Sprintf("%s-cli", variant.DisplayName)
 	lpath, err := log.Location(program)
 	if err != nil {
 		lpath = "N/A"
@@ -466,7 +467,7 @@ func main() {
 	if verbose {
 		utils.IsVerbose = true
 	}
-	log.Initialize("geteduroam-cli", debug)
+	log.Initialize(program, debug)
 	if versionf {
 		fmt.Println(version.Get())
 		return
@@ -496,7 +497,7 @@ func main() {
 	default:
 		v = doDiscovery()
 	}
-	fmt.Println("\nAn eduroam profile has been added to NetworkManager with the name: \"eduroam (from geteduroam)\"")
+	fmt.Printf("\nThe %s profile has been added to NetworkManager with the name: \"eduroam (from %s)\"\n", variant.ProfileName, variant.DisplayName)
 	if v == nil {
 		return
 	}

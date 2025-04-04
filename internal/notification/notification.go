@@ -6,11 +6,12 @@ import (
 	"golang.org/x/exp/slog"
 
 	"github.com/geteduroam/linux-app/internal/notification/systemd"
+	"github.com/geteduroam/linux-app/internal/variant"
 )
 
 // Send sends a single notification with notify-send
 func Send(msg string) error {
-	_, err := exec.Command("notify-send", "geteduroam", msg).Output()
+	_, err := exec.Command("notify-send", variant.DisplayName, msg).Output()
 	return err
 }
 

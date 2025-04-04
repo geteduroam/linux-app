@@ -1,5 +1,6 @@
 # goreleaser.yml
 
+version: 2
 builds:
   - main: ./cmd/geteduroam-cli
     id: geteduroam-cli
@@ -22,6 +23,33 @@ builds:
     goarch:
       - amd64
     binary: geteduroam-notifcheck
+  - main: ./cmd/geteduroam-cli
+    id: getgovroam-cli
+    tags:
+      - getgovroam
+    goos:
+      - linux
+    goarch:
+      - amd64
+    binary: getgovroam-cli
+  - main: ./cmd/geteduroam-gui
+    id: getgovroam-gui
+    tags:
+      - getgovroam
+    goos:
+      - linux
+    goarch:
+      - amd64
+    binary: getgovroam-gui
+  - main: ./cmd/geteduroam-notifcheck
+    id: getgovroam-notifcheck
+    tags:
+      - getgovroam
+    goos:
+      - linux
+    goarch:
+      - amd64
+    binary: getgovroam-notifcheck
 
 nfpms:
   - file_name_template: '{{ .PackageName }}_{{ .Os }}_{{ .Arch }}'
@@ -29,7 +57,7 @@ nfpms:
     package_name: geteduroam-cli
     maintainer: Jeroen Wijenbergh
     homepage: https://geteduroam.org/
-    builds:
+    ids:
        - geteduroam-cli
        - geteduroam-notifcheck
     formats:
@@ -58,7 +86,7 @@ nfpms:
     package_name: geteduroam-gui
     maintainer: Jeroen Wijenbergh
     homepage: https://geteduroam.org/
-    builds:
+    ids:
        - geteduroam-gui
        - geteduroam-notifcheck
     formats:
@@ -71,6 +99,73 @@ nfpms:
       Geteduroam GUI client for Linux distributions.
     contents:
         - src: cmd/geteduroam-gui/resources/share/
+          dst: /usr/share
+          type: tree
+        - src: systemd/user/
+          dst: /etc/systemd/user/
+          type: tree
+
+    overrides:
+     deb:
+      dependencies:
+       - network-manager
+       - libgtk-4-1
+       - libadwaita-1-0
+       - libnotify-bin
+     rpm:
+      dependencies:
+       - NetworkManager
+       - gtk4
+       - libadwaita
+       - libnotify
+
+  - file_name_template: '{{ .PackageName }}_{{ .Os }}_{{ .Arch }}'
+    id: getgovroam-cli
+    package_name: getgovroam-cli
+    maintainer: Jeroen Wijenbergh
+    homepage: https://getgovroam.org/
+    ids:
+       - getgovroam-cli
+       - getgovroam-notifcheck
+    formats:
+       - deb
+       - rpm
+    bindir: /usr/bin
+    version_metadata: git
+    release: 1
+    description: |-
+      getgovroam CLI client for Linux distributions.
+    contents:
+        - src: systemd/user/
+          dst: /etc/systemd/user/
+          type: tree
+
+    overrides:
+     deb:
+      dependencies:
+       - network-manager
+     rpm:
+      dependencies:
+       - NetworkManager
+
+  - file_name_template: '{{ .PackageName }}_{{ .Os }}_{{ .Arch }}'
+    id: getgovroam-gui
+    package_name: getgovroam-gui
+    maintainer: Jeroen Wijenbergh
+    homepage: https://getgovroam.org/
+    ids:
+       - getgovroam-gui
+       - getgovroam-notifcheck
+    formats:
+       - deb
+       - rpm
+    bindir: /usr/bin
+    version_metadata: git
+    release: 1
+    description: |-
+      getgovroam GUI client for Linux distributions.
+    contents:
+        - src: cmd/geteduroam-gui/resources/share_getgovroam/
           dst: /usr/share
           type: tree
         - src: systemd/user/

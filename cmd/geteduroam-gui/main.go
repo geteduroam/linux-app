@@ -24,6 +24,7 @@ import (
 	"github.com/geteduroam/linux-app/internal/log"
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/geteduroam/linux-app/internal/provider"
+	"github.com/geteduroam/linux-app/internal/variant"
 	"github.com/geteduroam/linux-app/internal/version"
 )
 
@@ -353,20 +354,20 @@ func (m *mainState) initBurger() {
 
 	aboutcb := func(_ gio.SimpleAction, _ uintptr) {
 		awin := gtk.NewAboutDialog()
-		awin.SetName("geteduroam Linux client")
-		pb, err := bytesPixbuf([]byte(MustResource("images/geteduroam.png")))
+		awin.SetName(fmt.Sprintf("%s Linux client", variant.DisplayName))
+		pb, err := bytesPixbuf([]byte(MustResource("images/heart.png")))
 		if err == nil {
 			texture := gdk.NewTextureForPixbuf(pb)
 			defer pb.Unref()
 			awin.SetLogo(texture)
 			defer texture.Unref()
 		}
-		lpath, err := log.Location("geteduroam-gui")
+		lpath, err := log.Location(fmt.Sprintf("%s-gui", variant.DisplayName))
 		if err == nil {
 			awin.SetSystemInformation("Log location: " + lpath)
 		}
-		awin.SetProgramName("geteduroam GUI")
-		awin.SetComments("Client to easily and securely configure eduroam")
+		awin.SetProgramName(fmt.Sprintf("%s GUI", variant.DisplayName))
+		awin.SetComments(fmt.Sprintf("Client to easily and securely configure %s", variant.ProfileName))
 		awin.SetAuthors([]string{"Jeroen Wijenbergh", "Martin van Es", "Alexandru Cacean"})
 		awin.SetVersion(version.Get())
 		awin.SetWebsite("https://github.com/geteduroam/linux-app")
@@ -413,7 +414,7 @@ type ui struct {
 
 func (ui *ui) initBuilder() {
 	// open the builder
-	ui.builder = gtk.NewBuilderFromString(MustResource("geteduroam.ui"), -1)
+	ui.builder = gtk.NewBuilderFromString(MustResource("main.ui"), -1)
 }
 
 func (ui *ui) initWindow() {
@@ -421,7 +422,7 @@ func (ui *ui) initWindow() {
 	var win adw.Window
 	ui.builder.GetObject("mainWindow").Cast(&win)
 	defer win.Unref()
-	win.SetTitle("geteduroam GUI")
+	win.SetTitle(fmt.Sprintf("%s GUI", variant.DisplayName))
 	win.SetDefaultSize(400, 600)
 	// style the window using the css
 	var search adw.ViewStackPage
@@ -429,7 +430,7 @@ func (ui *ui) initWindow() {
 	defer search.Unref()
 	widg := search.GetChild()
 	defer widg.Unref()
-	styleWidget(widg, "window")
+	styleWidget(widg, fmt.Sprintf("window_%s", variant.DisplayName))
 	ui.app.AddWindow(&win.Window)
 	win.Show()
 }
@@ -448,7 +449,7 @@ func (ui *ui) activate() {
 }
 
 func (ui *ui) Run(args []string) int {
-	const id = "app.geteduroam.Linux"
+	id := fmt.Sprintf("app.%s.Linux", variant.DisplayName)
 	ui.app = adw.NewApplication(id, gio.GApplicationFlagsNoneValue)
 	defer ui.app.Unref()
 	actcb := func(_ gio.Application) {
@@ -475,7 +476,7 @@ func main() {
 	var versionf bool
 	var debug bool
 	var gtkarg string
-	program := "geteduroam-gui"
+	program := fmt.Sprintf("%s-gui", variant.DisplayName)
 	lpath, err := log.Location(program)
 	if err != nil {
 		lpath = "N/A"
