@@ -10,6 +10,7 @@ import (
 	"golang.org/x/exp/slog"
 
 	"github.com/geteduroam/linux-app/internal/utils"
+	"github.com/geteduroam/linux-app/internal/variant"
 )
 
 // Config is the main structure for the configuration
@@ -45,7 +46,7 @@ func Directory() (p string, err error) {
 		}
 		dir = filepath.Join(home, ".local/share")
 	}
-	p = filepath.Join(dir, "geteduroam")
+	p = filepath.Join(dir, variant.DisplayName)
 	return
 }
 

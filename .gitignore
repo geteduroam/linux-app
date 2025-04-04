@@ -1,6 +1,4 @@
 ./dist/
-./geteduroam-cli
-./geteduroam-gui
 /internal/eap/test_data/pkcs12/
 /builds/
 /.direnv/
@@ -8,4 +6,7 @@
 /geteduroam-cli
 /geteduroam-gui
 /geteduroam-notifcheck
+/getgovroam-cli
+/getgovroam-gui
+/getgovroam-notifcheck
 /shell.nix

@@ -6,6 +6,7 @@ import (
 
 	"github.com/geteduroam/linux-app/internal/notification"
 	"github.com/geteduroam/linux-app/internal/utils"
+	"github.com/geteduroam/linux-app/internal/variant"
 	"github.com/jwijenbergh/puregotk/v4/adw"
 	"github.com/jwijenbergh/puregotk/v4/glib"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
@@ -56,12 +57,14 @@ func (s *SuccessState) Initialize() {
 	s.builder.GetObject("successSubTitle").Cast(&sub)
 	defer sub.Unref()
 	sub.SetVisible(!s.isredirect)
+	sub.SetText(fmt.Sprintf("Your %s profile has been added", variant.ProfileName))
 	styleWidget(&sub, "label")
 
 	var name gtk.Label
 	s.builder.GetObject("successConName").Cast(&name)
 	defer name.Unref()
 	name.SetVisible(!s.isredirect)
+	name.SetText(fmt.Sprintf("Name: \"eduroam (from %s)\"", variant.DisplayName))
 
 	var expiry gtk.Label
 	s.builder.GetObject("expiryText").Cast(&expiry)
