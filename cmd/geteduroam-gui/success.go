@@ -60,12 +60,6 @@ func (s *SuccessState) Initialize() {
 	sub.SetText(fmt.Sprintf("Your %s profile has been added", variant.ProfileName))
 	styleWidget(&sub, "label")
 
-	var name gtk.Label
-	s.builder.GetObject("successConName").Cast(&name)
-	defer name.Unref()
-	name.SetVisible(!s.isredirect)
-	name.SetText(fmt.Sprintf("Name: \"eduroam (from %s)\"", variant.DisplayName))
-
 	var expiry gtk.Label
 	s.builder.GetObject("expiryText").Cast(&expiry)
 	defer expiry.Unref()

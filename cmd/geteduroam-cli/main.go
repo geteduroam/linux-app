@@ -497,7 +497,7 @@ func main() {
 	default:
 		v = doDiscovery()
 	}
-	fmt.Printf("\nThe %s profile has been added to NetworkManager with the name: \"eduroam (from %s)\"\n", variant.ProfileName, variant.DisplayName)
+	fmt.Printf("\nThe %s profile has been added to NetworkManager\n", variant.ProfileName)
 	if v == nil {
 		return
 	}

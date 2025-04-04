@@ -271,11 +271,6 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="successConName">
-                        <property name="label">Name: "eduroam (from geteduroam)"</property>
-                      </object>
-                    </child>
-                    <child>
                       <object class="GtkLabel" id="expiryText">
                         <property name="label">Your profile is valid for:</property>
                       </object>
