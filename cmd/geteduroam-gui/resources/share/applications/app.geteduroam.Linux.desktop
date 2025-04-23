@@ -6,3 +6,4 @@ Comment=A geteduroam client for Linux. Geteduroam simplifies the process of conn
 Exec=geteduroam-gui
 Icon=app.geteduroam.Linux
 Terminal=false
+Categories=Network;Utility;
