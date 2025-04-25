@@ -449,8 +449,7 @@ func (ui *ui) activate() {
 }
 
 func (ui *ui) Run(args []string) int {
-	id := fmt.Sprintf("app.%s.%s", variant.DisplayName, variant.DisplayName)
-	ui.app = adw.NewApplication(id, gio.GApplicationFlagsNoneValue)
+	ui.app = adw.NewApplication(variant.AppID, gio.GApplicationFlagsNoneValue)
 	defer ui.app.Unref()
 	actcb := func(_ gio.Application) {
 		ui.activate()
