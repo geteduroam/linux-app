@@ -4,5 +4,6 @@ Encoding=UTF-8
 Name=getgovroam
 Comment=A govroam client for Linux. Getgovroam simplifies the process of connecting to govroam.
 Exec=getgovroam-gui
-Icon=app.getgovroam.Linux
+Icon=app.getgovroam.getgovroam
 Terminal=false
+Categories=Network;Utility;
