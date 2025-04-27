@@ -2,6 +2,8 @@
 
 This repository contains the source code for the geteduroam Linux client. Currently WIP.
 
+[![Get it on Flathub](https://flathub.org/api/badge?locale=en)](https://flathub.org/apps/app.eduroam.geteduroam)
+
 # Install through DEB/RPM
 To install the client using official packages, go to the [GitHub
 releases page](https://github.com/geteduroam/linux-app/releases) and
