@@ -34,11 +34,11 @@
   <launchable type="desktop-id">app.eduroam.geteduroam.desktop</launchable>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/PucklaJ/linux-app/2aafcd8fb574e6631fd1af4041a942081bc66d85/cmd/geteduroam-gui/flatpak/start.png</image>
+      <image>https://raw.githubusercontent.com/geteduroam/linux-app/986c96313a766bf3baf7cc5f122e66ec49627206/cmd/geteduroam-gui/flatpak/start.png</image>
       <caption>A simple GUI to login to eduroam</caption>
     </screenshot>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/PucklaJ/linux-app/2aafcd8fb574e6631fd1af4041a942081bc66d85/cmd/geteduroam-gui/flatpak/success.png</image>
+      <image>https://raw.githubusercontent.com/geteduroam/linux-app/986c96313a766bf3baf7cc5f122e66ec49627206/cmd/geteduroam-gui/flatpak/success.png</image>
       <caption>A NetworkManager profile will be created automatically</caption>
     </screenshot>
   </screenshots>
