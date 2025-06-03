@@ -419,7 +419,11 @@ func (am *AuthenticationMethod) TLSNetwork(base network.Base) (network.Network, 
 		}
 	}
 
-	base.AnonIdentity = identity
+	if identity != "" {
+		base.AnonIdentity = identity
+	} else { // if the identity is not given in the EAP metadata, set it to the subject common name
+		base.AnonIdentity = fcc.SubjectCN()
+	}
 	return &network.TLS{
 		Base:       base,
 		ClientCert: fcc,
