@@ -101,3 +101,8 @@ func (cc *ClientCert) ToPEM() []byte {
 func (cc *ClientCert) Validity() (time.Time, time.Time) {
 	return cc.cert.NotBefore, cc.cert.NotAfter
 }
+
+// SubjectCN returns the CommonName for the certificate subject
+func (cc *ClientCert) SubjectCN() string {
+	return cc.cert.Subject.CommonName
+}
