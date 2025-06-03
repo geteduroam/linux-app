@@ -77,6 +77,19 @@ func uiThread(cb func()) {
 	glib.IdleAdd(&idlecb, 0)
 }
 
+func uiTicker(d uint, cb func() bool) {
+	var timecb glib.SourceFunc
+	timecb = func(uintptr) bool {
+		ret := cb()
+		if !ret {
+			// unref so this callback does not take up any slots
+			defer glib.UnrefCallback(&timecb) //nolint:errcheck
+		}
+		return ret
+	}
+	glib.TimeoutAddSeconds(d, &timecb, 0)
+}
+
 func ensureContextError(ctx context.Context, err error) error {
 	if err == nil {
 		return nil

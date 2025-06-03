@@ -118,6 +118,6 @@ func (t *TLS) ProviderInfo() ProviderInfo {
 	return t.Base.ProviderInfo
 }
 
-func (t *TLS) Validity() time.Time {
+func (t *TLS) Validity() (time.Time, time.Time) {
 	return t.ClientCert.Validity()
 }

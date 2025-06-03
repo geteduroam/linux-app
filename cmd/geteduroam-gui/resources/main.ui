@@ -271,7 +271,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="expiryText">
+                      <object class="GtkLabel" id="validityText">
                         <property name="label">Your profile is valid for:</property>
                       </object>
                     </child>

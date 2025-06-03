@@ -6,6 +6,8 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"errors"
+	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/youmark/pkcs8"
@@ -39,8 +41,13 @@ func NewClientCert(pkcs12s string, pass string, b64 bool) (*ClientCert, error) {
 
 	// do some basic checks on the validity bounds
 	curr := time.Now()
-	if curr.Before(cc.NotBefore) {
-		return nil, errors.New("client certificate is used before the 'Not Before' time")
+
+	// Due to clock skew, it could be that the client time is too early
+	// We allow a delta of 5 minutes
+	const delta = 5
+	if curr.Add(delta * time.Minute).Before(cc.NotBefore) {
+		slog.Error("client certificate is used before Not Before + delta", "time", curr, "nb", cc.NotBefore)
+		return nil, fmt.Errorf("client certificate is used before the 'Not Before' time with a delta of %d minutes", delta)
 	}
 	if curr.After(cc.NotAfter) {
 		return nil, errors.New("client certificate is used after the 'Not After' time")
@@ -88,8 +95,9 @@ func (cc *ClientCert) ToPEM() []byte {
 	return toPEM(cc.cert)
 }
 
-// Validity returns until when the client certificate is valid
+// Validity returns starting at and until when the client certificate is valid
 // Before this time the certificate should thus be renewed by running the client again
-func (cc *ClientCert) Validity() time.Time {
-	return cc.cert.NotAfter
+// It could be also that, due to clock skew, the cert is not valid yet, which is indicated by the first value
+func (cc *ClientCert) Validity() (time.Time, time.Time) {
+	return cc.cert.NotBefore, cc.cert.NotAfter
 }

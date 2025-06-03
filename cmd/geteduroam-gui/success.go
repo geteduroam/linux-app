@@ -16,16 +16,18 @@ type SuccessState struct {
 	builder    *gtk.Builder
 	parent     *gtk.Window
 	stack      *adw.ViewStack
-	expiry     *time.Time
+	vBeg       *time.Time
+	vEnd       *time.Time
 	isredirect bool
 }
 
-func NewSuccessState(builder *gtk.Builder, parent *gtk.Window, stack *adw.ViewStack, expiry *time.Time, isredirect bool) *SuccessState {
+func NewSuccessState(builder *gtk.Builder, parent *gtk.Window, stack *adw.ViewStack, vBeg *time.Time, vEnd *time.Time, isredirect bool) *SuccessState {
 	return &SuccessState{
 		builder:    builder,
 		parent:     parent,
 		stack:      stack,
-		expiry:     expiry,
+		vBeg:       vBeg,
+		vEnd:       vEnd,
 		isredirect: isredirect,
 	}
 }
@@ -60,26 +62,44 @@ func (s *SuccessState) Initialize() {
 	sub.SetText(fmt.Sprintf("Your %s profile has been added", variant.ProfileName))
 	styleWidget(&sub, "label")
 
-	var expiry gtk.Label
-	s.builder.GetObject("expiryText").Cast(&expiry)
-	defer expiry.Unref()
-	if s.expiry != nil {
-		expiry.SetMarkup(fmt.Sprintf("%s <b>%d</b> days", expiry.GetText(), utils.ValidityDays(*s.expiry)))
-		expiry.Show()
+	var valid gtk.Label
+	s.builder.GetObject("validityText").Cast(&valid)
+	defer valid.Unref()
+	validText := valid.GetText()
+	if s.vBeg == nil {
+		valid.Hide()
+		valid.Unref()
 	} else {
-		expiry.Hide()
+		uiTicker(1, func() bool {
+			delta := time.Until(*s.vBeg)
+			// We do not want to show on 0 seconds
+			if delta >= 1*time.Second {
+				valid.SetMarkup(fmt.Sprintf("Your profile will be valid in: %s", utils.DeltaTime(delta, "<b>", "</b>")))
+				valid.Show()
+				return true
+			}
+			if s.vEnd != nil {
+				valid.SetMarkup(fmt.Sprintf("%s <b>%d</b> days", validText, utils.ValidityDays(*s.vEnd)))
+			} else { // not very realistic this happens, but in theory it could
+				valid.SetMarkup("Your profile is valid")
+			}
+			valid.Show()
+			valid.Unref()
+			return false
+		})
 	}
+
 	// set the page as current
 	setPage(s.stack, &page)
 
-	if s.expiry == nil {
+	if s.vEnd == nil {
 		return
 	}
 	if !notification.HasDaemonSupport() {
 		return
 	}
 
-	dialog := adw.NewMessageDialog(s.parent, "Enable notifications?", fmt.Sprintf("This connection profile will expire in %d days.\n\nDo you want to enable notifications that warn for imminent expiry using systemd?", utils.ValidityDays(*s.expiry)))
+	dialog := adw.NewMessageDialog(s.parent, "Enable notifications?", fmt.Sprintf("This connection profile will expire in %d days.\n\nDo you want to enable notifications that warn for imminent expiry using systemd?", utils.ValidityDays(*s.vEnd)))
 	dialog.AddResponse("disable", "Disable")
 	dialog.AddResponse("enable", "Enable")
 	dialog.SetResponseAppearance("enable", adw.ResponseSuggestedValue)

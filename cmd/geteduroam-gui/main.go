@@ -118,7 +118,7 @@ func (m *mainState) askCertificate(cert string, pwd string, pi network.ProviderI
 	return cert, pass, nil
 }
 
-func (m *mainState) file(metadata []byte) (*time.Time, error) {
+func (m *mainState) file(metadata []byte) (*time.Time, *time.Time, error) {
 	h := handler.Handlers{
 		CredentialsH: m.askCredentials,
 		CertificateH: m.askCertificate,
@@ -131,23 +131,23 @@ func (m *mainState) direct(p provider.Profile) error {
 	if err != nil {
 		return err
 	}
-	_, err = m.file(config)
+	_, _, err = m.file(config)
 	return err
 }
 
-func (m *mainState) local(path string) (*time.Time, error) {
+func (m *mainState) local(path string) (*time.Time, *time.Time, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	v, err := m.file(b)
+	vBeg, vEnd, err := m.file(b)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return v, nil
+	return vBeg, vEnd, nil
 }
 
-func (m *mainState) oauth(ctx context.Context, p provider.Profile) (*time.Time, error) {
+func (m *mainState) oauth(ctx context.Context, p provider.Profile) (*time.Time, *time.Time, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	config, err := p.EAPOAuth(ctx, func(url string) {
@@ -162,7 +162,7 @@ func (m *mainState) oauth(ctx context.Context, p provider.Profile) (*time.Time, 
 		})
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	return m.file(config)
@@ -179,7 +179,8 @@ func (m *mainState) rowActivated(sel provider.Provider) {
 		defer func() {
 			err = ensureContextError(ctx, err)
 		}()
-		var valid *time.Time
+		var vBeg *time.Time
+		var vEnd *time.Time
 		var isredirect bool
 		switch p.Flow() {
 		case provider.DirectFlow:
@@ -188,7 +189,7 @@ func (m *mainState) rowActivated(sel provider.Provider) {
 				return err
 			}
 		case provider.OAuthFlow:
-			valid, err = m.oauth(ctx, p)
+			vBeg, vEnd, err = m.oauth(ctx, p)
 			if err != nil {
 				return err
 			}
@@ -204,7 +205,7 @@ func (m *mainState) rowActivated(sel provider.Provider) {
 			}
 			fmt.Println("Browser has been opened with URL:", url)
 		}
-		s := NewSuccessState(m.builder, m.app.GetActiveWindow(), m.stack, valid, isredirect)
+		s := NewSuccessState(m.builder, m.app.GetActiveWindow(), m.stack, vBeg, vEnd, isredirect)
 		uiThread(func() {
 			s.Initialize()
 		})
@@ -322,7 +323,7 @@ func (m *mainState) localMetadata() {
 	}
 	fd.Run(func(path string) {
 		go func() {
-			v, err := m.local(path)
+			vBeg, vEnd, err := m.local(path)
 			if err != nil {
 				uiThread(func() {
 					m.activate()
@@ -330,7 +331,7 @@ func (m *mainState) localMetadata() {
 				})
 				return
 			}
-			s := NewSuccessState(m.builder, m.app.GetActiveWindow(), m.stack, v, false)
+			s := NewSuccessState(m.builder, m.app.GetActiveWindow(), m.stack, vBeg, vEnd, false)
 			s.Initialize()
 		}()
 	})

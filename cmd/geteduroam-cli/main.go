@@ -302,7 +302,7 @@ func askCertificate(cert string, pass string, pi network.ProviderInfo) (string, 
 }
 
 // file does the flow when the file has been obtained
-func file(metadata []byte) (*time.Time, error) {
+func file(metadata []byte) (*time.Time, *time.Time, error) {
 	h := handler.Handlers{
 		CredentialsH: askCredentials,
 		CertificateH: askCertificate,
@@ -323,7 +323,7 @@ func direct(p *provider.Profile) {
 	}
 
 	// we can ignore the validity because this does not use a client cert
-	_, err = file(config)
+	_, _, err = file(config)
 	if err != nil {
 		slog.Error("Failed to configure the connection using the metadata", "error", err)
 		fmt.Printf("Failed to configure the connection using the metadata %v\n", err)
@@ -349,7 +349,7 @@ func redirect(p *provider.Profile) {
 }
 
 // oauth does the handling for the OAuth flow
-func oauth(p *provider.Profile) *time.Time {
+func oauth(p *provider.Profile) (*time.Time, *time.Time) {
 	config, err := p.EAPOAuth(context.Background(), func(url string) {
 		fmt.Println("Your browser has been opened to authorize the client")
 		fmt.Println("Or copy and paste the following url:", url)
@@ -359,32 +359,32 @@ func oauth(p *provider.Profile) *time.Time {
 		os.Exit(1)
 	}
 
-	v, err := file(config)
+	vBeg, vEnd, err := file(config)
 	if err != nil {
 		slog.Error("Failed to configure the connection using the OAuth metadata", "error", err)
 		fmt.Printf("Failed to configure the connection using the OAuth metadata %v\n", err)
 		os.Exit(1)
 	}
-	return v
+	return vBeg, vEnd
 }
 
-func doLocal(filename string) *time.Time {
+func doLocal(filename string) (*time.Time, *time.Time) {
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		slog.Error("Failed to read local file", "error", err)
 		fmt.Printf("Failed to read local file %v\n", err)
 		os.Exit(1)
 	}
-	v, err := file(b)
+	vBeg, vEnd, err := file(b)
 	if err != nil {
 		slog.Error("Failed to configure the connection using the metadata", "error", err)
 		fmt.Printf("Failed to configure the connection using the metadata %v\n", err)
 		os.Exit(1)
 	}
-	return v
+	return vBeg, vEnd
 }
 
-func chosenProvider(chosen *provider.Provider) *time.Time {
+func chosenProvider(chosen *provider.Provider) (*time.Time, *time.Time) {
 	p := profile(chosen.Profiles)
 
 	// TODO: This switch statement should probably be moved to the profile code
@@ -397,10 +397,10 @@ func chosenProvider(chosen *provider.Provider) *time.Time {
 	case provider.OAuthFlow:
 		return oauth(p)
 	}
-	return nil
+	return nil, nil
 }
 
-func doDiscovery() *time.Time {
+func doDiscovery() (*time.Time, *time.Time) {
 	c := discovery.NewCache()
 	prov, err := c.Providers()
 	if err != nil {
@@ -413,7 +413,7 @@ func doDiscovery() *time.Time {
 	return chosenProvider(chosen)
 }
 
-func doURL(url string) *time.Time {
+func doURL(url string) (*time.Time, *time.Time) {
 	prov, err := provider.Custom(context.Background(), url)
 	if err != nil {
 		slog.Error("Failed to get EAP metadata from URL", "error", err)
@@ -489,20 +489,29 @@ func main() {
 		os.Exit(1)
 	}
 
-	var v *time.Time
+	var vBeg *time.Time
+	var vEnd *time.Time
 	switch {
 	case local != "":
-		doLocal(local)
+		vBeg, vEnd = doLocal(local)
 	case url != "":
-		doURL(url)
+		vBeg, vEnd = doURL(url)
 	default:
-		v = doDiscovery()
+		vBeg, vEnd = doDiscovery()
 	}
 	fmt.Printf("\nThe %s profile has been added to NetworkManager\n", variant.ProfileName)
-	if v == nil {
+	if vEnd == nil {
 		return
 	}
-	fmt.Printf("Your profile is valid for: %d days\n", utils.ValidityDays(*v))
+	fmt.Printf("Your profile is valid for: %d days\n", utils.ValidityDays(*vEnd))
+	curr := time.Now()
+	if vBeg != nil && curr.Before(*vBeg) {
+		delta := vBeg.Sub(curr)
+		// if there is more than 5 second difference we show a countdown
+		if delta > 5*time.Second {
+			fmt.Printf("And you can start using the profile in: %s\n", utils.DeltaTime(delta, "", ""))
+		}
+	}
 	if !notification.HasDaemonSupport() {
 		return
 	}

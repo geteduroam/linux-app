@@ -46,11 +46,11 @@ func (h Handlers) network(config []byte) (network.Network, error) {
 
 // Configure configures the connection using the parsed configuration
 // It installs it using NetworkManager
-func (h Handlers) Configure(eap []byte) (*time.Time, error) {
+func (h Handlers) Configure(eap []byte) (*time.Time, *time.Time, error) {
 	// Get the network
 	n, err := h.network(eap)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var uuids []string
 
@@ -60,14 +60,15 @@ func (h Handlers) Configure(eap []byte) (*time.Time, error) {
 		uuids = c.UUIDs
 	}
 
-	var valid *time.Time
+	var validFor *time.Time
+	var validAt *time.Time
 	switch t := n.(type) {
 	case *network.NonTLS:
 		if t.Credentials.Username == "" || t.Credentials.Password == "" {
 			username, password, cerr := h.CredentialsH(t.Credentials, n.ProviderInfo())
 			if cerr != nil {
 				slog.Debug("Error asking for credentials", "error", err)
-				return nil, cerr
+				return nil, nil, cerr
 			}
 			t.Credentials.Username = username
 			t.Credentials.Password = password
@@ -80,16 +81,17 @@ func (h Handlers) Configure(eap []byte) (*time.Time, error) {
 		if t.ClientCert == nil {
 			ccert, passphrase, err := h.CertificateH(t.RawPKCS12, t.Password, n.ProviderInfo())
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			// here the data is not base64 encoded
 			t.ClientCert, err = cert.NewClientCert(ccert, passphrase, b64)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 		}
-		v := t.Validity()
-		valid = &v
+		vBeg, vEnd := t.Validity()
+		validFor = &vEnd
+		validAt = &vBeg
 		uuids, err = nm.InstallTLS(*t, uuids)
 	default:
 		panic("unsupported network")
@@ -97,19 +99,19 @@ func (h Handlers) Configure(eap []byte) (*time.Time, error) {
 	if err != nil {
 		if len(uuids) == 0 {
 			slog.Error("Error installing network", "error", err)
-			return nil, err
+			return nil, nil, err
 		}
 		slog.Info("One of the networks failed to install", "error", err)
 	}
 	// save the config with the uuid
 	nc := config.Config{
 		UUIDs:    uuids,
-		Validity: valid,
+		Validity: validFor,
 	}
 	err = nc.Write()
 	if err != nil {
 		slog.Debug("Error configuring network", "error", err)
-		return nil, err
+		return nil, nil, err
 	}
-	return valid, nil
+	return validAt, validFor, nil
 }

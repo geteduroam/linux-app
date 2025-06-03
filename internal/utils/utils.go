@@ -50,3 +50,30 @@ func ValidityDays(v time.Time) int {
 	days := v.Sub(now).Hours() / 24
 	return int(math.Ceil(days))
 }
+
+// DeltaTime gives a human readable output for a time difference
+// markb and marke mark the beginning and end markers, e.g. bold text
+func DeltaTime(d time.Duration, markb string, marke string) string {
+	n := int(d.Seconds())
+	mins := n / 60
+	secs := n % 60
+
+	minText := "minutes"
+	secText := "seconds"
+	if mins == 1 {
+		minText = "minute"
+	}
+	if secs == 1 {
+		secText = "second"
+	}
+
+	switch {
+	case mins > 0 && secs > 0:
+		return fmt.Sprintf("%s%d%s %s and %s%d%s %s", markb, mins, marke, minText, markb, secs, marke, secText)
+
+	case mins > 0:
+		return fmt.Sprintf("%s%d%s %s", markb, mins, marke, minText)
+	default:
+		return fmt.Sprintf("%s%d%s %s", markb, secs, marke, secText)
+	}
+}
