@@ -92,7 +92,7 @@ type mainState struct {
 
 func (m *mainState) initServers() {
 	m.servers = &serverList{}
-	m.servers.store = gtk.NewStringList(0)
+	m.servers.store = gtk.NewStringList(nil)
 }
 
 func (m *mainState) activate() {
