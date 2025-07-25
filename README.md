@@ -4,6 +4,8 @@ This repository contains the source code for the geteduroam Linux client. Curren
 
 [![Get it on Flathub](https://flathub.org/api/badge?locale=en)](https://flathub.org/apps/app.eduroam.geteduroam)
 
+Note that currently it only works with NetworkManager. But support for e.g. wpa-supplicant and iwd is planned.
+
 # Install through DEB/RPM
 To install the client using official packages, go to the [GitHub
 releases page](https://github.com/geteduroam/linux-app/releases) and
@@ -20,6 +22,7 @@ We also have a small binary that is used for sending of notifications, which we 
 - GTK >= 4.06 (for the GUI)
 - Libadwaita >= 1.1 (for the GUI)
 - libnotify (for notifications)
+- NetworkManager
 
 ## CLI
 To build the CLI client run:
