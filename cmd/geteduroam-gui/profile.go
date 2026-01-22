@@ -58,8 +58,12 @@ func (p *ProfileState) Initialize() {
 		return provider.SortNames(p.profiles[a].Name, p.profiles[b].Name, "")
 	}
 	activated := func(idx int) {
-		go p.success(p.profiles[idx])
-		p.Destroy()
+		go func() {
+			p.success(p.profiles[idx])
+			uiThread(func() {
+				p.Destroy()
+			})
+		}()
 	}
 
 	p.sl = NewSelectList(&scroll, &list, activated, sorter)
