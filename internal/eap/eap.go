@@ -339,7 +339,7 @@ func (ca *CertData) isValid(format string) bool {
 }
 
 // CaList gets a list of certificates by looping through the certificate list and returning all *valid* certificates
-func (ss *ServerCredentialVariants) CAList() (*cert.Certs, error) {
+func (ss *ServerCredentialVariants) CAList() ([]byte, error) {
 	var certs []string
 	for _, c := range ss.CA {
 		if c.isValid("X.509") {
@@ -498,7 +498,7 @@ func (am *AuthenticationMethod) Network(ssids []network.SSID, pinfo network.Prov
 	// These are the settings that are common for each network
 	sid := ss.ServerID
 	base := network.Base{
-		Certs:        *CA,
+		Certs:        CA,
 		ProviderInfo: pinfo,
 		SSIDs:        ssids,
 		ServerIDs:    sid,
