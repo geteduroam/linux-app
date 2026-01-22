@@ -99,17 +99,13 @@ func (s *SuccessState) Initialize() {
 		return
 	}
 
-	dialog := adw.NewMessageDialog(s.parent, "Enable notifications?", fmt.Sprintf("This connection profile will expire in %d days.\n\nDo you want to enable notifications that warn for imminent expiry using systemd?", utils.ValidityDays(*s.vEnd)))
-	dialog.AddResponse("disable", "Disable")
-	dialog.AddResponse("enable", "Enable")
-	dialog.SetResponseAppearance("enable", adw.ResponseSuggestedValue)
-	dialog.SetDefaultResponse("disable")
-	dialog.SetCloseResponse("disale")
-
-	var dialogcb func(adw.MessageDialog, string)
-	dialogcb = func(_ adw.MessageDialog, response string) {
+	dialog := gtk.NewMessageDialog(s.parent, gtk.DialogDestroyWithParentValue, gtk.MessageQuestionValue, gtk.ButtonsYesNoValue, "This connection profile will expire in %i days.\n\nDo you want to enable notifications that warn for imminent expiry using systemd?", utils.ValidityDays(*s.vEnd))
+	dialog.Present()
+	var dialogcb func(gtk.Dialog, int)
+	dialogcb = func(_ gtk.Dialog, response int) {
 		defer glib.UnrefCallback(&dialogcb) //nolint:errcheck
-		notification.ConfigureDaemon(response == "enable")
+		notification.ConfigureDaemon(int32(response) == int32(gtk.ResponseYesValue))
+		dialog.Destroy()
 	}
 	dialog.ConnectResponse(&dialogcb)
 	dialog.Present()
