@@ -112,7 +112,7 @@ func installBaseSSID(n network.Base, ssid network.SSID, specifics map[string]int
 		v := fmt.Sprintf("DNS:%s", sid)
 		sids = append(sids, v)
 	}
-	caFile, err := encodeFileBytes("ca-cert.pem", n.Certs.ToPEM())
+	caFile, err := encodeFileBytes("ca-cert.pem", n.Certs)
 	if err != nil {
 		return "", err
 	}

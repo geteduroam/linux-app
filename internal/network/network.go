@@ -51,7 +51,7 @@ type SSID struct {
 // Base is the definition that each network always has
 type Base struct {
 	// Certs is the list of CA certificates that are used
-	Certs cert.Certs
+	Certs []byte
 	// SSIDs are the list of SSIDs
 	SSIDs []SSID
 	// ServerIDs is the list of server names
