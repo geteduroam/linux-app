@@ -90,6 +90,11 @@ func (cc *ClientCert) PrivateKeyPEMEnc() (pemb []byte, pwd string, err error) {
 	return pem.EncodeToMemory(block), pwd, nil
 }
 
+// toPEM converts an x509 certificate to a PEM encoded block
+func toPEM(cert *x509.Certificate) []byte {
+	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
+}
+
 // ToPEM generates the PEM bytes for the client certificate
 func (cc *ClientCert) ToPEM() []byte {
 	return toPEM(cc.cert)

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os/user"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -112,12 +113,16 @@ func installBaseSSID(n network.Base, ssid network.SSID, specifics map[string]int
 		v := fmt.Sprintf("DNS:%s", sid)
 		sids = append(sids, v)
 	}
-	caFile, err := encodeFileBytes("ca-cert.pem", n.Certs)
+	caBasePath, err := config.Directory()
+	if err != nil {
+		return "", err
+	}
+	err = n.Certs.ToDir(caBasePath)
 	if err != nil {
 		return "", err
 	}
 	s8021x := map[string]interface{}{
-		"ca-cert":            caFile,
+		"ca-path":            filepath.Join(caBasePath, "ca"),
 		"altsubject-matches": sids,
 	}
 	// add the network specific settings
