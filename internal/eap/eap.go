@@ -339,7 +339,7 @@ func (ca *CertData) isValid(format string) bool {
 }
 
 // CaList gets a list of certificates by looping through the certificate list and returning all *valid* certificates
-func (ss *ServerCredentialVariants) CAList() ([]byte, error) {
+func (ss *ServerCredentialVariants) CAList() (cert.Certificates, error) {
 	var certs []string
 	for _, c := range ss.CA {
 		if c.isValid("X.509") {
