@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/geteduroam/linux-app/internal/network/cert/rehash"
 )
 
 // toPEMFile converts an x509 certificate `cert` to a PEM encoded file `p`
@@ -48,14 +50,19 @@ func (c Certificates) ToDir(baseDir string) error {
 	if err := os.MkdirAll(caDir, 0o700); err != nil {
 		return err
 	}
+	hashes := map[uint32][]string{}
 	for k, v := range c {
 		fp := filepath.Join(caDir, fmt.Sprintf("%d.pem", k))
 		if err := toPEMFile(fp, v); err != nil {
 			return err
 		}
+		hash, err := rehash.SubjectNameHash(v)
+		if err != nil {
+			return fmt.Errorf("error getting subject name hash for cert (path=%q)\n%w", fp, err)
+		}
+		hashes[hash] = append(hashes[hash], fp)
 	}
-	// TODO: rehash dir
-	return nil
+	return rehash.CreateSymlinks(caDir, hashes)
 }
 
 // New creates certs by decoding each certificate and continuing on invalid certificates
