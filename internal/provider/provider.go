@@ -1,3 +1,4 @@
+// Package provider implements various functions for a discovery provider
 package provider
 
 import (

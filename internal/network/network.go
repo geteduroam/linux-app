@@ -1,3 +1,4 @@
+// Package network implements functions for configuring an eduroam network
 package network
 
 import (

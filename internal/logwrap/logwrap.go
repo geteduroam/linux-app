@@ -1,4 +1,4 @@
-// Package log implements wrapper around loggers
+// Package logwrap implements wrapper around loggers
 package logwrap
 
 import (
