@@ -37,7 +37,7 @@ jobs:
 # See https://github.com/golangci/golangci-lint-action/issues/485 for why we do --out-....
         with:
           version: latest
-          args: "-E stylecheck,revive,gocritic --timeout 5m"
+          args: "-E staticcheck,revive,gocritic --timeout 5m"
 
   build-cli:
     name: Build CLI
