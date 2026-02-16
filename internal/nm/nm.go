@@ -1,3 +1,4 @@
+// Package nm implements the functions needed to configure the connection using NetworkManager
 package nm
 
 import (
