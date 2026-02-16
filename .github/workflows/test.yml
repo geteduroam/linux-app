@@ -33,11 +33,11 @@ jobs:
           go-version: ^1.18
       - uses: actions/checkout@v3
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v9
 # See https://github.com/golangci/golangci-lint-action/issues/485 for why we do --out-....
         with:
           version: latest
-          args: "-E stylecheck,revive,gocritic --out-${NO_FUTURE}format colored-line-number --timeout 5m"
+          args: "-E stylecheck,revive,gocritic --timeout 5m"
 
   build-cli:
     name: Build CLI
