@@ -8,6 +8,7 @@ import (
 	"github.com/geteduroam/linux-app/internal/network/method"
 )
 
+// Network defines the interface for a network
 // A network belongs to the network interface when it has a method
 type Network interface {
 	// Method returns the EAP method
@@ -89,10 +90,12 @@ type NonTLS struct {
 	InnerAuth inner.Type
 }
 
+// Method returns the method for the NonTLS network
 func (n *NonTLS) Method() method.Type {
 	return n.MethodType
 }
 
+// ProviderInfo returns the provider info for the NonTLS network
 func (n *NonTLS) ProviderInfo() ProviderInfo {
 	return n.Base.ProviderInfo
 }
@@ -110,14 +113,17 @@ type TLS struct {
 	Password string
 }
 
+// Method returns the method for the TLS network
 func (t *TLS) Method() method.Type {
 	return method.TLS
 }
 
+// ProviderInfo returns the provider info for the TLS network
 func (t *TLS) ProviderInfo() ProviderInfo {
 	return t.Base.ProviderInfo
 }
 
+// Validity returns the start time and expiry time of the TLS client certificate
 func (t *TLS) Validity() (time.Time, time.Time) {
 	return t.ClientCert.Validity()
 }

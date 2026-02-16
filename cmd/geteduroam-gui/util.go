@@ -51,7 +51,7 @@ func bytesPixbuf(b []byte) (*gdkpixbuf.Pixbuf, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer os.Remove(f.Name())
+	defer os.Remove(f.Name()) //nolint:errcheck
 	_, err = f.Write(b)
 	if err != nil {
 		return nil, err

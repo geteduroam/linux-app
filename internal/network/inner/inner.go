@@ -1,3 +1,4 @@
+// Package inner implements inner EAP authentication methods
 package inner
 
 import (
@@ -9,13 +10,19 @@ type Type int
 
 // TODO: Should we split these in EAP and non-EAP instead?
 const (
-	None     Type = 0
-	Pap      Type = 1
-	Mschap   Type = 2
+	// None is no EAP inner authentication
+	None Type = 0
+	// Pap is PAP inner authentication
+	Pap Type = 1
+	// Mschap is MSCHAP inner authentication
+	Mschap Type = 2
+	// Mschapv2 is MSCHAPv2 inner authentication
 	Mschapv2 Type = 3
 	// TODO: remove this? https://github.com/geteduroam/windows-app/blob/f11f00dee3eb71abd38537e18881463f83b180d3/CHANGELOG.md?plain=1#L34
+	// EapPeapMschapv2 is EAP-PEAP-MSCHAPv2 inner authentication
 	EapPeapMschapv2 Type = 25
-	EapMschapv2     Type = 26
+	// EapMschapv2 is EAP-MSCHAPv2 inner authentication
+	EapMschapv2 Type = 26
 )
 
 // EAP returns whether the type is an EAP inner type

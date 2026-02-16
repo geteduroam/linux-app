@@ -1,3 +1,4 @@
+// Package log implements wrapper around loggers
 package log
 
 import (
@@ -10,6 +11,8 @@ import (
 	"golang.org/x/exp/slog"
 )
 
+// Location returns the location of the log file
+// and creates it if not exists
 func Location(program string) (string, error) {
 	logfile := fmt.Sprintf("%s.log", program)
 	dir, err := config.Directory()

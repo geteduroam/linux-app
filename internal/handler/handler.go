@@ -1,4 +1,4 @@
-// package handlers handles the eduroam connection by parsing the byte array
+// Package handler handles the eduroam connection by parsing the byte array
 // It has handlers for UI events
 package handler
 

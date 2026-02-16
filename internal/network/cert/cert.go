@@ -1,3 +1,4 @@
+// Package cert implements parsing of X509 certificates
 package cert
 
 import (
@@ -18,9 +19,8 @@ func toPEMFile(p string, cert *x509.Certificate) error {
 	if err != nil {
 		return err
 	}
-	defer gfile.Close()
-	pem.Encode(gfile, &pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
-	return nil
+	defer gfile.Close() //nolint:errcheck
+	return pem.Encode(gfile, &pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
 }
 
 func removeIfExists(p string) error {

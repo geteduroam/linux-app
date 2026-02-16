@@ -3,8 +3,12 @@
 package variant
 
 const (
-	AppID        string = "nl.govroam.getgovroam"
+	// AppID is the application ID for getgovroam
+	AppID string = "nl.govroam.getgovroam"
+	// DiscoveryURL is the discovery URL for getgovroam
 	DiscoveryURL string = "https://discovery.getgovroam.nl/v3/discovery.json"
-	DisplayName  string = "getgovroam"
-	ProfileName  string = "govroam"
+	// DisplayName is the display name for getgovroam
+	DisplayName string = "getgovroam"
+	// ProfileName is the connection profile name for govroam
+	ProfileName string = "govroam"
 )

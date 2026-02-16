@@ -1,3 +1,4 @@
+// Package version implements version info for the client
 package version
 
 import (
