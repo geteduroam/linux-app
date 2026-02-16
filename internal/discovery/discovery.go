@@ -1,4 +1,4 @@
-// package discovery contains methods to parse the discovery format from https://discovery.eduroam.app/v3/discovery.json into providers
+// Package discovery contains methods to parse the discovery format from https://discovery.eduroam.app/v3/discovery.json into providers
 package discovery
 
 import (
@@ -19,6 +19,7 @@ type Discovery struct {
 	Value Value `json:"http://letswifi.app/discovery#v3"`
 }
 
+// Value is the discovery JSON value
 type Value struct {
 	Providers provider.Providers `json:"providers"`
 	// See: https://github.com/geteduroam/windows-app/blob/22cd90f36031907c7174fbdc678edafaa627ce49/CHANGELOG.md#changed
@@ -68,7 +69,7 @@ func (c *Cache) Providers() (*provider.Providers, error) {
 		slog.Debug("Error requesting discovery.json", "error", err)
 		return &c.Cached.Value.Providers, err
 	}
-	defer res.Body.Close()
+	defer res.Body.Close() //nolint:errcheck
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {

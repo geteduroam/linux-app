@@ -1,4 +1,4 @@
-// package config has methods to write (TODO: read) config files
+// Package config has methods to write (TODO: read) config files
 package config
 
 import (
@@ -50,7 +50,7 @@ func Directory() (p string, err error) {
 	return
 }
 
-// Write writes the configuration to the filesystem with the filename and string
+// WriteFile writes the configuration to the filesystem with the filename and string
 func WriteFile(filename string, content []byte) (string, error) {
 	dir, err := Directory()
 	if err != nil {

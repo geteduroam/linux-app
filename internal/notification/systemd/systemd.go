@@ -1,3 +1,4 @@
+// Package systemd implements notification support with systemd
 package systemd
 
 import (

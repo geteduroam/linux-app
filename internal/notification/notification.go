@@ -1,3 +1,5 @@
+// Package notification implements notifications for the connection
+// To show when it's about to expire
 package notification
 
 import (

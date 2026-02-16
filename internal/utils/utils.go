@@ -32,9 +32,10 @@ func ErrorString(e error) string {
 	return e.Error()
 }
 
+// IsVerbose returns true if messages should be logged verbosed
 var IsVerbose bool
 
-// Conditionally (format) print verbose messages
+// Verbosef conditionally (format) print verbose messages
 func Verbosef(msg string, args ...any) {
 	if IsVerbose {
 		fmt.Printf(msg+"\n", args...)

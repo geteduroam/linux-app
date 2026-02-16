@@ -15,13 +15,18 @@ import (
 	"golang.org/x/text/language"
 )
 
+// LocalizedString is a string localized in the language
 type LocalizedString struct {
+	// Display is the string that is displayed
 	Display string `json:"display"`
-	Lang    string `json:"lang"`
+	// Lang is the language for the display
+	Lang string `json:"lang"`
 }
 
+// LocalizedStrings is a list of localized strings
 type LocalizedStrings []LocalizedString
 
+// Corpus returns the localized strings joined in one single search string
 func (ls LocalizedStrings) Corpus() string {
 	var corpus strings.Builder
 	for _, v := range ls {
@@ -46,6 +51,7 @@ func setSystemLanguage() {
 	systemLanguage = tag
 }
 
+// Get gets a string based on the system language
 func (ls LocalizedStrings) Get() string {
 	// first get the non-empty values
 	var disp string
@@ -77,15 +83,22 @@ func (ls LocalizedStrings) Get() string {
 	return disp
 }
 
+// Provider is the info for a single eduroam/getgovroam etc provider
 type Provider struct {
-	ID       string           `json:"id"`
-	Country  string           `json:"country"`
-	Name     LocalizedStrings `json:"name"`
-	Profiles []Profile        `json:"profiles"`
+	// ID is the identifier of the provider
+	ID string `json:"id"`
+	// Country is where the provider is from
+	Country string `json:"country"`
+	// Name is the name of the provider
+	Name LocalizedStrings `json:"name"`
+	// Profiles is the list of profiles for the provider
+	Profiles []Profile `json:"profiles"`
 }
 
+// Providers is the list of providers
 type Providers []Provider
 
+// SortNames sorts two localized strings
 func SortNames(a LocalizedStrings, b LocalizedStrings, search string) int {
 	la := strings.ToLower(a.Corpus())
 	lb := strings.ToLower(b.Corpus())
@@ -109,19 +122,28 @@ func SortNames(a LocalizedStrings, b LocalizedStrings, search string) int {
 	return 1
 }
 
+// ByName is the struct that implements by name sorting
 type ByName struct {
+	// Providers is the list of providers
 	Providers Providers
-	Search    string
+	// Search is the search string
+	Search string
 }
 
-func (s ByName) Len() int      { return len(s.Providers) }
+// Len returns the length of the ByName sort
+func (s ByName) Len() int { return len(s.Providers) }
+
+// Swap swaps two providers
 func (s ByName) Swap(i, j int) { s.Providers[i], s.Providers[j] = s.Providers[j], s.Providers[i] }
+
+// Less sorts the providers
 func (s ByName) Less(i, j int) bool {
 	diff := SortNames(s.Providers[i].Name, s.Providers[j].Name, s.Search)
 	// if i is less than j, diff returns less than 0
 	return diff < 0
 }
 
+// FilterSingle searches inside the corpus
 func FilterSingle(name LocalizedStrings, search string) bool {
 	l1, err1 := utils.RemoveDiacritics(strings.ToLower(name.Corpus()))
 	l2, err2 := utils.RemoveDiacritics(strings.ToLower(search))
@@ -150,6 +172,7 @@ func (i *Providers) FilterSort(search string) *Providers {
 	return &x.Providers
 }
 
+// Custom gets provider info using a custom URL
 func Custom(ctx context.Context, query string) (*Provider, error) {
 	client := http.Client{Timeout: 10 * time.Second}
 	// parse URL and add scheme

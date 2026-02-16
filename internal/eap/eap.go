@@ -1,4 +1,4 @@
-// package eap implements an XML eap-config parser compliant with the XML schema found at https://github.com/GEANT/CAT/blob/master/devices/eap_config/eap-metadata.xsd
+// Package eap implements an XML eap-config parser compliant with the XML schema found at https://github.com/GEANT/CAT/blob/master/devices/eap_config/eap-metadata.xsd
 // A part of this was generated with xgen https://github.com/xuri/xgen
 // By hand modified:
 // - Use NonEAPAuthNumbers as alias instead of hardcoded int
@@ -338,7 +338,7 @@ func (ca *CertData) isValid(format string) bool {
 	return true
 }
 
-// CaList gets a list of certificates by looping through the certificate list and returning all *valid* certificates
+// CAList gets a list of certificates by looping through the certificate list and returning all *valid* certificates
 func (ss *ServerCredentialVariants) CAList() (cert.Certificates, error) {
 	var certs []string
 	for _, c := range ss.CA {

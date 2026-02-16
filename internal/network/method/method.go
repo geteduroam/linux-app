@@ -1,11 +1,15 @@
+// Package method implements EAP methods
 package method
 
 // Type defines the EAP methods that are returned by the EAP xml
 type Type int
 
 const (
-	TLS  Type = 13
+	// TLS is the TLS EAP Method
+	TLS Type = 13
+	// TTLS is the TTLS EAP Method
 	TTLS Type = 21
+	// PEAP is the PEAP EAP Method
 	PEAP Type = 25
 )
 

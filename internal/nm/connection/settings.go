@@ -9,15 +9,21 @@ import (
 )
 
 const (
-	SettingsInterface  = base.Interface + ".Settings"
+	// SettingsInterface is the interface to get the settings
+	SettingsInterface = base.Interface + ".Settings"
+	// SettingsObjectPath is the path for the settings
 	SettingsObjectPath = base.ObjectPath + "/Settings"
 
-	SettingsAddConnection       = SettingsInterface + ".AddConnection"
+	// SettingsAddConnection is the interface to add a connection
+	SettingsAddConnection = SettingsInterface + ".AddConnection"
+	// SettingsGetConnectionByUUID is the interface to get a connection by UUID
 	SettingsGetConnectionByUUID = SettingsInterface + ".GetConnectionByUuid"
 )
 
+// SettingsArgs is the arguments for connection settings
 type SettingsArgs map[string]map[string]interface{}
 
+// UUID returns the UUID for the connection
 func (s SettingsArgs) UUID() (string, error) {
 	c, ok := s["connection"]
 	if !ok {
@@ -34,6 +40,7 @@ func (s SettingsArgs) UUID() (string, error) {
 	return uuidS, nil
 }
 
+// SSID returns the SSID for the connection
 func (s SettingsArgs) SSID() (string, error) {
 	c, ok := s["802-11-wireless"]
 	if !ok {
@@ -50,10 +57,12 @@ func (s SettingsArgs) SSID() (string, error) {
 	return string(ssidS), nil
 }
 
+// Settings returns the settings for the connection
 type Settings struct {
 	base.Base
 }
 
+// NewSettings creates new connection settings
 func NewSettings() (*Settings, error) {
 	s := &Settings{}
 	err := s.Init(base.Interface, SettingsObjectPath)
@@ -63,6 +72,7 @@ func NewSettings() (*Settings, error) {
 	return s, nil
 }
 
+// AddConnection adds a connection for the settings
 func (s *Settings) AddConnection(settings SettingsArgs) (*Connection, error) {
 	var path dbus.ObjectPath
 	err := s.CallReturn(&path, SettingsAddConnection, settings)
@@ -73,6 +83,7 @@ func (s *Settings) AddConnection(settings SettingsArgs) (*Connection, error) {
 	return New(path)
 }
 
+// ConnectionByUUID gets a connection by UUID for the settings
 func (s *Settings) ConnectionByUUID(uuid string) (*Connection, error) {
 	var path dbus.ObjectPath
 	err := s.CallReturn(&path, SettingsGetConnectionByUUID, uuid)

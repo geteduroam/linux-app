@@ -73,7 +73,7 @@ func (p *Profile) RedirectURI() (string, error) {
 // readResponse reads the HTTP response and returns the body and error
 // It also ensures the body is closed in the end to prevent a resource leak
 func readResponse(res *http.Response) ([]byte, error) {
-	defer res.Body.Close()
+	defer res.Body.Close() //nolint:errcheck
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
