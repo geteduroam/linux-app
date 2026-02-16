@@ -11,7 +11,7 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/jwijenbergh/eduoauth-go"
+	"codeberg.org/jwijenbergh/eduoauth-go/v2"
 )
 
 // Profile is the profile from discovery
