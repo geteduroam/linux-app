@@ -72,7 +72,7 @@ type parseTest struct {
 	netTest          networkTest
 }
 
-func mustParseCert(t *testing.T, root string) []byte {
+func mustParseCert(t *testing.T, root string) cert.Certificates {
 	c, err := cert.New([]string{root})
 	if err != nil {
 		t.Fatalf("failed to generate certs: %v", err)
