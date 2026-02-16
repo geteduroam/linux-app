@@ -10,7 +10,7 @@ import (
 	"github.com/geteduroam/linux-app/internal/network/cert"
 	"github.com/geteduroam/linux-app/internal/network/inner"
 	"github.com/geteduroam/linux-app/internal/network/method"
-	"github.com/geteduroam/linux-app/internal/utils"
+	"github.com/geteduroam/linux-app/internal/utilsx"
 )
 
 type authMethodTest struct {
@@ -30,7 +30,7 @@ func testAuthMethod(t *testing.T, eip *EAPIdentityProvider, cases []authMethodTe
 		if r != c.want {
 			t.Fatalf("method is not what is expected, got: %d, want: %d", r, c.want)
 		}
-		if utils.ErrorString(err) != c.err {
+		if utilsx.ErrorString(err) != c.err {
 			t.Fatalf("error is not expected, got: %v, want: %v", err, c.err)
 		}
 	}
@@ -53,7 +53,7 @@ func testSSIDSettings(t *testing.T, eip *EAPIdentityProvider, settings ssidSetti
 	if !reflect.DeepEqual(gotSSIDs, settings.SSIDs) {
 		t.Fatalf("SSIDs is not equal, got: %v, want: %v", gotSSIDs, settings.SSIDs)
 	}
-	gotErrS := utils.ErrorString(gotErr)
+	gotErrS := utilsx.ErrorString(gotErr)
 	if gotErrS != settings.err {
 		t.Fatalf("Error for SSID settings is not equal, got: %v, want: %v", gotErrS, settings.err)
 	}
@@ -196,7 +196,7 @@ func TestParse(t *testing.T) {
 
 		// finally test the whole network we get back
 		n, err := eipl.Network()
-		errS := utils.ErrorString(err)
+		errS := utilsx.ErrorString(err)
 		if errS != c.netTest.err {
 			t.Fatalf("network error not equal. Got: %v, want: %v", errS, c.netTest.err)
 		}

@@ -1,5 +1,5 @@
-// Package version implements version info for the client
-package version
+// Package clientver implements version info for the client
+package clientver
 
 import (
 	"fmt"

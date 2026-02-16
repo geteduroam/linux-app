@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/geteduroam/linux-app/internal/notification"
-	"github.com/geteduroam/linux-app/internal/utils"
+	"github.com/geteduroam/linux-app/internal/utilsx"
 	"github.com/geteduroam/linux-app/internal/variant"
 	"github.com/jwijenbergh/puregotk/v4/adw"
 	"github.com/jwijenbergh/puregotk/v4/glib"
@@ -74,12 +74,12 @@ func (s *SuccessState) Initialize() {
 			delta := time.Until(*s.vBeg)
 			// We do not want to show on 0 seconds
 			if delta >= 1*time.Second {
-				valid.SetMarkup(fmt.Sprintf("Your profile will be valid in: %s", utils.DeltaTime(delta, "<b>", "</b>")))
+				valid.SetMarkup(fmt.Sprintf("Your profile will be valid in: %s", utilsx.DeltaTime(delta, "<b>", "</b>")))
 				valid.Show()
 				return true
 			}
 			if s.vEnd != nil {
-				valid.SetMarkup(fmt.Sprintf("%s <b>%d</b> days", validText, utils.ValidityDays(*s.vEnd)))
+				valid.SetMarkup(fmt.Sprintf("%s <b>%d</b> days", validText, utilsx.ValidityDays(*s.vEnd)))
 			} else { // not very realistic this happens, but in theory it could
 				valid.SetMarkup("Your profile is valid")
 			}
@@ -99,7 +99,7 @@ func (s *SuccessState) Initialize() {
 		return
 	}
 
-	dialog := gtk.NewMessageDialog(s.parent, gtk.DialogDestroyWithParentValue, gtk.MessageQuestionValue, gtk.ButtonsYesNoValue, "This connection profile will expire in %i days.\n\nDo you want to enable notifications that warn for imminent expiry using systemd?", utils.ValidityDays(*s.vEnd))
+	dialog := gtk.NewMessageDialog(s.parent, gtk.DialogDestroyWithParentValue, gtk.MessageQuestionValue, gtk.ButtonsYesNoValue, "This connection profile will expire in %i days.\n\nDo you want to enable notifications that warn for imminent expiry using systemd?", utilsx.ValidityDays(*s.vEnd))
 	dialog.Present()
 	var dialogcb func(gtk.Dialog, int)
 	dialogcb = func(_ gtk.Dialog, response int) {

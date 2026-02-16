@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/geteduroam/linux-app/internal/utils"
+	"github.com/geteduroam/linux-app/internal/utilsx"
 	"golang.org/x/text/language"
 )
 
@@ -145,8 +145,8 @@ func (s ByName) Less(i, j int) bool {
 
 // FilterSingle searches inside the corpus
 func FilterSingle(name LocalizedStrings, search string) bool {
-	l1, err1 := utils.RemoveDiacritics(strings.ToLower(name.Corpus()))
-	l2, err2 := utils.RemoveDiacritics(strings.ToLower(search))
+	l1, err1 := utilsx.RemoveDiacritics(strings.ToLower(name.Corpus()))
+	l2, err2 := utilsx.RemoveDiacritics(strings.ToLower(search))
 	if err1 != nil || err2 != nil {
 		return false
 	}

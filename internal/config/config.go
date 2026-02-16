@@ -9,7 +9,7 @@ import (
 
 	"golang.org/x/exp/slog"
 
-	"github.com/geteduroam/linux-app/internal/utils"
+	"github.com/geteduroam/linux-app/internal/utilsx"
 	"github.com/geteduroam/linux-app/internal/variant"
 )
 
@@ -90,7 +90,7 @@ func Load() (*Config, error) {
 		slog.Debug("Error reading config file", "file", p, "error", err)
 		return nil, err
 	}
-	utils.Verbosef("Reading config file %s", p)
+	utilsx.Verbosef("Reading config file %s", p)
 	// If a v1 config is found, migrate it to a v2 one if that is empty
 	hasV1 := v.ConfigV1 != nil && v.ConfigV1.UUID != ""
 	hasV2 := v.Config != nil && len(v.Config.UUIDs) > 0

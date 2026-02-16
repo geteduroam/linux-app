@@ -1,4 +1,4 @@
-package utils
+package utilsx
 
 import "testing"
 

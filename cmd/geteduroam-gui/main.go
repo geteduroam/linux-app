@@ -20,13 +20,13 @@ import (
 	"github.com/jwijenbergh/puregotk/v4/glib"
 	"github.com/jwijenbergh/puregotk/v4/gtk"
 
+	"github.com/geteduroam/linux-app/internal/clientver"
 	"github.com/geteduroam/linux-app/internal/discovery"
 	"github.com/geteduroam/linux-app/internal/handler"
-	"github.com/geteduroam/linux-app/internal/log"
+	"github.com/geteduroam/linux-app/internal/logwrap"
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/geteduroam/linux-app/internal/provider"
 	"github.com/geteduroam/linux-app/internal/variant"
-	"github.com/geteduroam/linux-app/internal/version"
 )
 
 type serverList struct {
@@ -364,14 +364,14 @@ func (m *mainState) initBurger() {
 			awin.SetLogo(texture)
 			defer texture.Unref()
 		}
-		lpath, err := log.Location(fmt.Sprintf("%s-gui", variant.DisplayName))
+		lpath, err := logwrap.Location(fmt.Sprintf("%s-gui", variant.DisplayName))
 		if err == nil {
 			awin.SetSystemInformation("Log location: " + lpath)
 		}
 		awin.SetProgramName(fmt.Sprintf("%s GUI", variant.DisplayName))
 		awin.SetComments(fmt.Sprintf("Client to easily and securely configure %s", variant.ProfileName))
 		awin.SetAuthors([]string{"Jeroen Wijenbergh", "Martin van Es", "Alexandru Cacean"})
-		awin.SetVersion(version.Get())
+		awin.SetVersion(clientver.Get())
 		awin.SetWebsite("https://github.com/geteduroam/linux-app")
 		// SetLicenseType has a scary warning: "comes with absolutely no warranty"
 		// While it is true according to the license, I find it unfriendly
@@ -478,7 +478,7 @@ func main() {
 	var debug bool
 	var gtkarg string
 	program := fmt.Sprintf("%s-gui", variant.DisplayName)
-	lpath, err := log.Location(program)
+	lpath, err := logwrap.Location(program)
 	if err != nil {
 		lpath = "N/A"
 	}
@@ -496,7 +496,7 @@ func main() {
 	}
 
 	if versionf {
-		fmt.Println(version.Get())
+		fmt.Println(clientver.Get())
 		return
 	}
 
@@ -528,7 +528,7 @@ func main() {
 
 	glib.LogSetDefaultHandler(&handler, 0)
 
-	log.Initialize(program, debug)
+	logwrap.Initialize(program, debug)
 	ui := ui{}
 	args := []string{os.Args[0]}
 	if gtkarg != "" {
