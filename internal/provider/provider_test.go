@@ -3,7 +3,7 @@ package provider
 import (
 	"testing"
 
-	"github.com/geteduroam/linux-app/internal/utils"
+	"github.com/geteduroam/linux-app/internal/utilsx"
 	"golang.org/x/text/language"
 )
 
@@ -185,7 +185,7 @@ func TestRedirectURI(t *testing.T) {
 	for _, c := range cases {
 		p.WebviewEndpoint = c.input
 		r, e := p.RedirectURI()
-		es := utils.ErrorString(e)
+		es := utilsx.ErrorString(e)
 		if r != c.want || es != c.e {
 			t.Fatalf("Result: %s, %s Want: %s, %s", r, es, c.want, c.e)
 		}

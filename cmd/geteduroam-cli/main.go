@@ -16,15 +16,15 @@ import (
 	"golang.org/x/sys/unix"
 	"golang.org/x/term"
 
+	"github.com/geteduroam/linux-app/internal/clientver"
 	"github.com/geteduroam/linux-app/internal/discovery"
 	"github.com/geteduroam/linux-app/internal/handler"
-	"github.com/geteduroam/linux-app/internal/log"
+	"github.com/geteduroam/linux-app/internal/logwrap"
 	"github.com/geteduroam/linux-app/internal/network"
 	"github.com/geteduroam/linux-app/internal/notification"
 	"github.com/geteduroam/linux-app/internal/provider"
-	"github.com/geteduroam/linux-app/internal/utils"
+	"github.com/geteduroam/linux-app/internal/utilsx"
 	"github.com/geteduroam/linux-app/internal/variant"
-	"github.com/geteduroam/linux-app/internal/version"
 )
 
 // IsTerminal return true if the file descriptor is terminal.
@@ -445,7 +445,7 @@ func main() {
 	var local string
 	var url string
 	program := fmt.Sprintf("%s-cli", variant.DisplayName)
-	lpath, err := log.Location(program)
+	lpath, err := logwrap.Location(program)
 	if err != nil {
 		lpath = "N/A"
 	}
@@ -466,11 +466,11 @@ func main() {
 		return
 	}
 	if verbose {
-		utils.IsVerbose = true
+		utilsx.IsVerbose = true
 	}
-	log.Initialize(program, debug)
+	logwrap.Initialize(program, debug)
 	if versionf {
-		fmt.Println(version.Get())
+		fmt.Println(clientver.Get())
 		return
 	}
 	if !IsTerminal() {
@@ -503,13 +503,13 @@ func main() {
 	if vEnd == nil {
 		return
 	}
-	fmt.Printf("Your profile is valid for: %d days\n", utils.ValidityDays(*vEnd))
+	fmt.Printf("Your profile is valid for: %d days\n", utilsx.ValidityDays(*vEnd))
 	curr := time.Now()
 	if vBeg != nil && curr.Before(*vBeg) {
 		delta := vBeg.Sub(curr)
 		// if there is more than 5 second difference we show a countdown
 		if delta > 5*time.Second {
-			fmt.Printf("And you can start using the profile in: %s\n", utils.DeltaTime(delta, "", ""))
+			fmt.Printf("And you can start using the profile in: %s\n", utilsx.DeltaTime(delta, "", ""))
 		}
 	}
 	if !notification.HasDaemonSupport() {

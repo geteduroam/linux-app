@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/geteduroam/linux-app/internal/utils"
+	"github.com/geteduroam/linux-app/internal/utilsx"
 )
 
 func mockDir(t *testing.T, dir string) {
@@ -77,7 +77,7 @@ func TestLoad(t *testing.T) {
 		// mock the config name
 		configName = curr.filename
 		gotc, goterr := Load()
-		if utils.ErrorString(goterr) != curr.wanterr {
+		if utilsx.ErrorString(goterr) != curr.wanterr {
 			t.Fatalf("expected config error not equal to want, got: %v, want: %v", goterr, curr.wanterr)
 		}
 		// to compare structs we can use deepequal

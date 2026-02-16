@@ -1,4 +1,8 @@
-package utils
+// Package utilsx implements various utility functions
+// the suffix x is needed to make revive linter quiet for a useless package name
+// the obvious TODO is then:
+// TODO: make this package indeed obsolete
+package utilsx
 
 import (
 	"fmt"

@@ -9,7 +9,7 @@ import (
 	"golang.org/x/exp/slog"
 
 	"github.com/geteduroam/linux-app/internal/config"
-	"github.com/geteduroam/linux-app/internal/log"
+	"github.com/geteduroam/linux-app/internal/logwrap"
 	"github.com/geteduroam/linux-app/internal/nm"
 	"github.com/geteduroam/linux-app/internal/notification"
 	"github.com/geteduroam/linux-app/internal/variant"
@@ -43,13 +43,13 @@ func hasValidProfile(uuids []string) bool {
 
 func main() {
 	program := fmt.Sprintf("%s-notifcheck", variant.DisplayName)
-	lpath, err := log.Location(program)
+	lpath, err := logwrap.Location(program)
 	if err != nil {
 		lpath = "N/A"
 	}
 	flag.Usage = func() { fmt.Printf(usage, program, variant.DisplayName, lpath) }
 	flag.Parse()
-	log.Initialize(fmt.Sprintf("%s-notifcheck", variant.DisplayName), false)
+	logwrap.Initialize(fmt.Sprintf("%s-notifcheck", variant.DisplayName), false)
 	cfg, err := config.Load()
 	if err != nil {
 		slog.Error("no previous state", "error", err)

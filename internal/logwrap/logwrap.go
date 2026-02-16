@@ -1,5 +1,5 @@
 // Package log implements wrapper around loggers
-package log
+package logwrap
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/geteduroam/linux-app/internal/config"
-	"github.com/geteduroam/linux-app/internal/utils"
+	"github.com/geteduroam/linux-app/internal/utilsx"
 	"golang.org/x/exp/slog"
 )
 
@@ -50,14 +50,14 @@ func Initialize(program string, debug bool) {
 		if debug {
 			fmt.Printf("Writing debug logs to %s\n", fpath)
 		} else {
-			utils.Verbosef("Writing logs to %s", fpath)
+			utilsx.Verbosef("Writing logs to %s", fpath)
 		}
 	} else {
 		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, opts)))
 		if debug {
 			fmt.Println("Writing debug logs to console, due to error: ", err)
 		} else {
-			utils.Verbosef("Writing logs to console, due to error: ", err)
+			utilsx.Verbosef("Writing logs to console, due to error: ", err)
 		}
 	}
 	if debug {
