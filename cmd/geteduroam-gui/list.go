@@ -117,11 +117,11 @@ func (s *SelectList) setupFactory() *gtk.SignalListItemFactory {
 }
 
 func (s *SelectList) setupSorter(base gio.ListModel) gio.ListModel {
-	sf := (glib.CompareDataFunc)(func(this uintptr, other uintptr, _ uintptr) int {
+	sf := glib.CompareDataFunc(func(this uintptr, other uintptr, _ uintptr) int {
 		return s.sorter(indexFromPtr(this), indexFromPtr(other))
 	})
 
-	destroycb := (glib.DestroyNotify)(func(uintptr) {
+	destroycb := glib.DestroyNotify(func(uintptr) {
 		// do nothing
 	})
 
@@ -133,10 +133,10 @@ func (s *SelectList) setupSorter(base gio.ListModel) gio.ListModel {
 }
 
 func (s *SelectList) setupFilter(base gio.ListModel) gio.ListModel {
-	cf := (gtk.CustomFilterFunc)(func(item uintptr, _ uintptr) bool {
+	cf := gtk.CustomFilterFunc(func(item uintptr, _ uintptr) bool {
 		return s.filter(indexFromPtr(item))
 	})
-	destroycb := (glib.DestroyNotify)(func(uintptr) {
+	destroycb := glib.DestroyNotify(func(uintptr) {
 		// do nothing
 	})
 	s.cf = gtk.NewCustomFilter(&cf, 0, &destroycb)
