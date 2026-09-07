@@ -4,19 +4,69 @@ package nm
 import (
 	"errors"
 	"fmt"
+	"os"
 	"os/user"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 
 	"golang.org/x/exp/slog"
 
 	"github.com/geteduroam/linux-app/internal/config"
 	"github.com/geteduroam/linux-app/internal/network"
+	"github.com/geteduroam/linux-app/internal/network/cert"
 	"github.com/geteduroam/linux-app/internal/network/method"
+	basenm "github.com/geteduroam/linux-app/internal/nm/base"
 	"github.com/geteduroam/linux-app/internal/nm/connection"
 	"github.com/geteduroam/linux-app/internal/variant"
 )
+
+// since NM 1.58 ca-path cannot be used
+// We have to use ca-cert and this is fine as this NM is
+// on newer systems that have updated wpa-supplicant
+// For context why we need updated wpa-supplicant:
+// see https://github.com/geteduroam/linux-app/issues/97#issuecomment-5567518498
+func nmCanCACert() bool {
+	if os.Getenv("GETEDUROAM_NM_USE_CA_CERT") == "1" {
+		slog.Info("NM using ca-cert as env var is set")
+		return true
+	}
+	if os.Getenv("GETEDUROAM_NM_USE_CA_PATH") == "1" {
+		slog.Info("NM using ca-path as env var is set")
+		return false
+	}
+	b := basenm.Base{}
+	err := b.Init(basenm.Interface, basenm.ObjectPath)
+	if err != nil {
+		slog.Info("failed to create init to determine NM version", "error", err)
+		return false
+	}
+	ver, err := b.Version()
+	if err != nil {
+		slog.Info("failed to get NM version", "error", err)
+		return false
+	}
+	slog.Info("NM version", "version", ver)
+	parts := strings.Split(ver, ".")
+	if len(parts) < 2 {
+		slog.Info("version parts less than 2", "version", ver)
+		return false
+	}
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		slog.Info("failed to determine major version", "error", err)
+		return false
+	}
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil {
+		slog.Info("failed to determine minor version", "error", err)
+		return false
+	}
+	// We can use ca-cert since NM 1.58
+	// See: https://gitlab.freedesktop.org/NetworkManager/NetworkManager/-/blob/main/NEWS?ref_type=heads#L185
+	return major > 2 || (major == 1 && minor >= 58)
+}
 
 // encodePath encodes a string to a path expected by NetworkManager
 // This path is prefixed with file:// and is explicitly NULL terminated
@@ -118,13 +168,29 @@ func installBaseSSID(n network.Base, ssid network.SSID, specifics map[string]int
 	if err != nil {
 		return "", err
 	}
-	err = n.Certs.ToDir(caBasePath)
+	s8021x := map[string]interface{}{
+		"altsubject-matches": sids,
+	}
+	// cleanup old certificates
+	err = cert.Cleanup(caBasePath)
 	if err != nil {
 		return "", err
 	}
-	s8021x := map[string]interface{}{
-		"ca-path":            filepath.Join(caBasePath, "ca"),
-		"altsubject-matches": sids,
+	if nmCanCACert() {
+		slog.Info("NM using ca-cert")
+		gpem := n.Certs.ToPEM()
+		caFile, err := encodeFileBytes(cert.PEMFile, gpem)
+		if err != nil {
+			return "", err
+		}
+		s8021x["ca-cert"] = caFile
+	} else {
+		slog.Info("NM using ca-path")
+		err = n.Certs.ToDir(caBasePath)
+		if err != nil {
+			return "", err
+		}
+		s8021x["ca-path"] = filepath.Join(caBasePath, "ca")
 	}
 	// add the network specific settings
 	for k, v := range specifics {

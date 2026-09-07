@@ -35,17 +35,40 @@ func removeIfExists(p string) error {
 // Certificates is a list of x509 Certificates
 type Certificates []*x509.Certificate
 
-// ToDir outputs certificates into a base directory
-func (c Certificates) ToDir(baseDir string) error {
-	caDir := filepath.Join(baseDir, "ca")
+// ToPEM outputs PEM encoded blocks for all the certificates
+func (c Certificates) ToPEM() []byte {
+	var ret []byte
+	for _, v := range c {
+		ret = append(ret, toPEM(v)...)
+	}
+	return ret
+}
+
+const (
+	// PEMFile is the file where certificate data is stored
+	PEMFile = "ca-cert.pem"
+
+	// PEMDir is the directory where the PEM certificates are stored
+	PEMDir = "ca"
+)
+
+// Cleanup removes old certificate data
+func Cleanup(baseDir string) error {
+	caDir := filepath.Join(baseDir, PEMDir)
 	// remove the previous CA directory
 	if err := removeIfExists(caDir); err != nil {
 		return err
 	}
-	// remove a ca-cert.pem in the base dir which is from an old version of the client
-	if err := removeIfExists(filepath.Join(baseDir, "ca-cert.pem")); err != nil {
+	// remove a ca-cert.pem in the base dir
+	if err := removeIfExists(filepath.Join(baseDir, PEMFile)); err != nil {
 		return err
 	}
+	return nil
+}
+
+// ToDir outputs certificates into a base directory
+func (c Certificates) ToDir(baseDir string) error {
+	caDir := filepath.Join(baseDir, PEMDir)
 	// make sure the CA dir exists
 	if err := os.MkdirAll(caDir, 0o700); err != nil {
 		return err
