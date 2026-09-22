@@ -7,10 +7,9 @@ import (
 
 	"golang.org/x/exp/slog"
 
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/geteduroam/linux-app/internal/network"
-	"github.com/jwijenbergh/puregotk/v4/adw"
-	"github.com/jwijenbergh/puregotk/v4/gobject"
-	"github.com/jwijenbergh/puregotk/v4/gtk"
 )
 
 type LoginState interface {
@@ -28,13 +27,9 @@ type LoginState interface {
 
 	// Prefix returns the GTK builder prefix that is used to get each item
 	Prefix() string
-
-	// Destroy destroys any resources that should be called when the view is hidden
-	Destroy()
 }
 
 type LoginBase struct {
-	SignalPool
 	builder *gtk.Builder
 	stack   *adw.ViewStack
 	state   LoginState
@@ -44,31 +39,23 @@ type LoginBase struct {
 	btn *gtk.Button
 }
 
-func (l *LoginBase) GetObject(id string, obj gobject.Ptr) {
+func (l *LoginBase) GetObject(id string, obj any) {
 	fID := l.state.Prefix() + id
 	g := l.builder.GetObject(fID)
 	if g == nil {
 		panic("no such object with id: " + fID)
 	}
-	g.Cast(obj)
+	obj = g
 }
 
 func (l *LoginBase) ShowError(err error) {
 	slog.Error(err.Error(), "state", "login")
-	var overlay adw.ToastOverlay
-	l.GetObject("ToastOverlay", &overlay)
-	defer overlay.Unref()
+	var overlay *adw.ToastOverlay
+	l.GetObject("ToastOverlay", overlay)
 	showErrorToast(overlay, err)
 }
 
-func (l *LoginBase) Destroy() {
-	l.DisconnectSignals()
-	l.btn.Unref()
-}
-
 func (l *LoginBase) Get() (string, string) {
-	defer l.state.Destroy()
-	defer l.Destroy()
 	l.wg.Wait()
 	return l.state.Get()
 }
@@ -90,7 +77,6 @@ func (l *LoginBase) fillLogo(logo *gtk.Image) error {
 	pb, err := bytesPixbuf(d)
 	if err == nil {
 		uiThread(func() {
-			defer logo.Unref()
 			logo.SetFromPixbuf(pb)
 			logo.SetSizeRequest(100, 100)
 		})
@@ -102,26 +88,22 @@ func (l *LoginBase) Initialize() {
 	l.wg.Add(1)
 	var page adw.ViewStackPage
 	l.GetObject("Page", &page)
-	defer page.Unref()
 
 	// set the title
 	var title gtk.Label
 	l.GetObject("InstanceTitle", &title)
-	defer title.Unref()
 	styleWidget(&title, "label")
 	title.SetText(l.pi.Name)
 
 	if l.pi.Description != "" {
 		var descr gtk.Label
 		l.GetObject("InstanceDescription", &descr)
-		defer descr.Unref()
 		descr.SetText("Description: " + l.pi.Description)
 	}
 
 	// set logo
 	var logo gtk.Image
 	l.GetObject("InstanceLogo", &logo)
-	defer logo.Unref()
 
 	if l.pi.Logo != "" {
 		err := l.fillLogo(&logo)
@@ -135,7 +117,6 @@ func (l *LoginBase) Initialize() {
 	// set the contact
 	var email gtk.Label
 	l.GetObject("InstanceEmail", &email)
-	defer email.Unref()
 	if l.pi.Helpdesk.Email != "" {
 		email.SetText(fmt.Sprintf("E-mail: %s", l.pi.Helpdesk.Email))
 	} else {
@@ -143,7 +124,6 @@ func (l *LoginBase) Initialize() {
 	}
 	var tel gtk.Label
 	l.GetObject("InstanceTel", &tel)
-	defer tel.Unref()
 	if l.pi.Helpdesk.Phone != "" {
 		tel.SetText(fmt.Sprintf("Tel.: %s", l.pi.Helpdesk.Phone))
 	} else {
@@ -151,7 +131,6 @@ func (l *LoginBase) Initialize() {
 	}
 	var web gtk.Label
 	l.GetObject("InstanceWeb", &web)
-	defer web.Unref()
 	if l.pi.Helpdesk.Web != "" {
 		web.SetText(fmt.Sprintf("Website: %s", l.pi.Helpdesk.Web))
 	} else {
@@ -165,7 +144,7 @@ func (l *LoginBase) Initialize() {
 	submit := func() {
 		l.Submit()
 	}
-	l.AddSignal(l.btn, l.btn.ConnectSignal("clicked", &submit))
+	l.btn.ConnectClicked(submit)
 
 	// set the page as current
 	setPage(l.stack, &page)

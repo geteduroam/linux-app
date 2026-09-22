@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/geteduroam/linux-app/internal/notification"
 	"github.com/geteduroam/linux-app/internal/utilsx"
 	"github.com/geteduroam/linux-app/internal/variant"
-	"github.com/jwijenbergh/puregotk/v4/adw"
-	"github.com/jwijenbergh/puregotk/v4/glib"
-	"github.com/jwijenbergh/puregotk/v4/gtk"
 )
 
 type SuccessState struct {
@@ -33,21 +32,14 @@ func NewSuccessState(builder *gtk.Builder, parent *gtk.Window, stack *adw.ViewSt
 }
 
 func (s *SuccessState) Initialize() {
-	var page adw.ViewStackPage
-	s.builder.GetObject("successPage").Cast(&page)
-	defer page.Unref()
-
-	var title gtk.Label
-	s.builder.GetObject("successTitle").Cast(&title)
-	defer title.Unref()
-	styleWidget(&title, "title")
+	page := s.builder.GetObject("successPage").Cast().(*adw.ViewStackPage)
+	title := s.builder.GetObject("successTitle").Cast().(*gtk.Label)
+	styleWidget(title, "title")
 	if s.isredirect {
 		title.SetText("Follow the instructions at the link opened in your browser")
 	}
 
-	var logo gtk.Image
-	s.builder.GetObject("successLogo").Cast(&logo)
-	defer logo.Unref()
+	logo := s.builder.GetObject("successLogo").Cast().(*gtk.Image)
 	res := MustResource("images/success.png")
 	pb, err := bytesPixbuf([]byte(res))
 	if err == nil {
@@ -55,20 +47,15 @@ func (s *SuccessState) Initialize() {
 		logo.SetSizeRequest(64, 64)
 	}
 
-	var sub gtk.Label
-	s.builder.GetObject("successSubTitle").Cast(&sub)
-	defer sub.Unref()
+	sub := s.builder.GetObject("successSubTitle").Cast().(*gtk.Label)
 	sub.SetVisible(!s.isredirect)
 	sub.SetText(fmt.Sprintf("Your %s profile has been added", variant.ProfileName))
-	styleWidget(&sub, "label")
+	styleWidget(sub, "label")
 
-	var valid gtk.Label
-	s.builder.GetObject("validityText").Cast(&valid)
-	defer valid.Unref()
-	validText := valid.GetText()
+	valid := s.builder.GetObject("validityText").Cast().(*gtk.Label)
+	validText := valid.Text()
 	if s.vBeg == nil {
 		valid.Hide()
-		valid.Unref()
 	} else {
 		uiTicker(1, func() bool {
 			delta := time.Until(*s.vBeg)
@@ -84,13 +71,12 @@ func (s *SuccessState) Initialize() {
 				valid.SetMarkup("Your profile is valid")
 			}
 			valid.Show()
-			valid.Unref()
 			return false
 		})
 	}
 
 	// set the page as current
-	setPage(s.stack, &page)
+	setPage(s.stack, page)
 
 	if s.vEnd == nil {
 		return
@@ -99,14 +85,13 @@ func (s *SuccessState) Initialize() {
 		return
 	}
 
-	dialog := gtk.NewMessageDialog(s.parent, gtk.DialogDestroyWithParentValue, gtk.MessageQuestionValue, gtk.ButtonsYesNoValue, "This connection profile will expire in %i days.\n\nDo you want to enable notifications that warn for imminent expiry using systemd?", utilsx.ValidityDays(*s.vEnd))
+	dialog := gtk.NewMessageDialog(s.parent, gtk.DialogDestroyWithParent, gtk.MessageQuestion, gtk.ButtonsYesNo)
+	dialog.SetTitle(fmt.Sprintf("This connection profile will expire in %i days.\n\nDo you want to enable notifications that warn for imminent expiry using systemd?", utilsx.ValidityDays(*s.vEnd)))
 	dialog.Present()
-	var dialogcb func(gtk.Dialog, int)
-	dialogcb = func(_ gtk.Dialog, response int) {
-		defer glib.UnrefCallback(&dialogcb) //nolint:errcheck
-		notification.ConfigureDaemon(int32(response) == int32(gtk.ResponseYesValue))
+	dialogcb := func(response int) {
+		notification.ConfigureDaemon(int32(response) == int32(gtk.ResponseYes))
 		dialog.Destroy()
 	}
-	dialog.ConnectResponse(&dialogcb)
+	dialog.ConnectResponse(dialogcb)
 	dialog.Present()
 }

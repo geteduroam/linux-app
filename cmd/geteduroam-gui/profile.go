@@ -3,9 +3,9 @@ package main
 import (
 	"golang.org/x/exp/slog"
 
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/geteduroam/linux-app/internal/provider"
-	"github.com/jwijenbergh/puregotk/v4/adw"
-	"github.com/jwijenbergh/puregotk/v4/gtk"
 )
 
 type ProfileState struct {
@@ -25,33 +25,19 @@ func NewProfileState(builder *gtk.Builder, stack *adw.ViewStack, profiles []prov
 	}
 }
 
-func (p *ProfileState) Destroy() {
-	p.sl.Destroy()
-}
-
 func (p *ProfileState) ShowError(err error) {
 	slog.Error(err.Error(), "state", "profile")
-	var overlay adw.ToastOverlay
-	p.builder.GetObject("profileToastOverlay").Cast(&overlay)
-	defer overlay.Unref()
+	overlay := p.builder.GetObject("profileToastOverlay").Cast().(*adw.ToastOverlay)
 	showErrorToast(overlay, err)
 }
 
 func (p *ProfileState) Initialize() {
-	var page adw.ViewStackPage
-	p.builder.GetObject("profilePage").Cast(&page)
-	defer page.Unref()
-	var scroll gtk.ScrolledWindow
-	p.builder.GetObject("profileScroll").Cast(&scroll)
-	defer scroll.Unref()
-	var list gtk.ListView
-	p.builder.GetObject("profileList").Cast(&list)
-	defer list.Unref()
+	page := p.builder.GetObject("profilePage").Cast().(*adw.ViewStackPage)
+	scroll := p.builder.GetObject("profileScroll").Cast().(*gtk.ScrolledWindow)
+	list := p.builder.GetObject("profileList").Cast().(*gtk.ListView)
 
-	var label gtk.Label
-	p.builder.GetObject("profileLabel").Cast(&label)
-	defer label.Unref()
-	styleWidget(&label, "label")
+	label := p.builder.GetObject("profileLabel").Cast().(*gtk.Label)
+	styleWidget(label, "label")
 
 	sorter := func(a, b int) int {
 		// Here we have no search query
@@ -60,18 +46,15 @@ func (p *ProfileState) Initialize() {
 	activated := func(idx int) {
 		go func() {
 			p.success(p.profiles[idx])
-			uiThread(func() {
-				p.Destroy()
-			})
 		}()
 	}
 
-	p.sl = NewSelectList(&scroll, &list, activated, sorter)
+	p.sl = NewSelectList(scroll, list, activated, sorter)
 
 	for idx, prof := range p.profiles {
 		p.sl.Add(idx, prof.Name.Get())
 	}
 
 	p.sl.Setup()
-	setPage(p.stack, &page)
+	setPage(p.stack, page)
 }

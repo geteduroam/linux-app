@@ -14,11 +14,11 @@ import (
 
 	"golang.org/x/exp/slog"
 
-	"github.com/jwijenbergh/puregotk/v4/adw"
-	"github.com/jwijenbergh/puregotk/v4/gdk"
-	"github.com/jwijenbergh/puregotk/v4/gio"
-	"github.com/jwijenbergh/puregotk/v4/glib"
-	"github.com/jwijenbergh/puregotk/v4/gtk"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/gdk/v4"
+	"github.com/diamondburned/gotk4/pkg/gio/v2"
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 
 	"github.com/geteduroam/linux-app/internal/clientver"
 	"github.com/geteduroam/linux-app/internal/discovery"
@@ -96,12 +96,10 @@ func (m *mainState) initServers() {
 }
 
 func (m *mainState) activate() {
-	var page adw.ViewStackPage
-	m.builder.GetObject("searchPage").Cast(&page)
-	defer page.Unref()
+	page := m.builder.GetObject("searchPage").Cast().(*adw.ViewStackPage)
 	// we do not use setPage here as the margin is already set in the clamp
 	// This is so that the background is set on the current main page only but it expands to each side fully
-	m.stack.SetVisibleChild(page.GetChild())
+	m.stack.SetVisibleChild(page.Child())
 }
 
 func (m *mainState) askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string, error) {
@@ -112,7 +110,7 @@ func (m *mainState) askCredentials(c network.Credentials, pi network.ProviderInf
 }
 
 func (m *mainState) askCertificate(cert string, pwd string, pi network.ProviderInfo) (string, string, error) {
-	base := NewCertificateStateBase(m.app.GetActiveWindow(), m.builder, m.stack, cert, pwd, pi)
+	base := NewCertificateStateBase(m.app.ActiveWindow(), m.builder, m.stack, cert, pwd, pi)
 	base.Initialize()
 	cert, pass := base.Get()
 	return cert, pass, nil
@@ -169,9 +167,6 @@ func (m *mainState) oauth(ctx context.Context, p provider.Profile) (*time.Time, 
 }
 
 func (m *mainState) rowActivated(sel provider.Provider) {
-	var page gtk.Box
-	m.builder.GetObject("searchPage").Cast(&page)
-	defer page.Unref()
 	l := NewLoadingPage(m.builder, m.stack, "Loading organization details...", nil)
 	l.Initialize()
 	ctx := context.Background()
@@ -205,7 +200,7 @@ func (m *mainState) rowActivated(sel provider.Provider) {
 			}
 			fmt.Println("Browser has been opened with URL:", url)
 		}
-		s := NewSuccessState(m.builder, m.app.GetActiveWindow(), m.stack, vBeg, vEnd, isredirect)
+		s := NewSuccessState(m.builder, m.app.ActiveWindow(), m.stack, vBeg, vEnd, isredirect)
 		uiThread(func() {
 			s.Initialize()
 		})
@@ -229,9 +224,7 @@ func (m *mainState) rowActivated(sel provider.Provider) {
 
 func (m *mainState) initList() {
 	// style the treeview
-	var list gtk.ListView
-	m.builder.GetObject("searchList").Cast(&list)
-	defer list.Unref()
+	list := m.builder.GetObject("searchList").Cast().(*gtk.ListView)
 
 	cache := discovery.NewCache()
 	inst, err := cache.Providers()
@@ -241,10 +234,7 @@ func (m *mainState) initList() {
 	}
 	m.servers.providers = *inst
 
-	var search gtk.SearchEntry
-	m.builder.GetObject("searchBox").Cast(&search)
-	defer search.Unref()
-
+	search := m.builder.GetObject("searchBox").Cast().(*gtk.SearchEntry)
 	activated := func(idx int) {
 		l := NewLoadingPage(m.builder, m.stack, "Loading server details...", nil)
 		l.Initialize()
@@ -258,7 +248,7 @@ func (m *mainState) initList() {
 			m.rowActivated(*inst)
 		}
 		go func() {
-			inst, err := m.servers.get(idx, search.GetText())
+			inst, err := m.servers.get(idx, search.Text())
 			uiThread(func() {
 				cb(inst, err)
 			})
@@ -266,7 +256,7 @@ func (m *mainState) initList() {
 	}
 
 	sorter := func(a, b int) int {
-		query := search.GetText()
+		query := search.Text()
 		n1, err := m.servers.getNames(a, query)
 		if err != nil {
 			return -1
@@ -278,8 +268,8 @@ func (m *mainState) initList() {
 		return provider.SortNames(*n1, *n2, query)
 	}
 
-	m.servers.list = NewSelectList(m.scroll, &list, activated, sorter).WithFiltering(func(idx int) bool {
-		query := search.GetText()
+	m.servers.list = NewSelectList(m.scroll, list, activated, sorter).WithFiltering(func(idx int) bool {
+		query := search.Text()
 		n, err := m.servers.getNames(idx, query)
 		if err != nil {
 			return false
@@ -293,17 +283,17 @@ func (m *mainState) initList() {
 	// Further set up the list
 	m.servers.list.Setup()
 
-	changedcb := func(_ gtk.SearchEntry) {
+	changedcb := func() {
 		// TODO len returns length in bytes
 		// utf8.RuneCountInString() counts number of characters (runes)
-		query := search.GetText()
+		query := search.Text()
 		if len(query) <= 2 {
 			m.servers.list.Hide()
 			return
 		}
 		// url entered
 		if strings.Count(query, ".") >= 2 {
-			m.servers.AddCustom(search.GetText())
+			m.servers.AddCustom(search.Text())
 		} else {
 			m.servers.RemoveCustom()
 		}
@@ -312,11 +302,11 @@ func (m *mainState) initList() {
 	}
 
 	// Update the list when searching
-	search.ConnectSearchChanged(&changedcb)
+	search.ConnectSearchChanged(changedcb)
 }
 
 func (m *mainState) localMetadata() {
-	fd, err := NewFileDialog(m.app.GetActiveWindow(), "Choose an EAP metadata file")
+	fd, err := NewFileDialog(m.app.ActiveWindow(), "Choose an EAP metadata file")
 	if err != nil {
 		m.ShowError(err)
 		return
@@ -331,38 +321,32 @@ func (m *mainState) localMetadata() {
 				})
 				return
 			}
-			s := NewSuccessState(m.builder, m.app.GetActiveWindow(), m.stack, vBeg, vEnd, false)
+			s := NewSuccessState(m.builder, m.app.ActiveWindow(), m.stack, vBeg, vEnd, false)
 			s.Initialize()
 		}()
 	})
 }
 
 func (m *mainState) initBurger() {
-	var gears gtk.MenuButton
-	m.builder.GetObject("gears").Cast(&gears)
-	defer gears.Unref()
+	gears := m.builder.GetObject("gears").Cast().(*gtk.MenuButton)
 
-	var menu gio.MenuModel
-	builder := gtk.NewBuilderFromString(MustResource("gears.ui"), -1)
-	defer builder.Unref()
-	builder.GetObject("menu").Cast(&menu)
-	gears.SetMenuModel(&menu)
+	builder := gtk.NewBuilderFromString(MustResource("gears.ui"))
+	menu := builder.GetObject("menu").Cast().(*gio.Menu)
+	gears.SetMenuModel(menu)
 
 	imp := gio.NewSimpleAction("import-local", nil)
-	actcb := func(_ gio.SimpleAction, _ uintptr) {
+	actcb := func(_ *glib.Variant) {
 		m.localMetadata()
 	}
-	imp.ConnectActivate(&actcb)
+	imp.ConnectActivate(actcb)
 
-	aboutcb := func(_ gio.SimpleAction, _ uintptr) {
+	aboutcb := func(_ *glib.Variant) {
 		awin := gtk.NewAboutDialog()
 		awin.SetName(fmt.Sprintf("%s Linux client", variant.DisplayName))
 		pb, err := bytesPixbuf([]byte(MustResource("images/heart.png")))
 		if err == nil {
 			texture := gdk.NewTextureForPixbuf(pb)
-			defer pb.Unref()
 			awin.SetLogo(texture)
-			defer texture.Unref()
 		}
 		lpath, err := logwrap.Location(fmt.Sprintf("%s-gui", variant.DisplayName))
 		if err == nil {
@@ -376,22 +360,20 @@ func (m *mainState) initBurger() {
 		// SetLicenseType has a scary warning: "comes with absolutely no warranty"
 		// While it is true according to the license, I find it unfriendly
 		awin.SetLicense("This application has a BSD 3 license.")
-		awin.SetTransientFor(m.app.GetActiveWindow())
+		awin.SetTransientFor(m.app.ActiveWindow())
 		awin.Show()
 	}
 
 	about := gio.NewSimpleAction("about", nil)
-	about.ConnectActivate(&aboutcb)
+	about.ConnectActivate(aboutcb)
 
 	m.app.AddAction(imp)
 	m.app.AddAction(about)
 }
 
 func (m *mainState) Initialize() {
-	m.scroll = &gtk.ScrolledWindow{}
-	m.builder.GetObject("searchScroll").Cast(m.scroll)
-	m.stack = &adw.ViewStack{}
-	m.builder.GetObject("pageStack").Cast(m.stack)
+	m.scroll = m.builder.GetObject("searchScroll").Cast().(*gtk.ScrolledWindow)
+	m.stack = m.builder.GetObject("pageStack").Cast().(*adw.ViewStack)
 	m.initServers()
 	m.initList()
 	m.initBurger()
@@ -403,9 +385,7 @@ func (m *mainState) ShowError(err error) {
 		return
 	}
 	slog.Error(err.Error(), "state", "main")
-	var overlay adw.ToastOverlay
-	m.builder.GetObject("searchToastOverlay").Cast(&overlay)
-	defer overlay.Unref()
+	overlay := m.builder.GetObject("searchToastOverlay").Cast().(*adw.ToastOverlay)
 	showErrorToast(overlay, err)
 }
 
@@ -416,23 +396,18 @@ type ui struct {
 
 func (ui *ui) initBuilder() {
 	// open the builder
-	ui.builder = gtk.NewBuilderFromString(MustResource("main.ui"), -1)
+	ui.builder = gtk.NewBuilderFromString(MustResource("main.ui"))
 }
 
 func (ui *ui) initWindow() {
 	// get the window
-	var win adw.Window
-	ui.builder.GetObject("mainWindow").Cast(&win)
-	defer win.Unref()
+	win := ui.builder.GetObject("mainWindow").Cast().(*adw.Window)
 	win.SetTitle(fmt.Sprintf("%s GUI", variant.DisplayName))
 	win.SetDefaultSize(400, 600)
 	// style the window using the css
-	var search adw.ViewStackPage
-	ui.builder.GetObject("searchPage").Cast(&search)
-	defer search.Unref()
-	widg := search.GetChild()
-	defer widg.Unref()
-	styleWidget(widg, fmt.Sprintf("window_%s", variant.DisplayName))
+	search := ui.builder.GetObject("searchPage").Cast().(*adw.ViewStackPage)
+	child := search.Child().(*adw.ToastOverlay)
+	styleWidget(child, fmt.Sprintf("window_%s", variant.DisplayName))
 	ui.app.AddWindow(&win.Window)
 	win.Show()
 }
@@ -451,14 +426,13 @@ func (ui *ui) activate() {
 }
 
 func (ui *ui) Run(args []string) int {
-	ui.app = adw.NewApplication(variant.AppID, gio.GApplicationFlagsNoneValue)
-	defer ui.app.Unref()
-	actcb := func(_ gio.Application) {
+	ui.app = adw.NewApplication(variant.AppID, gio.ApplicationDefaultFlags)
+	actcb := func() {
 		ui.activate()
 	}
-	ui.app.ConnectActivate(&actcb)
+	ui.app.ConnectActivate(actcb)
 
-	return ui.app.Run(len(args), args)
+	return ui.app.Run(args)
 }
 
 func main() {
@@ -500,33 +474,33 @@ func main() {
 		return
 	}
 
-	var handler glib.LogFunc = func(pkg string, level glib.LogLevelFlags, msg string, _ uintptr) {
-		switch level {
-		case glib.GLogLevelErrorValue:
-			slog.Error(msg, "pkg-name", pkg, "level", level)
-		case glib.GLogLevelCriticalValue:
-			// Ignore some false positives due to Gtk bug
-			// Happens when pressing "Import Metadata"
-			// see https://discourse.gnome.org/t/menu-button-gives-error-messages-with-latest-gtk4/15689/3
-			ignore := "_gtk_css_corner_value_get_%s: assertion 'corner->class == &GTK_CSS_VALUE_CORNER' failed"
-			if fmt.Sprintf(ignore, "x") == msg || fmt.Sprintf(ignore, "y") == msg {
-				return
-			}
-			slog.Error("pkg-name", pkg, "level", level)
-		case glib.GLogLevelWarningValue:
-			slog.Warn(msg, "pkg-name", pkg, "level", level)
-		case glib.GLogLevelMessageValue:
-			slog.Info(msg, "pkg-name", pkg, "level", level)
-		case glib.GLogLevelInfoValue:
-			slog.Info(msg, "pkg-name", pkg, "level", level)
-		case glib.GLogLevelDebugValue:
-			slog.Debug(msg, "pkg-name", pkg, "level", level)
-		case glib.GLogLevelMaskValue:
-			slog.Debug(msg, "pkg-name", pkg, "level", level)
-		}
-	}
+	//var handler glib.LogFunc = func(pkg string, level glib.LogLevelFlags, msg string, _ uintptr) {
+	//	switch level {
+	//	case glib.GLogLevelErrorValue:
+	//		slog.Error(msg, "pkg-name", pkg, "level", level)
+	//	case glib.GLogLevelCriticalValue:
+	//		// Ignore some false positives due to Gtk bug
+	//		// Happens when pressing "Import Metadata"
+	//		// see https://discourse.gnome.org/t/menu-button-gives-error-messages-with-latest-gtk4/15689/3
+	//		ignore := "_gtk_css_corner_value_get_%s: assertion 'corner->class == &GTK_CSS_VALUE_CORNER' failed"
+	//		if fmt.Sprintf(ignore, "x") == msg || fmt.Sprintf(ignore, "y") == msg {
+	//			return
+	//		}
+	//		slog.Error("pkg-name", pkg, "level", level)
+	//	case glib.GLogLevelWarningValue:
+	//		slog.Warn(msg, "pkg-name", pkg, "level", level)
+	//	case glib.GLogLevelMessageValue:
+	//		slog.Info(msg, "pkg-name", pkg, "level", level)
+	//	case glib.GLogLevelInfoValue:
+	//		slog.Info(msg, "pkg-name", pkg, "level", level)
+	//	case glib.GLogLevelDebugValue:
+	//		slog.Debug(msg, "pkg-name", pkg, "level", level)
+	//	case glib.GLogLevelMaskValue:
+	//		slog.Debug(msg, "pkg-name", pkg, "level", level)
+	//	}
+	//}
 
-	glib.LogSetDefaultHandler(&handler, 0)
+	//glib.LogDefaultHandler(&handler, 0)
 
 	logwrap.Initialize(program, debug)
 	ui := ui{}

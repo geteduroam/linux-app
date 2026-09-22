@@ -5,9 +5,9 @@ import (
 	"os"
 	"sync"
 
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/geteduroam/linux-app/internal/network"
-	"github.com/jwijenbergh/puregotk/v4/adw"
-	"github.com/jwijenbergh/puregotk/v4/gtk"
 )
 
 func NewCertificateStateBase(win *gtk.Window, builder *gtk.Builder, stack *adw.ViewStack, cert string, passphrase string, pi network.ProviderInfo) *LoginBase {
@@ -27,21 +27,14 @@ func NewCertificateStateBase(win *gtk.Window, builder *gtk.Builder, stack *adw.V
 }
 
 type CertificateState struct {
-	SignalPool
 	win     *gtk.Window
 	builder *gtk.Builder
 
 	certPath   string
-	upload     gtk.Button
+	upload     *gtk.Button
 	cert       string
 	passphrase string
-	pwd        gtk.PasswordEntry
-}
-
-func (l *CertificateState) Destroy() {
-	l.DisconnectSignals()
-	l.upload.Unref()
-	l.pwd.Unref()
+	pwd        *gtk.PasswordEntry
 }
 
 func (l *CertificateState) Prefix() string {
@@ -56,7 +49,7 @@ func (l *CertificateState) File() ([]byte, error) {
 }
 
 func (l *CertificateState) Get() (string, string) {
-	return l.cert, l.pwd.GetText()
+	return l.cert, l.pwd.Text()
 }
 
 func (l *CertificateState) Validate() error {
@@ -72,15 +65,14 @@ func (l *CertificateState) Validate() error {
 }
 
 func (l *CertificateState) Initialize() {
-	l.builder.GetObject("certificateFileButton").Cast(&l.upload)
-	var label gtk.Label
-	l.builder.GetObject("certificateFileText").Cast(&label)
+	l.upload = l.builder.GetObject("certificateFileButton").Cast().(*gtk.Button)
+	label := l.builder.GetObject("certificateFileText").Cast().(*gtk.Label)
 	if l.cert != "" {
 		label.SetText("A certificate is already provided.\nEnter the passphrase to decrypt")
 		l.upload.Hide()
 	}
 
-	clicked := func(_ gtk.Button) {
+	clicked := func() {
 		// Create a file dialog
 		fd, err := NewFileDialog(l.win, "Choose a PKCS12 client certificate")
 		if err != nil {
@@ -94,8 +86,8 @@ func (l *CertificateState) Initialize() {
 		})
 	}
 
-	l.AddSignal(&l.upload, l.upload.ConnectClicked(&clicked))
+	l.upload.ConnectClicked(clicked)
 
-	l.builder.GetObject("certificatePassphraseText").Cast(&l.pwd)
+	l.pwd = l.builder.GetObject("certificatePassphraseText").Cast().(*gtk.PasswordEntry)
 	l.pwd.SetText(l.passphrase)
 }

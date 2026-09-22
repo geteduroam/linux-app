@@ -2,14 +2,22 @@
 package main
 
 import (
-	"github.com/jwijenbergh/puregotk/v4/gio"
-	"github.com/jwijenbergh/puregotk/v4/glib"
-	"github.com/jwijenbergh/puregotk/v4/gobject"
-	"github.com/jwijenbergh/puregotk/v4/gtk"
+	"strconv"
+
+	"github.com/diamondburned/gotk4/pkg/gio/v2"
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 )
 
+func strObjToIdx(v *gtk.StringObject) int {
+	gv, err := strconv.Atoi(v.String())
+	if err != nil {
+		panic(err)
+	}
+	return gv
+}
+
 type SelectList struct {
-	SignalPool
 	win       *gtk.ScrolledWindow
 	list      *gtk.ListView
 	activated func(int)
@@ -18,34 +26,21 @@ type SelectList struct {
 	store     *gtk.StringList
 	cf        *gtk.CustomFilter
 	cs        *gtk.CustomSorter
+	items     map[string]string
 }
 
-func indexFromPtr(ptr uintptr) int {
-	// TODO: Remove this once we have proper callback type signatures
-	// The callback should already give a gobject.Binding
-	thisl := gobject.BindingNewFromInternalPtr(ptr)
-	return int(thisl.GetData("model-index"))
-}
-
-func setupList(item uintptr) {
-	iteml := gtk.ListItemNewFromInternalPtr(item)
+func (s *SelectList) setup(item *gtk.ListItem) {
 	label := gtk.NewLabel("")
-	defer label.Unref()
-	label.Set("xalign", 0)
-	iteml.SetChild(&label.Widget)
+	label.SetXAlign(0)
+	item.SetChild(&label.Widget)
 	label.SetMarginTop(5)
 	label.SetMarginBottom(5)
 }
 
-func bindList(item uintptr) {
-	iteml := gtk.ListItemNewFromInternalPtr(item)
-	var label gtk.Label
-	var strobj gtk.StringObject
-	iteml.GetChild().Cast(&label)
-	defer label.Unref()
-	iteml.GetItem().Cast(&strobj)
-	defer strobj.Unref()
-	label.SetText(strobj.GetString())
+func (s *SelectList) bind(item *gtk.ListItem) {
+	label := item.Child().(*gtk.Label)
+	strobj := item.Item().Cast().(*gtk.StringObject)
+	label.SetText(s.items[strobj.String()])
 }
 
 func NewSelectList(win *gtk.ScrolledWindow, list *gtk.ListView, activated func(int), sorter func(a, b int) int) *SelectList {
@@ -55,27 +50,18 @@ func NewSelectList(win *gtk.ScrolledWindow, list *gtk.ListView, activated func(i
 		sorter:    sorter,
 		activated: activated,
 		store:     gtk.NewStringList(nil),
+		items:     make(map[string]string),
 	}
 }
 
-func (s *SelectList) Destroy() {
-	s.DisconnectSignals()
-	s.store.Unref()
-}
-
 func (s *SelectList) Add(idx int, label string) {
-	s.store.Append(label)
-	var strobj gtk.StringObject
-	// TODO: this is quite hacky but puregotk doesn't support subclassing yet
-	// We have to store the mondel index as the position will not always match 1:1
-	// In the beginning it will but after filtering the positions will only show the positions of the current model
-	// Whereas we need the positions/index of the original list
-	s.store.GetObject(uint(idx)).Cast(&strobj)
-	defer strobj.Unref()
-	strobj.SetData("model-index", uintptr(idx))
+	key := strconv.Itoa(idx)
+	s.items[key] = label
+	s.store.Append(key)
 }
 
 func (s *SelectList) Remove(idx int) {
+	delete(s.items, string(idx))
 	s.store.Remove(uint(idx))
 }
 
@@ -102,79 +88,61 @@ func (s *SelectList) Changed() {
 func (s *SelectList) setupFactory() *gtk.SignalListItemFactory {
 	factory := gtk.NewSignalListItemFactory()
 	// TODO: Add signal for cleanup
-	setupcb := func(_ uintptr, item uintptr) {
-		setupList(item)
+	setupcb := func(obj *glib.Object) {
+		listItem := obj.Cast().(*gtk.ListItem)
+		s.setup(listItem)
 	}
-	bindcb := func(_ uintptr, item uintptr) {
-		bindList(item)
+	bindcb := func(obj *glib.Object) {
+		listItem := obj.Cast().(*gtk.ListItem)
+		s.bind(listItem)
 	}
-	factory.Connect("signal::setup", glib.NewCallback(&setupcb), 0)
-
-	// TODO: Add signal for cleanup
-	factory.Connect("signal::bind", glib.NewCallback(&bindcb), 0)
+	factory.ConnectSetup(setupcb)
+	factory.ConnectBind(bindcb)
 
 	return factory
 }
 
-func (s *SelectList) setupSorter(base gio.ListModel) gio.ListModel {
-	sf := (glib.CompareDataFunc)(func(this uintptr, other uintptr, _ uintptr) int {
-		return s.sorter(indexFromPtr(this), indexFromPtr(other))
-	})
-
-	destroycb := (glib.DestroyNotify)(func(uintptr) {
-		// do nothing
-	})
-
-	s.cs = gtk.NewCustomSorter(&sf, 0, &destroycb)
-	var sort gtk.Sorter
-	s.cs.Cast(&sort)
-	sm := gtk.NewSortListModel(base, &sort)
+func (s *SelectList) setupSorter(base gio.ListModel) *gtk.SortListModel {
+	s.cs = gtk.NewCustomSorter(glib.NewObjectComparer(func(a, b *gtk.StringObject) int {
+		return s.sorter(strObjToIdx(a), strObjToIdx(b))
+	}))
+	sort := s.cs.Cast().(*gtk.CustomSorter)
+	sm := gtk.NewSortListModel(&base, &sort.Sorter)
 	return sm
 }
 
-func (s *SelectList) setupFilter(base gio.ListModel) gio.ListModel {
-	cf := (gtk.CustomFilterFunc)(func(item uintptr, _ uintptr) bool {
-		return s.filter(indexFromPtr(item))
+func (s *SelectList) setupFilter(base gio.ListModel) *gtk.FilterListModel {
+	s.cf = gtk.NewCustomFilter(func(obj *glib.Object) bool {
+		strobj := obj.Cast().(*gtk.StringObject)
+		return s.filter(strObjToIdx(strobj))
 	})
-	destroycb := (glib.DestroyNotify)(func(uintptr) {
-		// do nothing
-	})
-	s.cf = gtk.NewCustomFilter(&cf, 0, &destroycb)
-	var fil gtk.Filter
-	s.cf.Cast(&fil)
-	fl := gtk.NewFilterListModel(base, &fil)
+	fil := s.cf.Cast().(*gtk.CustomFilter)
+	fl := gtk.NewFilterListModel(&base, &fil.Filter)
 	return fl
 }
 
 func (s *SelectList) Setup() {
 	factory := s.setupFactory()
-	defer factory.Unref()
-	var model gio.ListModel = s.store
+	var model gio.ListModel = s.store.ListModel
 	if s.filter != nil {
-		model = s.setupFilter(model)
+		model = s.setupFilter(model).ListModel
 	}
 	// We never want horizontal scrollbars, but want automatically vertical ones
-	s.win.SetPolicy(gtk.PolicyExternalValue, gtk.PolicyAutomaticValue)
+	s.win.SetPolicy(gtk.PolicyExternal, gtk.PolicyAutomatic)
 
 	// further setup the list by setting the factory and model
 	sel := gtk.NewSingleSelection(s.setupSorter(model))
-	defer sel.Unref()
 	s.list.SetFactory(&factory.ListItemFactory)
 	s.list.SetModel(sel)
 
 	// We want to activate on single click always
 	s.list.SetSingleClickActivate(true)
 
-	actcb := func(_ gtk.ListView, _ uint) {
-		var strobj gtk.StringObject
-		sel.GetSelectedItem().Cast(&strobj)
-		defer strobj.Unref()
-		index := int(strobj.GetData("model-index"))
-		s.activated(index)
+	actcb := func(_pos uint) {
+		strobj := sel.SelectedItem().Cast().(*gtk.StringObject)
+		s.activated(strObjToIdx(strobj))
 	}
-
-	// Call the activated callback
-	s.AddSignal(s.list, s.list.ConnectActivate(&actcb))
+	s.list.ConnectActivate(actcb)
 
 	// style the widget
 	styleWidget(s.list, "list")

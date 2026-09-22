@@ -1,53 +1,41 @@
 package main
 
 import (
+	"context"
 	"errors"
 
-	"github.com/jwijenbergh/puregotk/v4/gtk"
+	"github.com/diamondburned/gotk4/pkg/gio/v2"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 )
 
 type FileDialog struct {
-	SignalPool
-	*gtk.FileChooserDialog
-	win *gtk.Window
+	*gtk.FileDialog
+	Parent *gtk.Window
 }
 
 func NewFileDialog(parent *gtk.Window, label string) (*FileDialog, error) {
-	fc := gtk.NewFileChooserDialog(
-		label,
-		parent,
-		gtk.FileChooserActionOpenValue,
-		"Cancel",
-		gtk.ResponseCancelValue,
-		"Select",
-		gtk.ResponseAcceptValue,
-		0,
-	)
+	fc := gtk.NewFileDialog()
 	if fc == nil {
 		return nil, errors.New("file chooser dialog could not be initialized")
 	}
-	var fwin gtk.Window
-	fc.Cast(&fwin)
+	fc.SetAcceptLabel("Select")
 	return &FileDialog{
-		FileChooserDialog: fc,
-		win:               &fwin,
+		FileDialog: fc,
+		Parent:     parent,
 	}, nil
 }
 
-func (fd *FileDialog) Destroy() {
-	fd.DisconnectSignals()
-	fd.win.Destroy()
-}
-
 func (fd *FileDialog) Run(cb func(path string)) {
-	rcb := func(_ gtk.Dialog, res int) {
-		// TODO: int32 casting is a puregotk bug? gint should be int32 but I think it someties is a normal int
-		if int32(res) == int32(gtk.ResponseAcceptValue) {
-			f := fd.GetFile()
-			cb(f.GetPath())
+	// TODO: what context here
+	fd.Open(context.Background(), fd.Parent, func(res gio.AsyncResulter) {
+		file, err := fd.OpenFinish(res)
+		if err != nil || file == nil {
+			return
 		}
-		fd.Destroy()
-	}
-	fd.AddSignal(fd, fd.ConnectResponse(&rcb))
-	fd.Present()
+		path := file.Path()
+		if path == "" {
+			return
+		}
+		cb(path)
+	})
 }

@@ -5,13 +5,13 @@ on: [push, pull_request]
 jobs:
   fmt-go:
     name: Check format Go
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v7
         with:
-          go-version: ^1.18
-      - uses: actions/checkout@v3
+          go-version: ^1.27
+      - uses: actions/checkout@v7
       - name: Install Gofumpt
         run: go install mvdan.cc/gofumpt@latest
       - name: Check fmt using Gofumpt
@@ -25,13 +25,13 @@ jobs:
 
   lint-go:
     name: Lint Go
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v7
         with:
-          go-version: ^1.18
-      - uses: actions/checkout@v3
+          go-version: ^1.27
+      - uses: actions/checkout@v7
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v9
 # See https://github.com/golangci/golangci-lint-action/issues/485 for why we do --out-....
@@ -41,32 +41,33 @@ jobs:
 
   build-cli:
     name: Build CLI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
-          go-version: ^1.18
+          go-version: ^1.27
       - run: make build-cli
 
   build-gui:
     name: Build GUI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
-          go-version: ^1.18
+          go-version: ^1.27
+      - run: sudo apt-get update -y && sudo apt-get install -y libgtk-4-dev libadwaita-1-dev libgirepository1.0-dev
       - run: make build-gui
 
   test-go:
     name: Test Go
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
-          go-version: ^1.18
+          go-version: ^1.27
       - run: make test

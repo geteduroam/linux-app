@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/jwijenbergh/puregotk/v4/adw"
-	"github.com/jwijenbergh/puregotk/v4/gtk"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 )
 
 type LoadingState struct {
@@ -29,29 +29,21 @@ func (l *LoadingState) Hide() {
 }
 
 func (l *LoadingState) Initialize() {
-	var page adw.ViewStackPage
-	l.builder.GetObject("loadingPage").Cast(&page)
-	defer page.Unref()
-	var label gtk.Label
-	l.builder.GetObject("loadingText").Cast(&label)
-	defer label.Unref()
+	page := l.builder.GetObject("loadingPage").Cast().(*adw.ViewStackPage)
+	label := l.builder.GetObject("loadingText").Cast().(*gtk.Label)
 	label.SetText(l.Message)
-	styleWidget(&label, "label")
-	setPage(l.stack, &page)
-	var spinner gtk.Spinner
-	l.builder.GetObject("loadingSpinner").Cast(&spinner)
-	defer spinner.Unref()
-	l.spinner = &spinner
+	styleWidget(label, "label")
+	setPage(l.stack, page)
+	spinner := l.builder.GetObject("loadingSpinner").Cast().(*gtk.Spinner)
+	l.spinner = spinner
 
-	var cancel gtk.Button
-	l.builder.GetObject("loadingCancel").Cast(&cancel)
-	defer cancel.Unref()
+	cancel := l.builder.GetObject("loadingCancel").Cast().(*gtk.Button)
 	if l.Cancel != nil {
 		cancel.SetVisible(true)
-		cb := func(_ gtk.Button) {
+		cb := func() {
 			l.Cancel()
 		}
-		cancel.ConnectClicked(&cb)
+		cancel.ConnectClicked(cb)
 	} else {
 		cancel.SetVisible(false)
 	}

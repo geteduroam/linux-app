@@ -6,9 +6,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/geteduroam/linux-app/internal/network"
-	"github.com/jwijenbergh/puregotk/v4/adw"
-	"github.com/jwijenbergh/puregotk/v4/gtk"
 )
 
 func NewCredentialsStateBase(builder *gtk.Builder, stack *adw.ViewStack, cred network.Credentials, pi network.ProviderInfo) *LoginBase {
@@ -33,21 +33,16 @@ type CredentialsState struct {
 	pwd  gtk.PasswordEntry
 }
 
-func (l *CredentialsState) Destroy() {
-	l.user.Unref()
-	l.pwd.Unref()
-}
-
 func (l *CredentialsState) Prefix() string {
 	return "login"
 }
 
 func (l *CredentialsState) Get() (string, string) {
-	return l.user.GetText(), l.pwd.GetText()
+	return l.user.Text(), l.pwd.Text()
 }
 
 func (l *CredentialsState) Validate() error {
-	ut := l.user.GetText()
+	ut := l.user.Text()
 	if ut == "" {
 		return errors.New("username cannot be empty")
 	}
@@ -57,7 +52,7 @@ func (l *CredentialsState) Validate() error {
 	if !strings.HasSuffix(ut, l.cred.Suffix) {
 		return fmt.Errorf("username must end with: \"%s\"", l.cred.Suffix)
 	}
-	if l.pwd.GetText() == "" {
+	if l.pwd.Text() == "" {
 		return errors.New("password cannot be empty")
 	}
 	return nil
@@ -66,9 +61,9 @@ func (l *CredentialsState) Validate() error {
 func (l *CredentialsState) Initialize() {
 	// TODO: Prefill suffix outside of text entry (so that it cannot be changed)
 	// prefill password and username
-	l.builder.GetObject("loginUsernameText").Cast(&l.user)
+	l.user = l.builder.GetObject("loginUsernameText").Cast().(gtk.Entry)
 	l.user.SetText(l.cred.Prefix + l.cred.Suffix)
 
-	l.builder.GetObject("loginPasswordText").Cast(&l.pwd)
+	l.pwd = l.builder.GetObject("loginPasswordText").Cast().(gtk.PasswordEntry)
 	l.pwd.SetText(l.cred.Password)
 }

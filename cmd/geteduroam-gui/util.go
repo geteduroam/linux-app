@@ -6,31 +6,31 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jwijenbergh/puregotk/v4/adw"
-	"github.com/jwijenbergh/puregotk/v4/gdkpixbuf"
-	"github.com/jwijenbergh/puregotk/v4/glib"
-	"github.com/jwijenbergh/puregotk/v4/gtk"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/gdkpixbuf/v2"
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 
 	"github.com/geteduroam/linux-app/internal/variant"
 )
 
 type StyledWidget interface {
-	GetStyleContext() *gtk.StyleContext
+	StyleContext() *gtk.StyleContext
 }
 
 func styleWidget(widget StyledWidget, resName string) {
-	provider := gtk.NewCssProvider()
-	provider.LoadFromData(MustResource(resName+".css"), -1)
-	sc := widget.GetStyleContext()
+	provider := gtk.NewCSSProvider()
+	provider.LoadFromData(MustResource(resName + ".css"))
+	sc := widget.StyleContext()
 	sc.AddProvider(provider, 800)
 }
 
 func setPage(stack *adw.ViewStack, page *adw.ViewStackPage) {
-	child := page.GetChild()
-	child.SetMarginStart(10)
-	child.SetMarginEnd(10)
-	child.SetMarginTop(5)
-	child.SetMarginBottom(5)
+	child := page.Child()
+	child.SetObjectProperty("margin-start", 10)
+	child.SetObjectProperty("margin-end", 10)
+	child.SetObjectProperty("margin-top", 5)
+	child.SetObjectProperty("margin-bottom", 5)
 	stack.SetVisibleChild(child)
 }
 
@@ -38,9 +38,9 @@ func upper(str string) string {
 	return strings.ToUpper(str[:1]) + str[1:]
 }
 
-func showErrorToast(overlay adw.ToastOverlay, err error) {
+func showErrorToast(overlay *adw.ToastOverlay, err error) {
 	msg := upper(err.Error())
-	toast := adw.NewToast(glib.MarkupEscapeText(msg, -1))
+	toast := adw.NewToast(glib.MarkupEscapeText(msg))
 	toast.SetTimeout(5)
 	overlay.AddToast(toast)
 }
@@ -64,30 +64,11 @@ func bytesPixbuf(b []byte) (*gdkpixbuf.Pixbuf, error) {
 }
 
 func uiThread(cb func()) {
-	var idlecb glib.SourceFunc
-	idlecb = func(uintptr) bool {
-		// unref so this callback does not take up any slots
-		defer glib.UnrefCallback(&idlecb) //nolint:errcheck
-		cb()
-
-		// return false here means just run it once, not over and over again
-		// see the docs for glib_idle_add
-		return false
-	}
-	glib.IdleAdd(&idlecb, 0)
+	glib.IdleAdd(cb)
 }
 
 func uiTicker(d uint, cb func() bool) {
-	var timecb glib.SourceFunc
-	timecb = func(uintptr) bool {
-		ret := cb()
-		if !ret {
-			// unref so this callback does not take up any slots
-			defer glib.UnrefCallback(&timecb) //nolint:errcheck
-		}
-		return ret
-	}
-	glib.TimeoutAddSeconds(d, &timecb, 0)
+	glib.TimeoutSecondsAdd(d, cb)
 }
 
 func ensureContextError(ctx context.Context, err error) error {
