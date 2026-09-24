@@ -7,7 +7,7 @@ import (
 )
 
 // version is the current version
-const version = "0.14"
+const version = "0.15"
 
 // isReleased sets whether or not the current version is released yet
 const isReleased = true
