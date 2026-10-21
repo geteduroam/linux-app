@@ -92,6 +92,8 @@ func (l *LoginBase) fillLogo(logo *gtk.Image) error {
 		uiThread(func() {
 			defer logo.Unref()
 			logo.SetFromPixbuf(pb)
+			// GtkImage renders at icon size by default, scale the logo to fit the requested size
+			logo.SetPixelSize(100)
 			logo.SetSizeRequest(100, 100)
 		})
 	}
