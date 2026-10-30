@@ -41,18 +41,3 @@ func (b *Base) Call(method string, args ...interface{}) error {
 func (b *Base) CallReturn(ret interface{}, method string, args ...interface{}) error {
 	return b.object.Call(method, 0, args...).Store(ret)
 }
-
-// Path returns the DBUS object path
-func (b *Base) Path() dbus.ObjectPath {
-	return b.object.Path()
-}
-
-// Version returns NetworkManager's version
-func (b *Base) Version() (string, error) {
-	var ver string
-	err := b.CallReturn(&ver, "org.freedesktop.DBus.Properties.Get", Interface, "Version")
-	if err != nil {
-		return "", err
-	}
-	return ver, nil
-}
