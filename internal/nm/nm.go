@@ -81,8 +81,8 @@ func installBaseSSID(n network.Base, ssid network.SSID, specifics map[string]int
 		// such that connections for existing eduroam profiles (and default priority)
 		// will not be used
 		"autoconnect-priority": 1,
-		"type": "802-11-wireless",
-		"id":   fID,
+		"type":                 "802-11-wireless",
+		"id":                   fID,
 	}
 	sWifi := map[string]interface{}{
 		"ssid":     []byte(ssid.Value),
