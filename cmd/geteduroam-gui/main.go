@@ -104,17 +104,30 @@ func (m *mainState) activate() {
 	m.stack.SetVisibleChild(page.GetChild())
 }
 
+// askLogin shows the login page and waits for it to be submitted.
+// It is called from a goroutine, so the GTK calls go to the main thread:
+// GTK is not thread safe, and calling it from here crashed the GUI
+func askLogin(login *LoginBase) (string, string) {
+	uiThreadWait(login.Initialize)
+	login.wg.Wait()
+	var first, second string
+	uiThreadWait(func() {
+		first, second = login.Get()
+	})
+	return first, second
+}
+
 func (m *mainState) askCredentials(c network.Credentials, pi network.ProviderInfo) (string, string, error) {
-	login := NewCredentialsStateBase(m.builder, m.stack, c, pi)
-	login.Initialize()
-	user, pass := login.Get()
+	user, pass := askLogin(NewCredentialsStateBase(m.builder, m.stack, c, pi))
 	return user, pass, nil
 }
 
 func (m *mainState) askCertificate(cert string, pwd string, pi network.ProviderInfo) (string, string, error) {
-	base := NewCertificateStateBase(m.app.GetActiveWindow(), m.builder, m.stack, cert, pwd, pi)
-	base.Initialize()
-	cert, pass := base.Get()
+	var win *gtk.Window
+	uiThreadWait(func() {
+		win = m.app.GetActiveWindow()
+	})
+	cert, pass := askLogin(NewCertificateStateBase(win, m.builder, m.stack, cert, pwd, pi))
 	return cert, pass, nil
 }
 
@@ -205,8 +218,8 @@ func (m *mainState) rowActivated(sel provider.Provider) {
 			}
 			fmt.Println("Browser has been opened with URL:", url)
 		}
-		s := NewSuccessState(m.builder, m.app.GetActiveWindow(), m.stack, vBeg, vEnd, isredirect)
 		uiThread(func() {
+			s := NewSuccessState(m.builder, m.app.GetActiveWindow(), m.stack, vBeg, vEnd, isredirect)
 			s.Initialize()
 		})
 		return nil
@@ -214,9 +227,11 @@ func (m *mainState) rowActivated(sel provider.Provider) {
 	cb := func(p provider.Profile) {
 		err := chosen(p)
 		if err != nil {
-			l.Hide()
-			m.activate()
-			m.ShowError(err)
+			uiThread(func() {
+				l.Hide()
+				m.activate()
+				m.ShowError(err)
+			})
 		}
 	}
 	if len(sel.Profiles) > 1 {
@@ -331,8 +346,10 @@ func (m *mainState) localMetadata() {
 				})
 				return
 			}
-			s := NewSuccessState(m.builder, m.app.GetActiveWindow(), m.stack, vBeg, vEnd, false)
-			s.Initialize()
+			uiThread(func() {
+				s := NewSuccessState(m.builder, m.app.GetActiveWindow(), m.stack, vBeg, vEnd, false)
+				s.Initialize()
+			})
 		}()
 	})
 }

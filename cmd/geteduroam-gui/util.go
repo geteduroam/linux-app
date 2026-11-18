@@ -77,6 +77,17 @@ func uiThread(cb func()) {
 	glib.IdleAdd(&idlecb, 0)
 }
 
+// uiThreadWait runs cb on the GTK main thread and waits for it to finish.
+// Only call it from another goroutine, never from the main thread itself.
+func uiThreadWait(cb func()) {
+	done := make(chan struct{})
+	uiThread(func() {
+		defer close(done)
+		cb()
+	})
+	<-done
+}
+
 func uiTicker(d uint, cb func() bool) {
 	var timecb glib.SourceFunc
 	timecb = func(uintptr) bool {
